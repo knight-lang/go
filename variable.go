@@ -31,3 +31,8 @@ func (v *Variable) Run() (Value, error) {
 func (v *Variable) Dump() {
 	fmt.Printf("Variable(%s)", v.name)
 }
+
+func (v *Variable) Assign(value Value) {
+	v.value = value
+}
+
