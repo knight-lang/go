@@ -1,6 +1,9 @@
 package knight
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type Boolean bool
 
@@ -25,9 +28,5 @@ func (b Boolean) Int() int {
 }
 
 func (b Boolean) String() string {
-	if b {
-		return "true"
-	}
-
-	return "false"
+	return strconv.FormatBool(bool(b))
 }

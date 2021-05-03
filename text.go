@@ -9,7 +9,7 @@ func (t Text) Run() (Value, error) {
 }
 
 func (t Text) Dump() {
-	fmt.Printf("Text(%s)", t)
+	fmt.Printf("String(%s)", t)
 }
 
 func (t Text) Bool() bool {
@@ -19,7 +19,7 @@ func (t Text) Bool() bool {
 func (t Text) Int() int {
 	var ret int
 
-	fmt.Sscan(string(t), "%l", ret)
+	fmt.Sscanf(string(t), "%d", &ret)
 
 	return ret
 }

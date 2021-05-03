@@ -16,16 +16,32 @@ type Function struct {
 }
 
 type Ast struct {
-	fn   *Function
+	fun  *Function
 	args []Value
 }
 
+var functions map[rune] *Function = make(map[rune] *Function)
+
+func GetFunction(r rune) *Function {
+	val, ok := functions[r]
+
+	if !ok {
+		return nil
+	}
+
+	return val
+}
+
+func RegisterFunction(name rune, arity int, body func([]Value) (Value, error)) {
+	functions[name] = &Function { name: name, arity: arity, body: body }
+}
+
 func (a *Ast) Run() (Value, error) {
-	return a.fn.body(a.args)
+	return a.fun.body(a.args)
 }
 
 func (a *Ast) Dump() {
-	fmt.Printf("Function(%c", a.fn.name)
+	fmt.Printf("Function(%c", a.fun.name)
 
 	for _, arg := range a.args {
 		fmt.Print(", ")
@@ -37,6 +53,39 @@ func (a *Ast) Dump() {
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
+
+	RegisterFunction('P', 0, Prompt)
+	RegisterFunction('R', 0, Random)
+
+	RegisterFunction('E', 1, Eval)
+	RegisterFunction('B', 1, Block)
+	RegisterFunction('C', 1, Call)
+	RegisterFunction('`', 1, System)
+	RegisterFunction('Q', 1, Quit)
+	RegisterFunction('!', 1, Not)
+	RegisterFunction('L', 1, Length)
+	RegisterFunction('D', 1, Dump)
+	RegisterFunction('O', 1, Output)
+
+	RegisterFunction('+', 2, Add)
+	RegisterFunction('-', 2, Subtract)
+	RegisterFunction('*', 2, Multiply)
+	RegisterFunction('/', 2, Divide)
+	RegisterFunction('%', 2, Modulo)
+	RegisterFunction('^', 2, Exponentiate)
+	RegisterFunction('<', 2, LessThan)
+	RegisterFunction('>', 2, GreaterThan)
+	RegisterFunction('?', 2, EqualTo)
+	RegisterFunction('&', 2, And)
+	RegisterFunction('|', 2, Or)
+	RegisterFunction(';', 2, Then)
+	RegisterFunction('=', 2, Assign)
+	RegisterFunction('W', 2, While)
+
+	RegisterFunction('I', 3, If)
+	RegisterFunction('G', 3, Get)
+
+	RegisterFunction('S', 4, Substitute)
 }
 
 func toString(value Value) (string, error) {
@@ -162,13 +211,15 @@ func Output(args []Value) (Value, error) {
 	}
 
 	if str != "" && str[len(str)-1] == '\\' {
-		fmt.Print(str[:len(str)-2])
+		fmt.Print(str[:len(str)-1])
 	} else {
 		fmt.Println(str)
 	}
 
 	return Null{}, nil
 }
+
+/** ARITY TWO **/
 
 func Add(args []Value) (Value, error) {
 	lval, err := args[0].Run()
@@ -424,47 +475,22 @@ func EqualTo(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	switch lhs := lval.(type) {
-	case Number:
-		rhs, err := toInt(args[1])
+	rval, err := args[1].Run()
 
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
-		return Boolean(int(lhs) == rhs), nil
 
-	case Text:
-		rhs, err := toString(args[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		return Boolean(string(lhs) == rhs), nil
-
-	case Boolean:
-		rhs, err := toBool(args[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		return Boolean(bool(lhs) == rhs), nil
-
+	switch lval.(type) {
 	case Null:
-		rhs, err := args[1].Run()
+		return Boolean(true), nil // all `Null`s are identical.
 
-		if err != nil {
-			return nil, err
-		}
-
-		_, ok := rhs.(Null)
-
-		return Boolean(ok), nil
+	case Number, Text, Boolean:
+		return Boolean(lval == rval), nil
 
 	default:
-		return nil, fmt.Errorf("Invalid type given to '?': %T", lhs)
+		return nil, fmt.Errorf("Invalid type given to '?': %T", lval)
 	}
 }
 
@@ -559,6 +585,8 @@ func While(args []Value) (Value, error) {
 	return Null{}, nil
 }
 
+/** ARITY THREE **/
+
 func If(args []Value) (Value, error) {
 	cond, err := toBool(args[0])
 
@@ -574,8 +602,32 @@ func If(args []Value) (Value, error) {
 }
 
 func Get(args []Value) (Value, error) {
-	panic("todo")
+	str, err := toString(args[0])
+
+	if err != nil {
+		return nil, err
+	}
+
+	start, err := toInt(args[1])
+
+	if err != nil  {
+		return nil, err
+	}
+
+	amnt, err := toInt(args[2])
+
+	if err != nil {
+		return nil, err
+	}
+
+	if start == len(str) {
+		return Text(""), nil
+	}
+
+	return Text(str[start:amnt]), nil
 }
+
+/** ARITY FOUR **/
 
 func Substitute(args []Value) (Value, error) {
 	panic("todo")

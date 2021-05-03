@@ -1,6 +1,9 @@
 package knight
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type Number int
 
@@ -21,5 +24,5 @@ func (n Number) Int() int {
 }
 
 func (n Number) String() string {
-	return string(n)
+	return strconv.Itoa(int(n))
 }
