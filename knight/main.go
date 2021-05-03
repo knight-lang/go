@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 )
 
-
 func run(s string) knight.Value {
 	val, err := knight.Parse(strings.NewReader(s))
 

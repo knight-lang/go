@@ -122,12 +122,12 @@ func toBool(value Value) (bool, error) {
 
 /** ARITY ZERO **/
 
+var reader = bufio.NewReader(os.Stdin)
+
 func Prompt([]Value) (Value, error) {
-	reader := bufio.NewReader(os.Stdin)
 	line, _, err := reader.ReadLine()
 
 	if err != nil {
-
 		return nil, err
 	}
 
@@ -182,8 +182,6 @@ func System(args []Value) (Value, error) {
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to read command result: %s", err)
-
-		
 	}
 
 	return Text(stdout), nil
