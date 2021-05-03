@@ -5,8 +5,10 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
+	"bufio"
 )
 
 type Function struct {
@@ -121,7 +123,15 @@ func toBool(value Value) (bool, error) {
 /** ARITY ZERO **/
 
 func Prompt([]Value) (Value, error) {
-	return Text("A"), nil
+	reader := bufio.NewReader(os.Stdin)
+	line, _, err := reader.ReadLine()
+
+	if err != nil {
+
+		return nil, err
+	}
+
+	return Text(line), err
 }
 
 func Random([]Value) (Value, error) {
@@ -155,7 +165,28 @@ func Call(args []Value) (Value, error) {
 }
 
 func System(args []Value) (Value, error) {
-	panic("todo: system")
+	cmd, err := toString(args[0])
+
+	if err != nil {
+		return nil, err
+	}
+
+	shell := "/bin/sh"
+	if s := os.Getenv("SHELL"); s != "" {
+		shell = s
+	}
+
+	command := exec.Command(shell, "-c", cmd)
+	command.Stdin = os.Stdin
+	stdout, err := command.Output()
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to read command result: %s", err)
+
+		
+	}
+
+	return Text(stdout), nil
 }
 
 func Quit(args []Value) (Value, error) {
@@ -481,17 +512,7 @@ func EqualTo(args []Value) (Value, error) {
 		return nil, err
 	}
 
-
-	switch lval.(type) {
-	case Null:
-		return Boolean(true), nil // all `Null`s are identical.
-
-	case Number, Text, Boolean:
-		return Boolean(lval == rval), nil
-
-	default:
-		return nil, fmt.Errorf("Invalid type given to '?': %T", lval)
-	}
+	return Boolean(lval == rval), nil
 }
 
 func And(args []Value) (Value, error) {
@@ -624,11 +645,40 @@ func Get(args []Value) (Value, error) {
 		return Text(""), nil
 	}
 
-	return Text(str[start:amnt]), nil
+
+	return Text(str[start:start + amnt]), nil
 }
 
 /** ARITY FOUR **/
 
 func Substitute(args []Value) (Value, error) {
-	panic("todo")
+	str, err := toString(args[0])
+
+	if err != nil {
+		return nil, err
+	}
+
+	start, err := toInt(args[1])
+
+	if err != nil  {
+		return nil, err
+	}
+
+	amnt, err := toInt(args[2])
+
+	if err != nil {
+		return nil, err
+	}
+
+	repl, err := toString(args[3])
+
+	if err != nil {
+		return nil, err
+	}
+
+	if start == len(str) && amnt == 0 {
+		return Text(str + repl), nil
+	}
+
+	return Text(str[:start] + repl + str[start+amnt:]), nil
 }
