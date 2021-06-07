@@ -1,13 +1,16 @@
 package main
 
 import (
-	"github.com/knight-lang/go"
 	"fmt"
-	"strings"
+	"github.com/knight-lang/go"
+	"io/ioutil"
 	"log"
 	"os"
-	"io/ioutil"
+	"strings"
 )
+
+// import "net/http"
+// import _ "net/http/pprof"
 
 func run(s string) knight.Value {
 	val, err := knight.Parse(strings.NewReader(s))
@@ -22,6 +25,10 @@ func run(s string) knight.Value {
 }
 
 func main() {
+// go func() {
+// 	log.Println(http.ListenAndServe("localhost:6060", nil))
+// }()
+
 	if len(os.Args) != 3 || (os.Args[1] != "-e" && os.Args[1] != "-f") {
 		fmt.Printf("usage: %s (-e 'expr' | -f file)", os.Args[0])
 		os.Exit(1)

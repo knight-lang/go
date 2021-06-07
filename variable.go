@@ -35,4 +35,3 @@ func (v *Variable) Dump() {
 func (v *Variable) Assign(value Value) {
 	v.value = value
 }
-

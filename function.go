@@ -1,6 +1,7 @@
 package knight
 
 import (
+	"bufio"
 	"fmt"
 	"math"
 	"math/rand"
@@ -8,7 +9,6 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-	"bufio"
 )
 
 type Function struct {
@@ -22,7 +22,7 @@ type Ast struct {
 	args []Value
 }
 
-var functions map[rune] *Function = make(map[rune] *Function)
+var functions map[rune]*Function = make(map[rune]*Function)
 
 func GetFunction(r rune) *Function {
 	val, ok := functions[r]
@@ -35,7 +35,7 @@ func GetFunction(r rune) *Function {
 }
 
 func RegisterFunction(name rune, arity int, body func([]Value) (Value, error)) {
-	functions[name] = &Function { name: name, arity: arity, body: body }
+	functions[name] = &Function{name: name, arity: arity, body: body}
 }
 
 func (a *Ast) Run() (Value, error) {
@@ -68,6 +68,7 @@ func init() {
 	RegisterFunction('L', 1, Length)
 	RegisterFunction('D', 1, Dump)
 	RegisterFunction('O', 1, Output)
+	RegisterFunction('A', 1, Ascii)
 
 	RegisterFunction('+', 2, Add)
 	RegisterFunction('-', 2, Subtract)
@@ -248,6 +249,32 @@ func Output(args []Value) (Value, error) {
 	return Null{}, nil
 }
 
+func Ascii(args []Value) (Value, error) {
+	val, err := args[0].Run()
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch lhs := val.(type) {
+	case Number:
+		if lhs <= 0 || 127 < lhs {
+			return nil, fmt.Errorf("Invalid number given to 'A': %d", lhs)
+		}
+
+		return Text(rune(lhs)), nil
+
+	case Text:
+		if lhs == "" {
+			return nil, fmt.Errorf("Empty string given")
+		}
+
+		return Number(lhs[0]), nil
+	default:
+		return nil, fmt.Errorf("Invalid type given to 'A': %T", lhs)
+	}
+}
+
 /** ARITY TWO **/
 
 func Add(args []Value) (Value, error) {
@@ -274,7 +301,11 @@ func Add(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		return Text(string(lhs) + rhs), nil
+		var sb strings.Builder
+		sb.WriteString(string(lhs))
+		sb.WriteString(rhs)
+
+		return Text(sb.String()), nil
 
 	default:
 		return nil, fmt.Errorf("Invalid type given to '+': %T", lhs)
@@ -547,7 +578,7 @@ func Or(args []Value) (Value, error) {
 	}
 
 	if !lhs.Bool() {
-	return args[1].Run()
+		return args[1].Run()
 	}
 
 	return lval, nil
@@ -571,7 +602,7 @@ func Assign(args []Value) (Value, error) {
 		return nil, fmt.Errorf("Invalid type given to '=': %T", lval)
 	}
 
-	rval, err := args[1].Run();
+	rval, err := args[1].Run()
 
 	if err != nil {
 		return nil, err
@@ -594,7 +625,7 @@ func While(args []Value) (Value, error) {
 			break
 		}
 
-		_, err = args[1].Run();
+		_, err = args[1].Run()
 
 		if err != nil {
 			return nil, err
@@ -629,7 +660,7 @@ func Get(args []Value) (Value, error) {
 
 	start, err := toInt(args[1])
 
-	if err != nil  {
+	if err != nil {
 		return nil, err
 	}
 
@@ -643,8 +674,7 @@ func Get(args []Value) (Value, error) {
 		return Text(""), nil
 	}
 
-
-	return Text(str[start:start + amnt]), nil
+	return Text(str[start : start+amnt]), nil
 }
 
 /** ARITY FOUR **/
@@ -658,7 +688,7 @@ func Substitute(args []Value) (Value, error) {
 
 	start, err := toInt(args[1])
 
-	if err != nil  {
+	if err != nil {
 		return nil, err
 	}
 
@@ -676,6 +706,10 @@ func Substitute(args []Value) (Value, error) {
 
 	if start == len(str) && amnt == 0 {
 		return Text(str + repl), nil
+	}
+
+	if start == 0 && len(repl) == 0 {
+		return Text(str[amnt:]), nil 
 	}
 
 	return Text(str[:start] + repl + str[start+amnt:]), nil
