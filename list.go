@@ -21,9 +21,17 @@ func (l List) Bool() bool {
 	return len(l) != 0
 }
 
-func (l List) Int() int       { return len(l) }
-func (l List) String() string { return l.Join("\n") }
-func (l List) List() List     { return l }
+func (l List) Int() int {
+	return len(l)
+}
+
+func (l List) String() string {
+	return l.Join("\n")
+}
+
+func (l List) List() List {
+	return l
+}
 
 func (l List) Join(sep string) string {
 	var sb strings.Builder

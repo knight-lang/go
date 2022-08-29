@@ -24,8 +24,8 @@ func (t Text) Int() int {
 	return ret
 }
 
-func (t Text) String() string {
-	return string(t)
+func (t Text) Text() Text {
+	return t
 }
 
 func (t Text) List() List {

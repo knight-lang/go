@@ -17,7 +17,7 @@ func (b Boolean) Dump() {
 }
 
 func (b Boolean) Bool() bool {
-	return bool(b)
+	return b
 }
 
 func (b Boolean) Int() int {

@@ -6,11 +6,13 @@ import (
 	"unicode"
 )
 
+/// Parser is used to parse `Value`s from source code.
 type Parser struct {
 	source []rune
 	index  int
 }
 
+/// NewParser creates a Parser for the given source string
 func NewParser(source string) Parser {
 	return Parser{source: []rune(source)}
 }
