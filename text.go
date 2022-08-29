@@ -4,6 +4,8 @@ import "fmt"
 
 type Text string
 
+var _ Literal = Text("")
+
 func (t Text) Run() (Value, error) {
 	return t, nil
 }
@@ -26,8 +28,8 @@ func (t Text) String() string {
 	return string(t)
 }
 
-func (t Text) List() []Value {
-	list := make([]Value, 0, len(t))
+func (t Text) List() List {
+	list := make(List, 0, len(t))
 
 	for i := 0; i < len(t); i++ {
 		list[i] = Text(string(t[i]))

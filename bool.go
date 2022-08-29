@@ -6,6 +6,8 @@ import (
 
 type Boolean bool
 
+var _ Literal = Boolean(true)
+
 func (b Boolean) Run() (Value, error) {
 	return b, nil
 }
@@ -32,9 +34,9 @@ func (b Boolean) String() string {
 	return "false"
 }
 
-func (b Boolean) List() []Value {
+func (b Boolean) List() List {
 	if b {
-		return []Value{b}
+		return List{b}
 	}
 	return nil
 }
