@@ -7,17 +7,24 @@ type Variable struct {
 	value Value
 }
 
-var variables map[string]*Variable = make(map[string]*Variable)
+type Environment struct {
+	variables map[string]*Variable
+}
 
-func NewVariable(name string) *Variable {
-	val, ok := variables[name]
+func NewEnvironment() Environment {
+	return Environment{
+		variables: make(map[string]*Variable),
+	}
+}
 
-	if !ok {
-		val = &Variable{name: name}
-		variables[name] = val
+func (e *Environment) Lookup(name string) *Variable {
+	if variable, ok := e.variables[name]; ok {
+		return variable
 	}
 
-	return val
+	variable := &Variable{name: name}
+	e.variables[name] = variable
+	return variable
 }
 
 func (v *Variable) Run() (Value, error) {

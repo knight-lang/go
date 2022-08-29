@@ -59,7 +59,7 @@ func init() {
 	RegisterFunction('P', 0, Prompt)
 	RegisterFunction('R', 0, Random)
 
-	RegisterFunction('E', 1, Eval)
+	RegisterFunction(',', 1, Box)
 	RegisterFunction('B', 1, Block)
 	RegisterFunction('C', 1, Call)
 	RegisterFunction('`', 1, System)
@@ -84,6 +84,7 @@ func init() {
 	RegisterFunction(';', 2, Then)
 	RegisterFunction('=', 2, Assign)
 	RegisterFunction('W', 2, While)
+	RegisterFunction('.', 2, Range)
 
 	RegisterFunction('I', 3, If)
 	RegisterFunction('G', 3, Get)
@@ -121,6 +122,16 @@ func toBool(value Value) (bool, error) {
 	return ran.(Literal).Bool(), nil
 }
 
+func toList(value Value) ([]Value, error) {
+	ran, err := value.Run()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ran.(Literal).List(), nil
+}
+
 /** ARITY ZERO **/
 
 var reader = bufio.NewReader(os.Stdin)
@@ -140,15 +151,13 @@ func Random([]Value) (Value, error) {
 }
 
 /** ARITY ONE **/
-
-func Eval(args []Value) (Value, error) {
-	str, err := toString(args[0])
-
+func Box(args []Value) (Value, error) {
+	ran, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	return Run(str)
+	return List{ran}, nil
 }
 
 func Block(args []Value) (Value, error) {
@@ -157,7 +166,6 @@ func Block(args []Value) (Value, error) {
 
 func Call(args []Value) (Value, error) {
 	ran, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +175,6 @@ func Call(args []Value) (Value, error) {
 
 func System(args []Value) (Value, error) {
 	cmd, err := toString(args[0])
-
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +187,6 @@ func System(args []Value) (Value, error) {
 	command := exec.Command(shell, "-c", cmd)
 	command.Stdin = os.Stdin
 	stdout, err := command.Output()
-
 	if err != nil {
 		return nil, fmt.Errorf("unable to read command result: %s", err)
 	}
@@ -190,19 +196,16 @@ func System(args []Value) (Value, error) {
 
 func Quit(args []Value) (Value, error) {
 	code, err := toInt(args[0])
-
 	if err != nil {
 		return nil, err
 	}
 
 	os.Exit(code)
-
-	return nil, nil
+	panic("unreachable")
 }
 
 func Not(args []Value) (Value, error) {
 	bool, err := toBool(args[0])
-
 	if err != nil {
 		return nil, err
 	}
@@ -211,18 +214,16 @@ func Not(args []Value) (Value, error) {
 }
 
 func Length(args []Value) (Value, error) {
-	str, err := toString(args[0])
-
+	list, err := toList(args[0])
 	if err != nil {
 		return nil, err
 	}
 
-	return Number(len(str)), nil
+	return Number(len(list)), nil
 }
 
 func Dump(args []Value) (Value, error) {
 	val, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +236,6 @@ func Dump(args []Value) (Value, error) {
 
 func Output(args []Value) (Value, error) {
 	str, err := toString(args[0])
-
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +251,6 @@ func Output(args []Value) (Value, error) {
 
 func Ascii(args []Value) (Value, error) {
 	val, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
@@ -259,19 +258,20 @@ func Ascii(args []Value) (Value, error) {
 	switch lhs := val.(type) {
 	case Number:
 		if lhs <= 0 || 127 < lhs {
-			return nil, fmt.Errorf("Invalid number given to 'A': %d", lhs)
+			return nil, fmt.Errorf("invalid number given to 'A': %d", lhs)
 		}
 
 		return Text(rune(lhs)), nil
 
 	case Text:
 		if lhs == "" {
-			return nil, fmt.Errorf("Empty string given")
+			return nil, fmt.Errorf("empty string given to 'A'")
 		}
 
 		return Number(lhs[0]), nil
+
 	default:
-		return nil, fmt.Errorf("Invalid type given to 'A': %T", lhs)
+		return nil, fmt.Errorf("invalid type given to 'A': %T", lhs)
 	}
 }
 
@@ -279,7 +279,6 @@ func Ascii(args []Value) (Value, error) {
 
 func Add(args []Value) (Value, error) {
 	lval, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
@@ -287,16 +286,14 @@ func Add(args []Value) (Value, error) {
 	switch lhs := lval.(type) {
 	case Number:
 		rhs, err := toInt(args[1])
-
 		if err != nil {
 			return nil, err
 		}
 
-		return Number(int(lhs) + rhs), nil
+		return lhs + Number(rhs), nil
 
 	case Text:
 		rhs, err := toString(args[1])
-
 		if err != nil {
 			return nil, err
 		}
@@ -307,36 +304,21 @@ func Add(args []Value) (Value, error) {
 
 		return Text(sb.String()), nil
 
+	case List:
+		rhs, err := toList(args[1])
+		if err != nil {
+			return nil, err
+		}
+
+		return append(lhs, rhs...), nil
+
 	default:
-		return nil, fmt.Errorf("Invalid type given to '+': %T", lhs)
+		return nil, fmt.Errorf("invalid type given to '+': %T", lhs)
 	}
 }
 
 func Subtract(args []Value) (Value, error) {
 	lval, err := args[0].Run()
-
-	if err != nil {
-		return nil, err
-	}
-
-	lhs, ok := lval.(Number)
-
-	if !ok {
-		return nil, fmt.Errorf("Invalid type given to '-': %T", lval)
-	}
-
-	rhs, err := toInt(args[1])
-
-	if err != nil {
-		return nil, err
-	}
-
-	return Number(int(lhs) - rhs), nil
-}
-
-func Multiply(args []Value) (Value, error) {
-	lval, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
@@ -344,220 +326,297 @@ func Multiply(args []Value) (Value, error) {
 	switch lhs := lval.(type) {
 	case Number:
 		rhs, err := toInt(args[1])
-
 		if err != nil {
 			return nil, err
 		}
 
-		return Number(int(lhs) * rhs), nil
-
-	case Text:
-		rhs, err := toInt(args[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		if rhs < 0 {
-			return nil, fmt.Errorf("Negative replication amount: %d", rhs)
-		}
-
-		return Text(strings.Repeat(string(lhs), rhs)), nil
+		return lhs - Number(rhs), nil
 
 	default:
-		return nil, fmt.Errorf("Invalid type given to '*': %T", lhs)
+		return nil, fmt.Errorf("invalid type given to '-': %T", lval)
+	}
+}
+
+func Multiply(args []Value) (Value, error) {
+	lval, err := args[0].Run()
+	if err != nil {
+		return nil, err
+	}
+
+	switch lhs := lval.(type) {
+	case Number:
+		rhs, err := toInt(args[1])
+		if err != nil {
+			return nil, err
+		}
+
+		return lhs * Number(rhs), nil
+
+	case Text:
+		amount, err := toInt(args[1])
+		if err != nil {
+			return nil, err
+		}
+		if amount < 0 {
+			return nil, fmt.Errorf("negative replication amount: %d", amount)
+		}
+
+		return Text(strings.Repeat(string(lhs), amount)), nil
+
+	case List:
+		amount, err := toInt(args[1])
+		if err != nil {
+			return nil, err
+		}
+		if amount < 0 {
+			return nil, fmt.Errorf("negative replication amount: %d", amount)
+		}
+
+		slice := make(List, 0, len(lhs)*amount)
+
+		for i := 0; i < amount; i++ {
+			slice = append(slice, lhs...)
+		}
+
+		return slice, nil
+
+	default:
+		return nil, fmt.Errorf("invalid type given to '*': %T", lhs)
 	}
 }
 
 func Divide(args []Value) (Value, error) {
 	lval, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
 
-	lhs, ok := lval.(Number)
+	switch lhs := lval.(type) {
+	case Number:
+		rhs, err := toInt(args[1])
+		if err != nil {
+			return nil, err
+		}
+		if rhs == 0 {
+			return nil, fmt.Errorf("division by zero")
+		}
 
-	if !ok {
-		return nil, fmt.Errorf("Invalid type given to '/': %T", lval)
+		return lhs / Number(rhs), nil
+
+	default:
+		return nil, fmt.Errorf("invalid type given to '/': %T", lhs)
 	}
-
-	rhs, err := toInt(args[1])
-
-	if err != nil {
-		return nil, err
-	}
-
-	if rhs == 0 {
-		return nil, fmt.Errorf("Division by zero attempted")
-	}
-
-	return Number(int(lhs) / rhs), nil
 }
 
 func Modulo(args []Value) (Value, error) {
 	lval, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
 
-	lhs, ok := lval.(Number)
+	switch lhs := lval.(type) {
+	case Number:
+		rhs, err := toInt(args[1])
+		if err != nil {
+			return nil, err
+		}
+		if rhs == 0 {
+			return nil, fmt.Errorf("modulo by zero")
+		}
 
-	if !ok {
-		return nil, fmt.Errorf("Invalid type given to '%': %T", lval)
+		return lhs % Number(rhs), nil
+
+	default:
+		return nil, fmt.Errorf("invalid type given to '%': %T", lhs)
 	}
 
-	rhs, err := toInt(args[1])
-
-	if err != nil {
-		return nil, err
-	}
-
-	if rhs == 0 {
-		return nil, fmt.Errorf("Modulo by zero attempted")
-	}
-
-	return Number(int(lhs) % rhs), nil
 }
 
 func Exponentiate(args []Value) (Value, error) {
 	lval, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
 
-	lhs, ok := lval.(Number)
+	switch lhs := lval.(type) {
+	case Number:
+		rhs, err := toInt(args[1])
+		if err != nil {
+			return nil, err
+		}
+		if rhs < 0 {
+			return nil, fmt.Errorf("Exponentiation of negative power attempted")
+		}
 
-	if !ok {
-		return nil, fmt.Errorf("Invalid type given to '^': %T", lval)
+		return Number(math.Pow(float64(lhs), float64(rhs))), nil
+
+	case List:
+		sep, err := toString(args[1])
+		if err != nil {
+			return nil, err
+		}
+
+		var sb strings.Builder
+
+		for i := 0; i < len(lhs); i++ {
+			if i != 0 {
+				sb.WriteString(sep)
+			}
+
+			sb.WriteString(lhs[i].(Literal).String())
+		}
+
+		return Text(sb.String()), nil
+
+	default:
+		return nil, fmt.Errorf("invalid type given to '^': %T", lhs)
 	}
+}
 
-	rhs, err := toInt(args[1])
+func compare(lhs, rhs Value, fn rune) (int, error) {
+	switch lhs := lhs.(type) {
+	case Number:
+		return int(lhs) - rhs.(Literal).Int(), nil
 
-	if err != nil {
-		return nil, err
+	case Text:
+		return strings.Compare(string(lhs), rhs.(Literal).String()), nil
+
+	case Boolean:
+		conv := func(b bool) int {
+			if b {
+				return 1
+			}
+			return 0
+		}
+
+		return conv(bool(lhs)) - conv(rhs.(Literal).Bool()), nil
+	case List:
+		r := rhs.(Literal).List()
+		for i := 0; i < int(math.Min(float64(len(lhs)), float64(len(r)))); i++ {
+			cmp, err := compare(lhs[i], r[i], fn)
+			if err != nil {
+				return 0, err
+			}
+			if cmp != 0 {
+				return cmp, nil
+			}
+		}
+		return len(lhs) - len(r), nil
+
+	default:
+		return 0, fmt.Errorf("invalid type given to %q: %T", fn, lhs)
 	}
-
-	if lhs == 0 && rhs < 0 {
-		return nil, fmt.Errorf("Exponentiation of zero to a negative power attempted")
-	}
-
-	return Number(int(math.Pow(float64(int(lhs)), float64(rhs)))), nil
-
 }
 
 func LessThan(args []Value) (Value, error) {
 	lval, err := args[0].Run()
-
-	if err != nil {
-		return nil, err
-	}
-
-	switch lhs := lval.(type) {
-	case Number:
-		rhs, err := toInt(args[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		return Boolean(int(lhs) < rhs), nil
-
-	case Text:
-		rhs, err := toString(args[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		return Boolean(string(lhs) < rhs), nil
-
-	case Boolean:
-		rhs, err := toBool(args[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		return Boolean(!bool(lhs) && rhs), nil
-
-	default:
-		return nil, fmt.Errorf("Invalid type given to '<': %T", lhs)
-	}
-}
-
-func GreaterThan(args []Value) (Value, error) {
-	lval, err := args[0].Run()
-
-	if err != nil {
-		return nil, err
-	}
-
-	switch lhs := lval.(type) {
-	case Number:
-		rhs, err := toInt(args[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		return Boolean(int(lhs) > rhs), nil
-
-	case Text:
-		rhs, err := toString(args[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		return Boolean(string(lhs) > rhs), nil
-
-	case Boolean:
-		rhs, err := toBool(args[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		return Boolean(bool(lhs) && !rhs), nil
-
-	default:
-		return nil, fmt.Errorf("Invalid type given to '>': %T", lhs)
-	}
-}
-
-func EqualTo(args []Value) (Value, error) {
-	lval, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
 
 	rval, err := args[1].Run()
-
 	if err != nil {
 		return nil, err
 	}
 
-	return Boolean(lval == rval), nil
+	cmp, err := compare(lval, rval, '<')
+	if err != nil {
+		return nil, err
+	}
+
+	return Boolean(cmp < 0), nil
+}
+
+func GreaterThan(args []Value) (Value, error) {
+	lval, err := args[0].Run()
+	if err != nil {
+		return nil, err
+	}
+
+	rval, err := args[1].Run()
+	if err != nil {
+		return nil, err
+	}
+
+	cmp, err := compare(lval, rval, '>')
+	if err != nil {
+		return nil, err
+	}
+
+	return Boolean(cmp > 0), nil
+}
+
+func equals(lhs, rhs Value) bool {
+	if lhs == rhs {
+		return true
+	}
+
+	switch lhs := lhs.(type) {
+	case Number:
+		if rhs, ok := rhs.(Number); ok {
+			return lhs == rhs
+		}
+		return false
+
+	case Text:
+		if rhs, ok := rhs.(Text); ok {
+			return lhs == rhs
+		}
+		return false
+
+	case Boolean:
+		if rhs, ok := rhs.(Boolean); ok {
+			return lhs == rhs
+		}
+		return false
+
+	case Null:
+		_, ok := rhs.(Null)
+		return ok
+
+	case List:
+		rhs, ok := rhs.(List)
+		if !ok {
+			return false
+		}
+		if len(lhs) != len(rhs) {
+			return false
+		}
+
+		for i := 0; i < len(lhs); i++ {
+			if !equals(lhs[i], rhs[i]) {
+				return false
+			}
+		}
+
+		return true
+
+	default:
+		return false
+	}
+}
+
+func EqualTo(args []Value) (Value, error) {
+	lval, err := args[0].Run()
+	if err != nil {
+		return nil, err
+	}
+
+	rval, err := args[1].Run()
+	if err != nil {
+		return nil, err
+	}
+
+	return Boolean(equals(lval, rval)), nil
 }
 
 func And(args []Value) (Value, error) {
 	lval, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
 
-	lhs, ok := lval.(Literal)
-
-	if !ok {
-		return nil, fmt.Errorf("Invalid type given to '&': %T", lval)
-	}
-
-	if lhs.Bool() {
+	if lval.(Literal).Bool() {
 		return args[1].Run()
 	}
 
@@ -566,28 +625,19 @@ func And(args []Value) (Value, error) {
 
 func Or(args []Value) (Value, error) {
 	lval, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
 
-	lhs, ok := lval.(Literal)
-
-	if !ok {
-		return nil, fmt.Errorf("Invalid type given to '|': %T", lval)
-	}
-
-	if !lhs.Bool() {
+	if !lval.(Literal).Bool() {
 		return args[1].Run()
 	}
 
 	return lval, nil
-
 }
 
 func Then(args []Value) (Value, error) {
 	_, err := args[0].Run()
-
 	if err != nil {
 		return nil, err
 	}
@@ -597,13 +647,11 @@ func Then(args []Value) (Value, error) {
 
 func Assign(args []Value) (Value, error) {
 	lval, ok := args[0].(*Variable)
-
 	if !ok {
-		return nil, fmt.Errorf("Invalid type given to '=': %T", lval)
+		return nil, fmt.Errorf("invalid type given to '=': %T", lval)
 	}
 
 	rval, err := args[1].Run()
-
 	if err != nil {
 		return nil, err
 	}
@@ -616,30 +664,75 @@ func Assign(args []Value) (Value, error) {
 func While(args []Value) (Value, error) {
 	for {
 		cond, err := toBool(args[0])
-
 		if err != nil {
 			return nil, err
 		}
 
 		if !cond {
-			break
+			return Null{}, nil
 		}
 
-		_, err = args[1].Run()
-
-		if err != nil {
+		if _, err = args[1].Run(); err != nil {
 			return nil, err
 		}
 	}
 
-	return Null{}, nil
+}
+
+func Range(args []Value) (Value, error) {
+	lval, err := args[0].Run()
+	if err != nil {
+		return nil, err
+	}
+
+	switch lhs := lval.(type) {
+	case Number:
+		start := lhs
+		stop, err := toInt(args[1])
+		if err != nil {
+			return nil, err
+		}
+
+		if start > Number(stop) {
+			return nil, fmt.Errorf("invalid values to range: %d > %d", start, stop)
+		}
+
+		ret := make(List, 0, Number(stop)-start)
+		for curr := start; curr != Number(stop); curr++ {
+			ret = append(ret, curr)
+		}
+		return ret, nil
+
+	case Text:
+		if len(lhs) == 0 {
+			return nil, fmt.Errorf("empty start given to range")
+		}
+		start := lhs[0]
+
+		rhs, err := toString(args[1])
+		if err != nil {
+			return nil, err
+		}
+		if len(rhs) == 0 {
+			return nil, fmt.Errorf("empty stop given to range")
+		}
+		stop := rhs[0]
+
+		ret := make(List, 0, int32(stop)-int32(start))
+		for curr := start; curr != stop; curr++ {
+			ret = append(ret, Text(curr))
+		}
+		return ret, nil
+
+	default:
+		return nil, fmt.Errorf("invalid type given to '.': %T", lhs)
+	}
 }
 
 /** ARITY THREE **/
 
 func If(args []Value) (Value, error) {
 	cond, err := toBool(args[0])
-
 	if err != nil {
 		return nil, err
 	}
@@ -652,29 +745,32 @@ func If(args []Value) (Value, error) {
 }
 
 func Get(args []Value) (Value, error) {
-	str, err := toString(args[0])
-
+	collection, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
 	start, err := toInt(args[1])
-
 	if err != nil {
 		return nil, err
 	}
 
 	amnt, err := toInt(args[2])
-
 	if err != nil {
 		return nil, err
 	}
 
-	if start == len(str) {
-		return Text(""), nil
-	}
+	switch lhs := collection.(type) {
+	case Text:
+		if len(lhs) <= start+amnt {
+			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(lhs), start, amnt)
+		}
 
-	return Text(str[start : start+amnt]), nil
+		return lhs[start : start+amnt], nil
+
+	default:
+		return nil, fmt.Errorf("invalid type given to '.': %T", lhs)
+	}
 }
 
 /** ARITY FOUR **/
@@ -709,7 +805,7 @@ func Substitute(args []Value) (Value, error) {
 	}
 
 	if start == 0 && len(repl) == 0 {
-		return Text(str[amnt:]), nil 
+		return Text(str[amnt:]), nil
 	}
 
 	return Text(str[:start] + repl + str[start+amnt:]), nil

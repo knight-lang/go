@@ -25,9 +25,9 @@ func run(s string) knight.Value {
 }
 
 func main() {
-// go func() {
-// 	log.Println(http.ListenAndServe("localhost:6060", nil))
-// }()
+	// go func() {
+	// 	log.Println(http.ListenAndServe("localhost:6060", nil))
+	// }()
 
 	if len(os.Args) != 3 || (os.Args[1] != "-e" && os.Args[1] != "-f") {
 		fmt.Printf("usage: %s (-e 'expr' | -f file)", os.Args[0])

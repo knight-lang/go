@@ -2,7 +2,6 @@ package knight
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type Boolean bool
@@ -23,10 +22,19 @@ func (b Boolean) Int() int {
 	if b {
 		return 1
 	}
-
 	return 0
 }
 
 func (b Boolean) String() string {
-	return strconv.FormatBool(bool(b))
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
+func (b Boolean) List() []Value {
+	if b {
+		return []Value{b}
+	}
+	return nil
 }

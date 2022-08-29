@@ -9,4 +9,5 @@ type Literal interface {
 	Bool() bool
 	Int() int
 	String() string
+	List() []Value
 }
