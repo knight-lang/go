@@ -5,31 +5,39 @@ import (
 	"strings"
 )
 
+// List is the list type within Knight, and is simply a wrapper around `[]Value`.
 type List []Value
 
+// Compile-time assertion that `List`s implement the `Literal` interface.
 var _ Literal = List{}
 
+// Run simply returns `l` unchanged.
 func (l List) Run() (Value, error) {
 	return l, nil
 }
 
+// Dump prints a debugging representation of `l` to stdout.
 func (l List) Dump() {
 	fmt.Printf("List(%q)", l)
 }
 
-func (l List) Bool() bool {
+// Bool returns whether `l` is nonempty.
+func (l List) ToBoolean() Boolean {
 	return len(l) != 0
 }
 
-func (l List) Int() int {
-	return len(l)
+// Int returns `l`'s length.
+func (l List) ToNumber() Number {
+	return Number(len(l))
 }
 
-func (l List) String() string {
-	return l.Join("\n")
+// String returns `l` converted to a string, with `\n` inserted between each element.
+func (l List) ToText() Text {
+	return Text(l.Join("\n"))
 }
 
-func (l List) List() List {
+// List simply returns `l`.
+func (l List) ToList() List {
 	return l
 }
 
@@ -41,7 +49,7 @@ func (l List) Join(sep string) string {
 			sb.WriteString(sep)
 		}
 
-		sb.WriteString(ele.(interface{ String() string }).String())
+		sb.WriteString(string(ele.(interface{ ToText() Text }).ToText()))
 	}
 
 	return sb.String()

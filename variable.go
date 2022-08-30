@@ -1,6 +1,8 @@
 package knight
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Variable struct {
 	name  string

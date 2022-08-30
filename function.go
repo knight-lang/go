@@ -7,14 +7,37 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
+// Function is a type representing a function within Knight.
+//
+// Each `Function`'s `fn` expects to receive exactly `arity` arguments
 type Function struct {
 	name  rune
 	arity int
-	body  func([]Value) (Value, error)
+	fn    func([]Value) (Value, error)
+}
+
+var functions map[rune]*Function = make(map[rune]*Function)
+
+func NewFunction(name rune, arity int, fn func([]Value) (Value, error)) *Function {
+	return &Function{name: name, arity: arity, fn: fn}
+}
+
+func GetFunction(name rune) *Function {
+	if fn, ok := functions[name]; ok {
+		return fn
+	}
+
+	return nil
+}
+
+func RegisterFunction(name rune, arity int, fn func([]Value) (Value, error)) {
+	functions[name] = &Function{name: name, arity: arity, fn: fn}
 }
 
 type Ast struct {
@@ -22,24 +45,8 @@ type Ast struct {
 	args []Value
 }
 
-var functions map[rune]*Function = make(map[rune]*Function)
-
-func GetFunction(r rune) *Function {
-	val, ok := functions[r]
-
-	if !ok {
-		return nil
-	}
-
-	return val
-}
-
-func RegisterFunction(name rune, arity int, body func([]Value) (Value, error)) {
-	functions[name] = &Function{name: name, arity: arity, body: body}
-}
-
 func (a *Ast) Run() (Value, error) {
-	return a.fun.body(a.args)
+	return a.fun.fn(a.args)
 }
 
 func (a *Ast) Dump() {
@@ -69,6 +76,7 @@ func init() {
 	RegisterFunction('D', 1, Dump)
 	RegisterFunction('O', 1, Output)
 	RegisterFunction('A', 1, Ascii)
+	RegisterFunction('~', 1, Negate)
 
 	RegisterFunction('+', 2, Add)
 	RegisterFunction('-', 2, Subtract)
@@ -92,14 +100,14 @@ func init() {
 	RegisterFunction('S', 4, Substitute)
 }
 
-func toString(value Value) (string, error) {
+func toString(value Value) (Text, error) {
 	ran, err := value.Run()
 
 	if err != nil {
 		return "", err
 	}
 
-	return ran.(Literal).String(), nil
+	return ran.(Literal).ToText(), nil
 }
 
 func toNumber(value Value) (Number, error) {
@@ -109,17 +117,17 @@ func toNumber(value Value) (Number, error) {
 		return Number(0), err
 	}
 
-	return Number(ran.(Literal).Int()), nil
+	return ran.(Literal).ToNumber(), nil
 }
 
-func toBool(value Value) (bool, error) {
+func toBoolean(value Value) (Boolean, error) {
 	ran, err := value.Run()
 
 	if err != nil {
 		return false, err
 	}
 
-	return ran.(Literal).Bool(), nil
+	return ran.(Literal).ToBoolean(), nil
 }
 
 func toList(value Value) (List, error) {
@@ -129,16 +137,15 @@ func toList(value Value) (List, error) {
 		return nil, err
 	}
 
-	return ran.(Literal).List(), nil
+	return ran.(Literal).ToList(), nil
 }
 
 /** ARITY ZERO **/
 
 var reader = bufio.NewReader(os.Stdin)
 
-func Prompt([]Value) (Value, error) {
+func Prompt(_ []Value) (Value, error) {
 	line, _, err := reader.ReadLine()
-
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +153,7 @@ func Prompt([]Value) (Value, error) {
 	return Text(line), err
 }
 
-func Random([]Value) (Value, error) {
+func Random(_ []Value) (Value, error) {
 	return Number(rand.Int63()), nil
 }
 
@@ -165,12 +172,12 @@ func Block(args []Value) (Value, error) {
 }
 
 func Call(args []Value) (Value, error) {
-	ran, err := args[0].Run()
+	block, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	return ran.Run()
+	return block.Run()
 }
 
 func System(args []Value) (Value, error) {
@@ -184,7 +191,7 @@ func System(args []Value) (Value, error) {
 		shell = s
 	}
 
-	command := exec.Command(shell, "-c", cmd)
+	command := exec.Command(shell, "-c", string(cmd))
 	command.Stdin = os.Stdin
 	stdout, err := command.Output()
 	if err != nil {
@@ -205,12 +212,12 @@ func Quit(args []Value) (Value, error) {
 }
 
 func Not(args []Value) (Value, error) {
-	bool, err := toBool(args[0])
+	boolean, err := toBoolean(args[0])
 	if err != nil {
 		return nil, err
 	}
 
-	return Boolean(!bool), nil
+	return !boolean, nil
 }
 
 func Length(args []Value) (Value, error) {
@@ -223,15 +230,15 @@ func Length(args []Value) (Value, error) {
 }
 
 func Dump(args []Value) (Value, error) {
-	val, err := args[0].Run()
+	ran, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	val.Dump()
+	ran.Dump()
 	fmt.Println()
 
-	return val, nil
+	return ran, nil
 }
 
 func Output(args []Value) (Value, error) {
@@ -250,29 +257,39 @@ func Output(args []Value) (Value, error) {
 }
 
 func Ascii(args []Value) (Value, error) {
-	val, err := args[0].Run()
+	ran, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	switch lhs := val.(type) {
+	switch value := ran.(type) {
 	case Number:
-		if lhs <= 0 || 127 < lhs {
-			return nil, fmt.Errorf("invalid number given to 'A': %d", lhs)
+		if !utf8.ValidRune(rune(value)) {
+			return nil, fmt.Errorf("invalid integer given to 'A': %d", value)
 		}
 
-		return Text(rune(lhs)), nil
+		return Text(rune(value)), nil
 
 	case Text:
-		if lhs == "" {
+		if value == "" {
 			return nil, fmt.Errorf("empty string given to 'A'")
 		}
 
-		return Number(lhs[0]), nil
+		rune, _ := value.FirstRune()
+		return Number(rune), nil
 
 	default:
-		return nil, fmt.Errorf("invalid type given to 'A': %T", lhs)
+		return nil, fmt.Errorf("invalid type given to 'A': %T", value)
 	}
+}
+
+func Negate(args []Value) (Value, error) {
+	number, err := toNumber(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return -number, nil
 }
 
 /** ARITY TWO **/
@@ -298,9 +315,10 @@ func Add(args []Value) (Value, error) {
 			return nil, err
 		}
 
+		// using `strings.Builder` is a bit more efficient than concating and stuff.
 		var sb strings.Builder
 		sb.WriteString(string(lhs))
-		sb.WriteString(rhs)
+		sb.WriteString(string(rhs))
 
 		return Text(sb.String()), nil
 
@@ -456,17 +474,7 @@ func Exponentiate(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		var sb strings.Builder
-
-		for i := 0; i < len(lhs); i++ {
-			if i != 0 {
-				sb.WriteString(sep)
-			}
-
-			sb.WriteString(lhs[i].(Literal).String())
-		}
-
-		return Text(sb.String()), nil
+		return Text(lhs.Join(string(sep))), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '^': %T", lhs)
@@ -476,32 +484,33 @@ func Exponentiate(args []Value) (Value, error) {
 func compare(lhs, rhs Value, fn rune) (int, error) {
 	switch lhs := lhs.(type) {
 	case Number:
-		return int(lhs) - rhs.(Literal).Int(), nil
+		return int(lhs - rhs.(Literal).ToNumber()), nil
 
 	case Text:
-		return strings.Compare(string(lhs), rhs.(Literal).String()), nil
+		return strings.Compare(string(lhs), string(rhs.(Literal).ToText())), nil
 
 	case Boolean:
-		conv := func(b bool) int {
-			if b {
-				return 1
-			}
-			return 0
+		return int(lhs.ToNumber() - rhs.(Literal).ToBoolean().ToNumber()), nil
+
+	case List:
+		rhs := rhs.(Literal).ToList()
+		min_len := len(lhs)
+		if len(rhs) < min_len {
+			min_len = len(rhs)
 		}
 
-		return conv(bool(lhs)) - conv(rhs.(Literal).Bool()), nil
-	case List:
-		r := rhs.(Literal).List()
-		for i := 0; i < int(math.Min(float64(len(lhs)), float64(len(r)))); i++ {
-			cmp, err := compare(lhs[i], r[i], fn)
+		for i := 0; i < min_len; i++ {
+			cmp, err := compare(lhs[i], rhs[i], fn)
 			if err != nil {
 				return 0, err
 			}
+
 			if cmp != 0 {
 				return cmp, nil
 			}
 		}
-		return len(lhs) - len(r), nil
+
+		return len(lhs) - len(rhs), nil
 
 	default:
 		return 0, fmt.Errorf("invalid type given to %q: %T", fn, lhs)
@@ -509,17 +518,17 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 }
 
 func LessThan(args []Value) (Value, error) {
-	lval, err := args[0].Run()
+	lhs, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	rval, err := args[1].Run()
+	rhs, err := args[1].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	cmp, err := compare(lval, rval, '<')
+	cmp, err := compare(lhs, rhs, '<')
 	if err != nil {
 		return nil, err
 	}
@@ -528,72 +537,22 @@ func LessThan(args []Value) (Value, error) {
 }
 
 func GreaterThan(args []Value) (Value, error) {
-	lval, err := args[0].Run()
+	lhs, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	rval, err := args[1].Run()
+	rhs, err := args[1].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	cmp, err := compare(lval, rval, '>')
+	cmp, err := compare(lhs, rhs, '>')
 	if err != nil {
 		return nil, err
 	}
 
 	return Boolean(cmp > 0), nil
-}
-
-func equals(lhs, rhs Value) bool {
-	if lhs == rhs {
-		return true
-	}
-
-	switch lhs := lhs.(type) {
-	case Number:
-		if rhs, ok := rhs.(Number); ok {
-			return lhs == rhs
-		}
-		return false
-
-	case Text:
-		if rhs, ok := rhs.(Text); ok {
-			return lhs == rhs
-		}
-		return false
-
-	case Boolean:
-		if rhs, ok := rhs.(Boolean); ok {
-			return lhs == rhs
-		}
-		return false
-
-	case Null:
-		_, ok := rhs.(Null)
-		return ok
-
-	case List:
-		rhs, ok := rhs.(List)
-		if !ok {
-			return false
-		}
-		if len(lhs) != len(rhs) {
-			return false
-		}
-
-		for i := 0; i < len(lhs); i++ {
-			if !equals(lhs[i], rhs[i]) {
-				return false
-			}
-		}
-
-		return true
-
-	default:
-		return false
-	}
 }
 
 func EqualTo(args []Value) (Value, error) {
@@ -607,7 +566,8 @@ func EqualTo(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	return Boolean(equals(lval, rval)), nil
+	// `DeepEqual` happens to correspond exactly to knight's equality semantics
+	return Boolean(reflect.DeepEqual(lval, rval)), nil
 }
 
 func And(args []Value) (Value, error) {
@@ -616,7 +576,7 @@ func And(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	if lval.(Literal).Bool() {
+	if lval.(Literal).ToBoolean() {
 		return args[1].Run()
 	}
 
@@ -629,7 +589,7 @@ func Or(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	if !lval.(Literal).Bool() {
+	if !lval.(Literal).ToBoolean() {
 		return args[1].Run()
 	}
 
@@ -637,8 +597,7 @@ func Or(args []Value) (Value, error) {
 }
 
 func Then(args []Value) (Value, error) {
-	_, err := args[0].Run()
-	if err != nil {
+	if _, err := args[0].Run(); err != nil {
 		return nil, err
 	}
 
@@ -646,30 +605,30 @@ func Then(args []Value) (Value, error) {
 }
 
 func Assign(args []Value) (Value, error) {
-	lval, ok := args[0].(*Variable)
+	variable, ok := args[0].(*Variable)
 	if !ok {
-		return nil, fmt.Errorf("invalid type given to '=': %T", lval)
+		return nil, fmt.Errorf("invalid type given to '=': %T", variable)
 	}
 
-	rval, err := args[1].Run()
+	value, err := args[1].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	lval.Assign(rval)
+	variable.Assign(value)
 
-	return rval, nil
+	return value, nil
 }
 
 func While(args []Value) (Value, error) {
 	for {
-		cond, err := toBool(args[0])
+		cond, err := toBoolean(args[0])
 		if err != nil {
 			return nil, err
 		}
 
 		if !cond {
-			return Null{}, nil
+			break
 		}
 
 		if _, err = args[1].Run(); err != nil {
@@ -677,6 +636,7 @@ func While(args []Value) (Value, error) {
 		}
 	}
 
+	return Null{}, nil
 }
 
 func Range(args []Value) (Value, error) {
@@ -693,36 +653,43 @@ func Range(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		if start > Number(stop) {
+		if stop < start {
 			return nil, fmt.Errorf("invalid values to range: %d > %d", start, stop)
 		}
 
-		ret := make(List, 0, Number(stop)-start)
-		for curr := start; curr != Number(stop); curr++ {
-			ret = append(ret, curr)
+		list := make(List, 0, stop-start)
+		for current := start; current < stop; current++ {
+			list = append(list, current)
 		}
-		return ret, nil
+
+		return list, nil
 
 	case Text:
-		if len(lhs) == 0 {
+		if lhs == "" {
 			return nil, fmt.Errorf("empty start given to range")
 		}
-		start := lhs[0]
 
 		rhs, err := toString(args[1])
 		if err != nil {
 			return nil, err
 		}
-		if len(rhs) == 0 {
+		if rhs == "" {
 			return nil, fmt.Errorf("empty stop given to range")
 		}
-		stop := rhs[0]
 
-		ret := make(List, 0, int32(stop)-int32(start))
-		for curr := start; curr != stop; curr++ {
-			ret = append(ret, Text(curr))
+		start, _ := lhs.FirstRune()
+		stop, _ := rhs.FirstRune()
+
+		if stop < start {
+			return nil, fmt.Errorf("invalid values to range: %q > %q", start, stop)
 		}
-		return ret, nil
+
+		rng := make(List, stop-start)
+		for i := rune(0); i < stop-start; i++ {
+			rng[i] = Text(start + i)
+		}
+
+		return rng, nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '.': %T", lhs)
@@ -732,7 +699,7 @@ func Range(args []Value) (Value, error) {
 /** ARITY THREE **/
 
 func If(args []Value) (Value, error) {
-	cond, err := toBool(args[0])
+	cond, err := toBoolean(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -768,17 +735,18 @@ func Get(args []Value) (Value, error) {
 
 	switch collection := collection.(type) {
 	case Text:
-		if len(collection) <= int(start+length) {
+		if Number(len(collection)) <= start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
 		return collection[start : start+length], nil
 
 	case List:
-		if len(collection) <= int(start+length) {
+		if Number(len(collection)) <= start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
+		// special case for returning _just_ the element at that index.
 		if length == 0 {
 			return collection[start], nil
 		}
@@ -803,7 +771,7 @@ func Substitute(args []Value) (Value, error) {
 		return nil, err
 	}
 	if start < 0 {
-		return nil, fmt.Errorf("negative start given to GET (%d)", start)
+		return nil, fmt.Errorf("negative start given to SET (%d)", start)
 	}
 
 	length, err := toNumber(args[2])
@@ -811,46 +779,45 @@ func Substitute(args []Value) (Value, error) {
 		return nil, err
 	}
 	if length < 0 {
-		return nil, fmt.Errorf("negative length given to GET (%d)", length)
+		return nil, fmt.Errorf("negative length given to SET (%d)", length)
 	}
 
 	switch collection := collection.(type) {
 	case Text:
-		repl, err := toString(args[3])
+		if Number(len(collection)) <= start+length {
+			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
+		}
+
+		replacement, err := toString(args[3])
 		if err != nil {
 			return nil, err
 		}
 
-		if len(collection) <= int(start+length) {
-			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
-		}
-
-		if int(start) == len(collection) && length == 0 {
-			return collection + Text(repl), nil
-		}
-
-		if start == 0 && len(repl) == 0 {
-			return collection[length:], nil
-		}
-
-		return collection[:start] + Text(repl) + collection[start+length:], nil
+		return collection[:start] + replacement + collection[start+length:], nil
 
 	case List:
-		repl, err := toList(args[3])
+		if Number(len(collection)) <= start+length {
+			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
+		}
+
+		replacement, err := args[3].Run()
 		if err != nil {
 			return nil, err
 		}
 
-		// fixme: verify bounds
-		if len(collection) <= int(start+length) {
-			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
-		}
-
+		// Special case for `SET` where we replace just that element.
 		if length == 0 {
-			return collection[start], nil
+			ret := make(List, len(collection))
+			copy(ret, collection)
+			ret[start] = replacement
+			return ret, nil
 		}
 
-		return append(append(collection[:start], repl...), collection[start+length:]...), nil
+		begin := collection[:start]
+		middle := replacement.(Literal).ToList()
+		end := collection[start+length:]
+
+		return append(append(begin, middle...), end...), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to 'S': %T", collection)

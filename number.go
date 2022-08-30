@@ -17,10 +17,19 @@ func (n Number) Dump() {
 	fmt.Printf("Number(%d)", n)
 }
 
-func (n Number) Bool() bool     { return n != 0 }
-func (n Number) Int() int       { return int(n) }
-func (n Number) String() string { return strconv.Itoa(int(n)) }
-func (n Number) List() List {
+func (n Number) ToBoolean() Boolean {
+	return n != 0
+}
+
+func (n Number) ToNumber() Number {
+	return n
+}
+
+func (n Number) ToText() Text {
+	return Text(strconv.Itoa(int(n)))
+}
+
+func (n Number) ToList() List {
 	if n < 0 {
 		panic("negative value given to list")
 	}

@@ -6,8 +6,8 @@ type Value interface {
 }
 
 type Literal interface {
-	Bool() bool
-	Int() int
-	String() string
-	List() List
+	ToBoolean() Boolean
+	ToNumber() Number
+	ToText() Text
+	ToList() List
 }

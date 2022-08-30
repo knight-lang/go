@@ -6,13 +6,13 @@ import (
 	"unicode"
 )
 
-/// Parser is used to parse `Value`s from source code.
+// Parser is used to parse `Value`s from source code.
 type Parser struct {
 	source []rune
 	index  int
 }
 
-/// NewParser creates a Parser for the given source string
+// NewParser creates a Parser for the given source string
 func NewParser(source string) Parser {
 	return Parser{source: []rune(source)}
 }
@@ -21,7 +21,8 @@ func (p *Parser) isEOF() bool {
 	return len(p.source) <= p.index
 }
 
-// This is a function because we only need to look at itonce
+// This is a function, and not an instance variable, because we only need to determine it
+// when an error is happening (at which point, efficiency is irrelevant)
 func (p *Parser) linenoAt(index int) int {
 	lineno := 0
 
@@ -36,7 +37,7 @@ func (p *Parser) linenoAt(index int) int {
 
 func (p *Parser) peek() rune {
 	if p.isEOF() {
-		panic("peeking empty parser")
+		panic("peeking at an empty parser")
 	}
 
 	return p.source[p.index]
@@ -47,36 +48,42 @@ func (p *Parser) advance() {
 }
 
 func (p *Parser) takeWhile(cond func(rune) bool) string {
-	start := p.source
+	start := p.index
 
 	for !p.isEOF() && cond(p.peek()) {
 		p.advance()
 	}
 
-	return string(start[:len(start)-len(p.source)])
+	return string(p.source[start:p.index])
 }
 
 func (p *Parser) strip() {
-	not_newline := func(r rune) bool { return r != '\n' }
+	isnt_newline := func(r rune) bool { return r != '\n' }
 	is_whitespace := func(r rune) bool {
 		return unicode.IsSpace(r) || r == '(' || r == ')' || r == ':'
 	}
 
-	for !p.isEOF() {
+	for {
+		// first, strip all leading whitespace.
 		p.takeWhile(is_whitespace)
 
+		// Then, if the next character isn't the start of a comment, we're done stripping.
 		if p.isEOF() || p.peek() != '#' {
-			break
+			return
 		}
 
-		p.takeWhile(not_newline)
+		p.takeWhile(isnt_newline)
 	}
 }
 
+// Parse returns the next Value within the parser's source code.
+//
+// If there's nothing left to parse, `nil` is returned for the `Value`.
 func (p *Parser) Parse(e *Environment) (Value, error) {
 	is_digit := func(r rune) bool { return '0' <= r && r <= '9' }
 	is_lower := func(r rune) bool { return unicode.IsLower(r) || r == '_' }
 	is_upper := func(r rune) bool { return unicode.IsUpper(r) || r == '_' }
+	is_ident_body := func(r rune) bool { return is_lower(r) || is_digit(r) }
 
 	// Remove whitespace, and return `nil, nil` if at EOF.
 	p.strip()
@@ -94,23 +101,22 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 
 	// Parse identifiers.
 	if is_lower(head) {
-		name := p.takeWhile(func(r rune) bool { return is_lower(r) || is_digit(r) })
-
-		return e.Lookup(name), nil
+		return e.Lookup(p.takeWhile(is_ident_body)), nil
 	}
 
 	// Parse strings.
 	if head == '\'' || head == '"' {
 		p.advance() // gobble up the quote
+
 		start_index := p.index
-		body := p.takeWhile(func(r rune) bool { return r != head })
+		contents := p.takeWhile(func(r rune) bool { return r != head })
 
 		if p.isEOF() {
 			return nil, fmt.Errorf("[line %d] unterminated %q string", p.linenoAt(start_index), head)
 		}
 
 		p.advance()
-		return Text(body), nil
+		return Text(contents), nil
 	}
 
 	// Everything else follows the function format, so remove it accordingly.
@@ -147,17 +153,15 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 		args: make([]Value, fun.arity),
 	}
 
+	// Parse each argument and add them to the `ast`'s body.
 	for i := 0; i < fun.arity; i++ {
-		// `p.Parse` will return one of:
-		// - `nil, <err>` if an error occurred
-		// - `nil, nil` if nothing could be parsed (i.e. EOF)
-		// - `<val>, nil` if no errors occured and it could parse something.
 		arg, err := p.Parse(e)
 
 		if err != nil {
 			return nil, err
 		}
 
+		// `arg` is nil when nothing could be parsed. This means an argument was missing.
 		if arg == nil {
 			return nil, fmt.Errorf("[line %d] missing argument %d for function %q",
 				p.linenoAt(start_index), i, fun.name)
