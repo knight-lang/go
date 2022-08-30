@@ -45,6 +45,9 @@ type Ast struct {
 	args []Value
 }
 
+// Compile-time assertion that `Ast`s implements the `Value` interface.
+var _ Value = &Ast{}
+
 func (a *Ast) Run() (Value, error) {
 	return a.fun.fn(a.args)
 }
@@ -107,7 +110,7 @@ func toString(value Value) (Text, error) {
 		return "", err
 	}
 
-	return ran.(Literal).ToText(), nil
+	return ran.(Convertible).ToText(), nil
 }
 
 func toNumber(value Value) (Number, error) {
@@ -117,7 +120,7 @@ func toNumber(value Value) (Number, error) {
 		return Number(0), err
 	}
 
-	return ran.(Literal).ToNumber(), nil
+	return ran.(Convertible).ToNumber(), nil
 }
 
 func toBoolean(value Value) (Boolean, error) {
@@ -127,7 +130,7 @@ func toBoolean(value Value) (Boolean, error) {
 		return false, err
 	}
 
-	return ran.(Literal).ToBoolean(), nil
+	return ran.(Convertible).ToBoolean(), nil
 }
 
 func toList(value Value) (List, error) {
@@ -137,7 +140,7 @@ func toList(value Value) (List, error) {
 		return nil, err
 	}
 
-	return ran.(Literal).ToList(), nil
+	return ran.(Convertible).ToList(), nil
 }
 
 /** ARITY ZERO **/
@@ -484,16 +487,16 @@ func Exponentiate(args []Value) (Value, error) {
 func compare(lhs, rhs Value, fn rune) (int, error) {
 	switch lhs := lhs.(type) {
 	case Number:
-		return int(lhs - rhs.(Literal).ToNumber()), nil
+		return int(lhs - rhs.(Convertible).ToNumber()), nil
 
 	case Text:
-		return strings.Compare(string(lhs), string(rhs.(Literal).ToText())), nil
+		return strings.Compare(string(lhs), string(rhs.(Convertible).ToText())), nil
 
 	case Boolean:
-		return int(lhs.ToNumber() - rhs.(Literal).ToBoolean().ToNumber()), nil
+		return int(lhs.ToNumber() - rhs.(Convertible).ToBoolean().ToNumber()), nil
 
 	case List:
-		rhs := rhs.(Literal).ToList()
+		rhs := rhs.(Convertible).ToList()
 		min_len := len(lhs)
 		if len(rhs) < min_len {
 			min_len = len(rhs)
@@ -576,7 +579,7 @@ func And(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	if lval.(Literal).ToBoolean() {
+	if lval.(Convertible).ToBoolean() {
 		return args[1].Run()
 	}
 
@@ -589,7 +592,7 @@ func Or(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	if !lval.(Literal).ToBoolean() {
+	if !lval.(Convertible).ToBoolean() {
 		return args[1].Run()
 	}
 

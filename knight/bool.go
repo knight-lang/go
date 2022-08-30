@@ -7,8 +7,9 @@ import (
 // Boolean is the boolean type within Knight, and is simply a wrapper around `bool`.
 type Boolean bool
 
-// Compile-time assertion that `Text`s implement the `Literal` interface.
-var _ Literal = Boolean(true)
+// Compile-time assertion that `Boolean`s implements the `Convertible` and `Value` interfaces.
+var _ Convertible = Boolean(true)
+var _ Value = Boolean(true)
 
 // Run simply returns `b` unchanged.
 func (b Boolean) Run() (Value, error) {
@@ -34,6 +35,7 @@ func (b Boolean) ToNumber() Number {
 	return 0
 }
 
+// ToText returns the string representation of `b`.
 func (b Boolean) ToText() Text {
 	if b {
 		return "true"
@@ -41,6 +43,7 @@ func (b Boolean) ToText() Text {
 	return "false"
 }
 
+// ToList returns `b`'s `List` representation: An empty `List` when false and `List{b}` when true.
 func (b Boolean) ToList() List {
 	if b {
 		return List{b}
