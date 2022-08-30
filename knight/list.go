@@ -18,7 +18,17 @@ func (l List) Run() (Value, error) {
 
 // Dump prints a debugging representation of `l` to stdout.
 func (l List) Dump() {
-	fmt.Printf("List(%q)", l)
+	fmt.Print("List(")
+
+	for i, ele := range l {
+		if i != 0 {
+			fmt.Print(", ")
+		}
+
+		ele.Dump()
+	}
+
+	fmt.Print(")")
 }
 
 // Bool returns whether `l` is nonempty.

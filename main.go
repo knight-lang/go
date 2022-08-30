@@ -2,27 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/knight-lang/go"
 	"io/ioutil"
 	"log"
 	"os"
-	"strings"
+
+	"github.com/knight-lang/go"
 )
 
 // import "net/http"
 // import _ "net/http/pprof"
-
-func run(s string) knight.Value {
-	val, err := knight.Parse(strings.NewReader(s))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	val.Dump()
-	fmt.Println()
-	return val
-}
 
 func main() {
 	// go func() {
@@ -48,7 +36,7 @@ func main() {
 		program = string(program_bytes)
 	}
 
-	_, err := knight.Run(program)
+	_, err := knight.Play(program)
 
 	if err != nil {
 		log.Fatal(err)

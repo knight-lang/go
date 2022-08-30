@@ -684,9 +684,11 @@ func Range(args []Value) (Value, error) {
 			return nil, fmt.Errorf("invalid values to range: %q > %q", start, stop)
 		}
 
-		rng := make(List, stop-start)
-		for i := rune(0); i < stop-start; i++ {
-			rng[i] = Text(start + i)
+		rng := make(List, 0, stop-start)
+		for curr := start; curr != stop; curr++ {
+			if utf8.ValidRune(curr) {
+				rng = append(rng, Text(curr))
+			}
 		}
 
 		return rng, nil
@@ -735,18 +737,18 @@ func Get(args []Value) (Value, error) {
 
 	switch collection := collection.(type) {
 	case Text:
-		if Number(len(collection)) <= start+length {
+		if Number(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
 		return collection[start : start+length], nil
 
 	case List:
-		if Number(len(collection)) <= start+length {
+		if Number(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
-		// special case for returning _just_ the element at that index.
+		// Special case for returning _just_ the element at that index.
 		if length == 0 {
 			return collection[start], nil
 		}
@@ -784,7 +786,7 @@ func Substitute(args []Value) (Value, error) {
 
 	switch collection := collection.(type) {
 	case Text:
-		if Number(len(collection)) <= start+length {
+		if Number(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
@@ -796,28 +798,20 @@ func Substitute(args []Value) (Value, error) {
 		return collection[:start] + replacement + collection[start+length:], nil
 
 	case List:
-		if Number(len(collection)) <= start+length {
+		if Number(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
-		replacement, err := args[3].Run()
+		begin := collection[:start]
+		end := collection[start+length:]
+
+		middle, err := toList(args[3])
 		if err != nil {
 			return nil, err
 		}
 
-		// Special case for `SET` where we replace just that element.
-		if length == 0 {
-			ret := make(List, len(collection))
-			copy(ret, collection)
-			ret[start] = replacement
-			return ret, nil
-		}
-
-		begin := collection[:start]
-		middle := replacement.(Literal).ToList()
-		end := collection[start+length:]
-
-		return append(append(begin, middle...), end...), nil
+		ret := make(List, 0, len(collection)-int(length)+len(middle))
+		return append(append(append(ret, begin...), middle...), end...), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to 'S': %T", collection)
