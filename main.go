@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/knight-lang/go"
+	"github.com/knight-lang/go/knight"
 )
 
 func die(fmtstr string, rest ...interface{}) {
