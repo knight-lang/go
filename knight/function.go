@@ -22,88 +22,56 @@ type Function struct {
 	fn    func([]Value) (Value, error)
 }
 
-var functions map[rune]*Function = make(map[rune]*Function)
-
+// NewFunction creates a new `Function` for the given args.
 func NewFunction(name rune, arity int, fn func([]Value) (Value, error)) *Function {
 	return &Function{name: name, arity: arity, fn: fn}
 }
 
-func GetFunction(name rune) *Function {
-	if fn, ok := functions[name]; ok {
-		return fn
-	}
-
-	return nil
-}
-
-func RegisterFunction(name rune, arity int, fn func([]Value) (Value, error)) {
-	functions[name] = &Function{name: name, arity: arity, fn: fn}
-}
-
-type Ast struct {
-	fun  *Function
-	args []Value
-}
-
-// Compile-time assertion that `Ast`s implements the `Value` interface.
-var _ Value = &Ast{}
-
-func (a *Ast) Run() (Value, error) {
-	return a.fun.fn(a.args)
-}
-
-func (a *Ast) Dump() {
-	fmt.Printf("Function(%c", a.fun.name)
-
-	for _, arg := range a.args {
-		fmt.Print(", ")
-		arg.Dump()
-	}
-
-	fmt.Print(")")
-}
-
+// initialize the random number generator.
 func init() {
 	rand.Seed(time.Now().UnixNano())
-
-	RegisterFunction('P', 0, Prompt)
-	RegisterFunction('R', 0, Random)
-
-	RegisterFunction(',', 1, Box)
-	RegisterFunction('B', 1, Block)
-	RegisterFunction('C', 1, Call)
-	RegisterFunction('`', 1, System)
-	RegisterFunction('Q', 1, Quit)
-	RegisterFunction('!', 1, Not)
-	RegisterFunction('L', 1, Length)
-	RegisterFunction('D', 1, Dump)
-	RegisterFunction('O', 1, Output)
-	RegisterFunction('A', 1, Ascii)
-	RegisterFunction('~', 1, Negate)
-
-	RegisterFunction('+', 2, Add)
-	RegisterFunction('-', 2, Subtract)
-	RegisterFunction('*', 2, Multiply)
-	RegisterFunction('/', 2, Divide)
-	RegisterFunction('%', 2, Modulo)
-	RegisterFunction('^', 2, Exponentiate)
-	RegisterFunction('<', 2, LessThan)
-	RegisterFunction('>', 2, GreaterThan)
-	RegisterFunction('?', 2, EqualTo)
-	RegisterFunction('&', 2, And)
-	RegisterFunction('|', 2, Or)
-	RegisterFunction(';', 2, Then)
-	RegisterFunction('=', 2, Assign)
-	RegisterFunction('W', 2, While)
-	RegisterFunction('.', 2, Range)
-
-	RegisterFunction('I', 3, If)
-	RegisterFunction('G', 3, Get)
-
-	RegisterFunction('S', 4, Substitute)
 }
 
-func toString(value Value) (Text, error) {
+// Add all the default functions to `e`.
+func populateDefaultFunctions(e *Environment) {
+	e.RegisterFunction(NewFunction('P', 0, Prompt))
+	e.RegisterFunction(NewFunction('R', 0, Random))
+
+	e.RegisterFunction(NewFunction(',', 1, Box))
+	e.RegisterFunction(NewFunction('B', 1, Block))
+	e.RegisterFunction(NewFunction('C', 1, Call))
+	e.RegisterFunction(NewFunction('`', 1, System))
+	e.RegisterFunction(NewFunction('Q', 1, Quit))
+	e.RegisterFunction(NewFunction('!', 1, Not))
+	e.RegisterFunction(NewFunction('L', 1, Length))
+	e.RegisterFunction(NewFunction('D', 1, Dump))
+	e.RegisterFunction(NewFunction('O', 1, Output))
+	e.RegisterFunction(NewFunction('A', 1, Ascii))
+	e.RegisterFunction(NewFunction('~', 1, Negate))
+
+	e.RegisterFunction(NewFunction('+', 2, Add))
+	e.RegisterFunction(NewFunction('-', 2, Subtract))
+	e.RegisterFunction(NewFunction('*', 2, Multiply))
+	e.RegisterFunction(NewFunction('/', 2, Divide))
+	e.RegisterFunction(NewFunction('%', 2, Modulo))
+	e.RegisterFunction(NewFunction('^', 2, Exponentiate))
+	e.RegisterFunction(NewFunction('<', 2, LessThan))
+	e.RegisterFunction(NewFunction('>', 2, GreaterThan))
+	e.RegisterFunction(NewFunction('?', 2, EqualTo))
+	e.RegisterFunction(NewFunction('&', 2, And))
+	e.RegisterFunction(NewFunction('|', 2, Or))
+	e.RegisterFunction(NewFunction(';', 2, Then))
+	e.RegisterFunction(NewFunction('=', 2, Assign))
+	e.RegisterFunction(NewFunction('W', 2, While))
+	e.RegisterFunction(NewFunction('.', 2, Range))
+
+	e.RegisterFunction(NewFunction('I', 3, If))
+	e.RegisterFunction(NewFunction('G', 3, Get))
+
+	e.RegisterFunction(NewFunction('S', 4, Substitute))
+}
+
+func runToText(value Value) (Text, error) {
 	ran, err := value.Run()
 
 	if err != nil {
@@ -113,17 +81,17 @@ func toString(value Value) (Text, error) {
 	return ran.(Convertible).ToText(), nil
 }
 
-func toNumber(value Value) (Number, error) {
+func runToNumber(value Value) (Number, error) {
 	ran, err := value.Run()
 
 	if err != nil {
-		return Number(0), err
+		return 0, err
 	}
 
 	return ran.(Convertible).ToNumber(), nil
 }
 
-func toBoolean(value Value) (Boolean, error) {
+func runToBoolean(value Value) (Boolean, error) {
 	ran, err := value.Run()
 
 	if err != nil {
@@ -133,7 +101,7 @@ func toBoolean(value Value) (Boolean, error) {
 	return ran.(Convertible).ToBoolean(), nil
 }
 
-func toList(value Value) (List, error) {
+func runToList(value Value) (List, error) {
 	ran, err := value.Run()
 
 	if err != nil {
@@ -145,10 +113,11 @@ func toList(value Value) (List, error) {
 
 /** ARITY ZERO **/
 
-var reader = bufio.NewReader(os.Stdin)
+// this is a global variable because there's no way to read lines without a buffered input.
+var stdinReader = bufio.NewReader(os.Stdin)
 
 func Prompt(_ []Value) (Value, error) {
-	line, _, err := reader.ReadLine()
+	line, _, err := stdinReader.ReadLine()
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +153,7 @@ func Call(args []Value) (Value, error) {
 }
 
 func System(args []Value) (Value, error) {
-	cmd, err := toString(args[0])
+	cmd, err := runToText(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -205,17 +174,17 @@ func System(args []Value) (Value, error) {
 }
 
 func Quit(args []Value) (Value, error) {
-	code, err := toNumber(args[0])
+	code, err := runToNumber(args[0])
 	if err != nil {
 		return nil, err
 	}
 
 	os.Exit(int(code))
-	panic("unreachable")
+	panic("<unreachable>")
 }
 
 func Not(args []Value) (Value, error) {
-	boolean, err := toBoolean(args[0])
+	boolean, err := runToBoolean(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +193,7 @@ func Not(args []Value) (Value, error) {
 }
 
 func Length(args []Value) (Value, error) {
-	list, err := toList(args[0])
+	list, err := runToList(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +214,7 @@ func Dump(args []Value) (Value, error) {
 }
 
 func Output(args []Value) (Value, error) {
-	str, err := toString(args[0])
+	str, err := runToText(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +256,7 @@ func Ascii(args []Value) (Value, error) {
 }
 
 func Negate(args []Value) (Value, error) {
-	number, err := toNumber(args[0])
+	number, err := runToNumber(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -297,6 +266,35 @@ func Negate(args []Value) (Value, error) {
 
 /** ARITY TWO **/
 
+func (n Number) Add(r Value) (Value, error) {
+	return n + r.(Convertible).ToNumber(), nil
+}
+
+func (t Text) Add(r Value) (Value, error) {
+	return t + r.(Convertible).ToText(), nil
+}
+
+func (l List) Add(r Value) (Value, error) {
+	return append(l, r.(Convertible).ToList()...), nil
+}
+
+func add1(args []Value) (Value, error) {
+	lval, err := args[0].Run()
+	if err != nil {
+		return nil, err
+	}
+	r, err := args[1].Run()
+	if err != nil {
+		return nil, err
+	}
+
+	if x, ok := lval.(interface{ Add(Value) (Value, error) }); ok {
+		return x.Add(r)
+	}
+
+	return nil, fmt.Errorf("invalid type given to '+': %T", lval)
+}
+
 func Add(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
@@ -305,7 +303,7 @@ func Add(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := toNumber(args[1])
+		rhs, err := runToNumber(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -313,7 +311,7 @@ func Add(args []Value) (Value, error) {
 		return lhs + rhs, nil
 
 	case Text:
-		rhs, err := toString(args[1])
+		rhs, err := runToText(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -326,7 +324,7 @@ func Add(args []Value) (Value, error) {
 		return Text(sb.String()), nil
 
 	case List:
-		rhs, err := toList(args[1])
+		rhs, err := runToList(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -346,7 +344,7 @@ func Subtract(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := toNumber(args[1])
+		rhs, err := runToNumber(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -366,7 +364,7 @@ func Multiply(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := toNumber(args[1])
+		rhs, err := runToNumber(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -374,7 +372,7 @@ func Multiply(args []Value) (Value, error) {
 		return lhs * rhs, nil
 
 	case Text:
-		amount, err := toNumber(args[1])
+		amount, err := runToNumber(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -385,7 +383,7 @@ func Multiply(args []Value) (Value, error) {
 		return Text(strings.Repeat(string(lhs), int(amount))), nil
 
 	case List:
-		amount, err := toNumber(args[1])
+		amount, err := runToNumber(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -414,7 +412,7 @@ func Divide(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := toNumber(args[1])
+		rhs, err := runToNumber(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -437,7 +435,7 @@ func Modulo(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := toNumber(args[1])
+		rhs, err := runToNumber(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -448,7 +446,7 @@ func Modulo(args []Value) (Value, error) {
 		return lhs % rhs, nil
 
 	default:
-		return nil, fmt.Errorf("invalid type given to '%': %T", lhs)
+		return nil, fmt.Errorf("invalid type given to '%%': %T", lhs)
 	}
 
 }
@@ -461,7 +459,7 @@ func Exponentiate(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := toNumber(args[1])
+		rhs, err := runToNumber(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -472,7 +470,7 @@ func Exponentiate(args []Value) (Value, error) {
 		return Number(math.Pow(float64(lhs), float64(rhs))), nil
 
 	case List:
-		sep, err := toString(args[1])
+		sep, err := runToText(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -625,7 +623,7 @@ func Assign(args []Value) (Value, error) {
 
 func While(args []Value) (Value, error) {
 	for {
-		cond, err := toBoolean(args[0])
+		cond, err := runToBoolean(args[0])
 		if err != nil {
 			return nil, err
 		}
@@ -651,7 +649,7 @@ func Range(args []Value) (Value, error) {
 	switch lhs := lval.(type) {
 	case Number:
 		start := lhs
-		stop, err := toNumber(args[1])
+		stop, err := runToNumber(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -672,7 +670,7 @@ func Range(args []Value) (Value, error) {
 			return nil, fmt.Errorf("empty start given to range")
 		}
 
-		rhs, err := toString(args[1])
+		rhs, err := runToText(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -704,7 +702,7 @@ func Range(args []Value) (Value, error) {
 /** ARITY THREE **/
 
 func If(args []Value) (Value, error) {
-	cond, err := toBoolean(args[0])
+	cond, err := runToBoolean(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -722,7 +720,7 @@ func Get(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	start, err := toNumber(args[1])
+	start, err := runToNumber(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -730,7 +728,7 @@ func Get(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to GET (%d)", start)
 	}
 
-	length, err := toNumber(args[2])
+	length, err := runToNumber(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -771,7 +769,7 @@ func Substitute(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	start, err := toNumber(args[1])
+	start, err := runToNumber(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -779,7 +777,7 @@ func Substitute(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to SET (%d)", start)
 	}
 
-	length, err := toNumber(args[2])
+	length, err := runToNumber(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -793,7 +791,7 @@ func Substitute(args []Value) (Value, error) {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
-		replacement, err := toString(args[3])
+		replacement, err := runToText(args[3])
 		if err != nil {
 			return nil, err
 		}
@@ -808,7 +806,7 @@ func Substitute(args []Value) (Value, error) {
 		begin := collection[:start]
 		end := collection[start+length:]
 
-		middle, err := toList(args[3])
+		middle, err := runToList(args[3])
 		if err != nil {
 			return nil, err
 		}

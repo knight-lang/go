@@ -13,30 +13,6 @@ type Variable struct {
 // Compile-time assertion that `Variable`s implements the `Value` interface.
 var _ Value = &Variable{}
 
-// Environment holds all the defined variables for a program.
-//
-// This isn't needed when executing `Value`s, as there's no way to dynamically look up variables
-// within Knight (without extensions).
-type Environment struct {
-	variables map[string]*Variable
-}
-
-// NewEnvironment creates a blank `Environment`.
-func NewEnvironment() Environment {
-	return Environment{variables: make(map[string]*Variable)}
-}
-
-// Lookup fetches the variable corresponding to `name`. If one doesn't exist, it is created.
-func (e *Environment) Lookup(name string) *Variable {
-	if variable, ok := e.variables[name]; ok {
-		return variable
-	}
-
-	variable := &Variable{name: name}
-	e.variables[name] = variable
-	return variable
-}
-
 // Run looks up the last-assigned value for `v`, returning an error if `v` is unassigned.
 func (v *Variable) Run() (Value, error) {
 	if v.value == nil {

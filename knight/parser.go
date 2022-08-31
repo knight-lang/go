@@ -139,22 +139,19 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 		return &List{}, nil
 	}
 
-	// Fetch the function, if it doesn't exist it means it's an invalid identifier.
-	fun := GetFunction(head)
-	if fun == nil {
-		return nil, fmt.Errorf("[line %d] unknown token start: %q", head)
-	}
-
 	// Start index is for error messages.
 	startIndex := p.index
 
-	// Create the ast, and parse out all its arguments.
-	ast := &Ast{
-		fun:  fun,
-		args: make([]Value, fun.arity),
+	// Fetch the function, if it doesn't exist it means it's an invalid identifier.
+	fun := e.GetFunction(head)
+	if fun == nil {
+		return nil, fmt.Errorf("[line %d] unknown token start: %q", p.linenoAt(startIndex), head)
 	}
 
-	// Parse each argument and add them to the `ast`'s body.
+	// Create the ast, and parse out all its arguments.
+	args := make([]Value, fun.arity)
+
+	// Parse each argument and add them to the `args`.
 	for i := 0; i < fun.arity; i++ {
 		arg, err := p.Parse(e)
 
@@ -168,8 +165,8 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 				p.linenoAt(startIndex), i, fun.name)
 		}
 
-		ast.args[i] = arg
+		args[i] = arg
 	}
 
-	return ast, nil
+	return NewAst(fun, args), nil
 }
