@@ -23,7 +23,3 @@ type Convertible interface {
 	// ToList coerces the `Convertible` to a `List`.
 	ToList() List
 }
-
-type Texter interface {
-	Text() Text
-}
