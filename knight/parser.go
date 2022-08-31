@@ -77,9 +77,12 @@ func (p *Parser) strip() {
 	}
 }
 
+// NothingToParse indicates that `Parser.Parse` was called when no more tokens remained.
+var NothingToParse = fmt.Errorf("nothing to parse")
+
 // Parse returns the next Value within the parser's source code.
 //
-// If there's nothing left to parse, `nil` is returned for the `Value`.
+// If there's nothing left to parse, `NothingToParse` is returned.
 func (p *Parser) Parse(e *Environment) (Value, error) {
 	isDigit := func(r rune) bool { return '0' <= r && r <= '9' }
 	isLower := func(r rune) bool { return unicode.IsLower(r) || r == '_' }
@@ -89,7 +92,7 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 	// Remove whitespace, and return `nil, nil` if at EOF.
 	p.strip()
 	if p.isEOF() {
-		return nil, nil // nothing's wrong, there's just nothing to parse.
+		return nil, NothingToParse
 	}
 
 	head := p.peek()
@@ -155,14 +158,13 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 	for i := 0; i < fun.arity; i++ {
 		arg, err := p.Parse(e)
 
-		if err != nil {
-			return nil, err
-		}
-
-		// `arg` is nil when nothing could be parsed. This means an argument was missing.
-		if arg == nil {
+		if err == NothingToParse {
 			return nil, fmt.Errorf("[line %d] missing argument %d for function %q",
 				p.linenoAt(startIndex), i, fun.name)
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		args[i] = arg

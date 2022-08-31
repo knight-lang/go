@@ -10,13 +10,13 @@ type Environment struct {
 }
 
 // NewEnvironment creates a blank `Environment`.
-func NewEnvironment() Environment {
-	env := Environment{
+func NewEnvironment() *Environment {
+	env := &Environment{
 		variables: make(map[string]*Variable),
 		functions: make(map[rune]*Function),
 	}
 
-	populateDefaultFunctions(&env)
+	populateDefaultFunctions(env)
 	return env
 }
 

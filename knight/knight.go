@@ -4,17 +4,12 @@ import (
 	"fmt"
 )
 
-// NothingToParse is the error that's returned when `Play` is given a source string that's empty or
-// just comments and whitespace.
-var NothingToParse = fmt.Errorf("nothing to parse")
-
 // Play parses `source` as Knight code, and then executes it.
 //
 // Note that each call to `Play` uses a different set of variables. USe `PlayWithEnvironment` if
 // you want to reuse variables.
 func Play(source string) (Value, error) {
-	env := NewEnvironment()
-	return PlayWithEnvironment(source, &env)
+	return PlayWithEnvironment(source, NewEnvironment())
 }
 
 // PlayWithEnvironment parses `source` as Knight code, and then executes it.
@@ -22,12 +17,13 @@ func PlayWithEnvironment(source string, env *Environment) (Value, error) {
 	parser := NewParser(source)
 	value, err := parser.Parse(env)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("compile error: %v", err)
 	}
 
-	if value == nil {
-		return nil, NothingToParse
+	result, err := value.Run()
+	if err != nil {
+		return nil, fmt.Errorf("runtime error: %v", err)
 	}
 
-	return value.Run()
+	return result, nil
 }

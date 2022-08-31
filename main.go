@@ -3,42 +3,43 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 
 	"github.com/knight-lang/go"
 )
 
-// import "net/http"
-// import _ "net/http/pprof"
+func die(fmtstr string, rest ...interface{}) {
+	fmt.Fprintf(os.Stderr, fmtstr, rest...)
+	fmt.Fprint(os.Stderr, "\n")
+	os.Exit(1)
+}
+
+func usage() {
+	die("usage: %s (-e 'expr' | -f file)", os.Args[0])
+}
 
 func main() {
-	// go func() {
-	// 	log.Println(http.ListenAndServe("localhost:6060", nil))
-	// }()
-
-	if len(os.Args) != 3 || (os.Args[1] != "-e" && os.Args[1] != "-f") {
-		fmt.Printf("usage: %s (-e 'expr' | -f file)", os.Args[0])
-		os.Exit(1)
+	if len(os.Args) != 3 {
+		usage()
 	}
 
 	var program string
-
-	if os.Args[1] == "-e" {
+	switch os.Args[1] {
+	case "-e":
 		program = os.Args[2]
-	} else {
+
+	case "-f":
 		programBytes, err := ioutil.ReadFile(os.Args[2])
-
 		if err != nil {
-			log.Fatal(err)
+			die("couldn't read file contents: %s", err)
 		}
-
 		program = string(programBytes)
+
+	default:
+		usage()
 	}
 
-	_, err := knight.Play(program)
-
-	if err != nil {
-		log.Fatal(err)
+	if _, err := knight.Play(program); err != nil {
+		die("%s", err)
 	}
 }
