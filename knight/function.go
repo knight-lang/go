@@ -419,7 +419,6 @@ func Modulo(args []Value) (Value, error) {
 	default:
 		return nil, fmt.Errorf("invalid type given to '%%': %T", lhs)
 	}
-
 }
 
 func Exponentiate(args []Value) (Value, error) {
@@ -438,6 +437,8 @@ func Exponentiate(args []Value) (Value, error) {
 			return nil, fmt.Errorf("Exponentiation of negative power attempted")
 		}
 
+		// All 32 bit number exponentiations that can be represented in 32 bits can be done with
+		// 64 bit floats and a "powf" function.
 		return Number(math.Pow(float64(lhs), float64(rhs))), nil
 
 	case List:
@@ -538,7 +539,7 @@ func EqualTo(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	// `DeepEqual` happens to correspond exactly to knight's equality semantics
+	// `DeepEqual` happens to correspond exactly to Knight's equality semantics
 	return Boolean(reflect.DeepEqual(lval, rval)), nil
 }
 
@@ -657,7 +658,7 @@ func Range(args []Value) (Value, error) {
 		}
 
 		rng := make(List, 0, stop-start)
-		for curr := start; curr != stop; curr++ {
+		for curr := start; curr <= stop; curr++ {
 			if utf8.ValidRune(curr) {
 				rng = append(rng, Text(curr))
 			}
