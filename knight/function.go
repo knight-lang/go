@@ -266,35 +266,6 @@ func Negate(args []Value) (Value, error) {
 
 /** ARITY TWO **/
 
-func (n Number) Add(r Value) (Value, error) {
-	return n + r.(Convertible).ToNumber(), nil
-}
-
-func (t Text) Add(r Value) (Value, error) {
-	return t + r.(Convertible).ToText(), nil
-}
-
-func (l List) Add(r Value) (Value, error) {
-	return append(l, r.(Convertible).ToList()...), nil
-}
-
-func add1(args []Value) (Value, error) {
-	lval, err := args[0].Run()
-	if err != nil {
-		return nil, err
-	}
-	r, err := args[1].Run()
-	if err != nil {
-		return nil, err
-	}
-
-	if x, ok := lval.(interface{ Add(Value) (Value, error) }); ok {
-		return x.Add(r)
-	}
-
-	return nil, fmt.Errorf("invalid type given to '+': %T", lval)
-}
-
 func Add(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
