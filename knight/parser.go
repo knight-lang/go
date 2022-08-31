@@ -14,7 +14,7 @@ type Parser struct {
 
 // NewParser creates a `Parser` for the given source string.
 func NewParser(source string) Parser {
-	// TODO: Converting the entire source into a list of runes probably isn't ideal.
+	// TODO: converting the entire source into a list of runes probably isn't ideal.
 	return Parser{source: []rune(source)}
 }
 
@@ -59,21 +59,21 @@ func (p *Parser) takeWhile(cond func(rune) bool) string {
 }
 
 func (p *Parser) strip() {
-	isnt_newline := func(r rune) bool { return r != '\n' }
-	is_whitespace := func(r rune) bool {
+	isntNewline := func(r rune) bool { return r != '\n' }
+	isWhitespace := func(r rune) bool {
 		return unicode.IsSpace(r) || r == '(' || r == ')' || r == ':'
 	}
 
 	for {
 		// first, strip all leading whitespace.
-		p.takeWhile(is_whitespace)
+		p.takeWhile(isWhitespace)
 
 		// Then, if the next character isn't the start of a comment, we're done stripping.
 		if p.isEOF() || p.peek() != '#' {
 			return
 		}
 
-		p.takeWhile(isnt_newline)
+		p.takeWhile(isntNewline)
 	}
 }
 
@@ -81,10 +81,10 @@ func (p *Parser) strip() {
 //
 // If there's nothing left to parse, `nil` is returned for the `Value`.
 func (p *Parser) Parse(e *Environment) (Value, error) {
-	is_digit := func(r rune) bool { return '0' <= r && r <= '9' }
-	is_lower := func(r rune) bool { return unicode.IsLower(r) || r == '_' }
-	is_upper := func(r rune) bool { return unicode.IsUpper(r) || r == '_' }
-	is_ident_body := func(r rune) bool { return is_lower(r) || is_digit(r) }
+	isDigit := func(r rune) bool { return '0' <= r && r <= '9' }
+	isLower := func(r rune) bool { return unicode.IsLower(r) || r == '_' }
+	isUpper := func(r rune) bool { return unicode.IsUpper(r) || r == '_' }
+	isLowerOrDigit := func(r rune) bool { return isLower(r) || isDigit(r) }
 
 	// Remove whitespace, and return `nil, nil` if at EOF.
 	p.strip()
@@ -95,25 +95,25 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 	head := p.peek()
 
 	// Parse numbers.
-	if is_digit(head) {
-		num, _ := strconv.Atoi(p.takeWhile(is_digit))
+	if isDigit(head) {
+		num, _ := strconv.Atoi(p.takeWhile(isDigit))
 		return Number(num), nil
 	}
 
 	// Parse identifiers.
-	if is_lower(head) {
-		return e.Lookup(p.takeWhile(is_ident_body)), nil
+	if isLower(head) {
+		return e.Lookup(p.takeWhile(isLowerOrDigit)), nil
 	}
 
 	// Parse strings.
 	if head == '\'' || head == '"' {
 		p.advance() // gobble up the quote
 
-		start_index := p.index
+		startIndex := p.index
 		contents := p.takeWhile(func(r rune) bool { return r != head })
 
 		if p.isEOF() {
-			return nil, fmt.Errorf("[line %d] unterminated %q string", p.linenoAt(start_index), head)
+			return nil, fmt.Errorf("[line %d] unterminated %q string", p.linenoAt(startIndex), head)
 		}
 
 		p.advance()
@@ -121,8 +121,8 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 	}
 
 	// Everything else follows the function format, so remove it accordingly.
-	if is_upper(head) {
-		p.takeWhile(is_upper)
+	if isUpper(head) {
+		p.takeWhile(isUpper)
 	} else {
 		p.advance()
 	}
@@ -146,7 +146,7 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 	}
 
 	// Start index is for error messages.
-	start_index := p.index
+	startIndex := p.index
 
 	// Create the ast, and parse out all its arguments.
 	ast := &Ast{
@@ -165,7 +165,7 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 		// `arg` is nil when nothing could be parsed. This means an argument was missing.
 		if arg == nil {
 			return nil, fmt.Errorf("[line %d] missing argument %d for function %q",
-				p.linenoAt(start_index), i, fun.name)
+				p.linenoAt(startIndex), i, fun.name)
 		}
 
 		ast.args[i] = arg

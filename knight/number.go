@@ -41,8 +41,8 @@ func (n Number) ToText() Text {
 //
 // While not required by the specs, if `n` is negative, `-1` is prepended to the list of digits.
 func (n Number) ToList() List {
-	is_negative := n < 0
-	if is_negative {
+	isNegative := n < 0
+	if isNegative {
 		n = -n
 	}
 
@@ -57,7 +57,7 @@ func (n Number) ToList() List {
 		n /= 10
 	}
 
-	if is_negative {
+	if isNegative {
 		list = append(List{Number(-1)}, list...)
 	}
 

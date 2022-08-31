@@ -27,13 +27,13 @@ func main() {
 	if os.Args[1] == "-e" {
 		program = os.Args[2]
 	} else {
-		program_bytes, err := ioutil.ReadFile(os.Args[2])
+		programBytes, err := ioutil.ReadFile(os.Args[2])
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		program = string(program_bytes)
+		program = string(programBytes)
 	}
 
 	_, err := knight.Play(program)

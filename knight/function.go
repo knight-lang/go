@@ -497,12 +497,12 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 
 	case List:
 		rhs := rhs.(Convertible).ToList()
-		min_len := len(lhs)
-		if len(rhs) < min_len {
-			min_len = len(rhs)
+		minLen := len(lhs)
+		if len(rhs) < minLen {
+			minLen = len(rhs)
 		}
 
-		for i := 0; i < min_len; i++ {
+		for i := 0; i < minLen; i++ {
 			cmp, err := compare(lhs[i], rhs[i], fn)
 			if err != nil {
 				return 0, err
