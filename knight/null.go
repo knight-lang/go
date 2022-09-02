@@ -33,7 +33,7 @@ func (_ Null) ToNumber() Number {
 
 // ToText simply returns `"null"`.
 func (_ Null) ToText() Text {
-	return "null"
+	return ""
 }
 
 // ToList simply returns an empty list.
