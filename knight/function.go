@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"os/exec"
 	"reflect"
 	"strings"
 	"time"
@@ -40,7 +39,6 @@ func populateDefaultFunctions(e *Environment) {
 	e.RegisterFunction(NewFunction(',', 1, Box))
 	e.RegisterFunction(NewFunction('B', 1, Block))
 	e.RegisterFunction(NewFunction('C', 1, Call))
-	e.RegisterFunction(NewFunction('`', 1, System))
 	e.RegisterFunction(NewFunction('Q', 1, Quit))
 	e.RegisterFunction(NewFunction('!', 1, Not))
 	e.RegisterFunction(NewFunction('L', 1, Length))
@@ -63,7 +61,6 @@ func populateDefaultFunctions(e *Environment) {
 	e.RegisterFunction(NewFunction(';', 2, Then))
 	e.RegisterFunction(NewFunction('=', 2, Assign))
 	e.RegisterFunction(NewFunction('W', 2, While))
-	e.RegisterFunction(NewFunction('.', 2, Range))
 
 	e.RegisterFunction(NewFunction('I', 3, If))
 	e.RegisterFunction(NewFunction('G', 3, Get))
@@ -150,27 +147,6 @@ func Call(args []Value) (Value, error) {
 	}
 
 	return block.Run()
-}
-
-func System(args []Value) (Value, error) {
-	cmd, err := runToText(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	shell := "/bin/sh"
-	if s := os.Getenv("SHELL"); s != "" {
-		shell = s
-	}
-
-	command := exec.Command(shell, "-c", string(cmd))
-	command.Stdin = os.Stdin
-	stdout, err := command.Output()
-	if err != nil {
-		return nil, fmt.Errorf("unable to read command result: %s", err)
-	}
-
-	return Text(stdout), nil
 }
 
 func Quit(args []Value) (Value, error) {
@@ -610,65 +586,6 @@ func While(args []Value) (Value, error) {
 	}
 
 	return Null{}, nil
-}
-
-func Range(args []Value) (Value, error) {
-	lval, err := args[0].Run()
-	if err != nil {
-		return nil, err
-	}
-
-	switch lhs := lval.(type) {
-	case Number:
-		start := lhs
-		stop, err := runToNumber(args[1])
-		if err != nil {
-			return nil, err
-		}
-
-		if stop < start {
-			return nil, fmt.Errorf("invalid values to range: %d > %d", start, stop)
-		}
-
-		list := make(List, 0, stop-start)
-		for current := start; current < stop; current++ {
-			list = append(list, current)
-		}
-
-		return list, nil
-
-	case Text:
-		if lhs == "" {
-			return nil, fmt.Errorf("empty start given to range")
-		}
-
-		rhs, err := runToText(args[1])
-		if err != nil {
-			return nil, err
-		}
-		if rhs == "" {
-			return nil, fmt.Errorf("empty stop given to range")
-		}
-
-		start, _ := lhs.FirstRune()
-		stop, _ := rhs.FirstRune()
-
-		if stop < start {
-			return nil, fmt.Errorf("invalid values to range: %q > %q", start, stop)
-		}
-
-		rng := make(List, 0, stop-start)
-		for curr := start; curr <= stop; curr++ {
-			if utf8.ValidRune(curr) {
-				rng = append(rng, Text(curr))
-			}
-		}
-
-		return rng, nil
-
-	default:
-		return nil, fmt.Errorf("invalid type given to '.': %T", lhs)
-	}
 }
 
 /** ARITY THREE **/
