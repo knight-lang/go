@@ -36,7 +36,6 @@ func populateDefaultFunctions(e *Environment) {
 	e.RegisterFunction(NewFunction('P', 0, Prompt))
 	e.RegisterFunction(NewFunction('R', 0, Random))
 
-	e.RegisterFunction(NewFunction(',', 1, Box))
 	e.RegisterFunction(NewFunction('B', 1, Block))
 	e.RegisterFunction(NewFunction('C', 1, Call))
 	e.RegisterFunction(NewFunction('Q', 1, Quit))
@@ -46,6 +45,9 @@ func populateDefaultFunctions(e *Environment) {
 	e.RegisterFunction(NewFunction('O', 1, Output))
 	e.RegisterFunction(NewFunction('A', 1, Ascii))
 	e.RegisterFunction(NewFunction('~', 1, Negate))
+	e.RegisterFunction(NewFunction(',', 1, Box))
+	e.RegisterFunction(NewFunction('[', 1, Head))
+	e.RegisterFunction(NewFunction(']', 1, Tail))
 
 	e.RegisterFunction(NewFunction('+', 2, Add))
 	e.RegisterFunction(NewFunction('-', 2, Subtract))
@@ -134,6 +136,45 @@ func Box(args []Value) (Value, error) {
 	}
 
 	return List{ran}, nil
+}
+
+func Head(args []Value) (Value, error) {
+	list, err := runToList(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	if len(list) == 0 {
+		return nil, fmt.Errorf("head of empty list")
+	}
+
+	return list[0], nil
+}
+
+func Tail(args []Value) (Value, error) {
+	ran, err := args[0].Run()
+	if err != nil {
+		return nil, err
+	}
+
+	switch container := ran.(type) {
+	case List:
+		if len(container) == 0 {
+			return nil, fmt.Errorf("tail on empty list")
+		}
+
+		return container[1:], nil
+
+	case Text:
+		if len(container) == 0 {
+			return nil, fmt.Errorf("tail on empty text")
+		}
+
+		return container[1:], nil
+
+	default:
+		return nil, fmt.Errorf("invalid type given to ']': %T", container)
+	}
 }
 
 func Block(args []Value) (Value, error) {
@@ -556,7 +597,7 @@ func Then(args []Value) (Value, error) {
 func Assign(args []Value) (Value, error) {
 	variable, ok := args[0].(*Variable)
 	if !ok {
-		return nil, fmt.Errorf("invalid type given to '=': %T", variable)
+		return nil, fmt.Errorf("invalid type given to '=': %T", args[0])
 	}
 
 	value, err := args[1].Run()
@@ -636,11 +677,6 @@ func Get(args []Value) (Value, error) {
 	case List:
 		if Number(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
-		}
-
-		// Special case for returning _just_ the element at that index.
-		if length == 0 {
-			return collection[start], nil
 		}
 
 		return collection[start : start+length], nil
