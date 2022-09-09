@@ -112,16 +112,19 @@ func runToList(value Value) (List, error) {
 
 /** ARITY ZERO **/
 
-// this is a global variable because there's no way to read lines without a buffered input.
-var stdinReader = bufio.NewReader(os.Stdin)
+// this is a global variable because there's no way to read lines without a scanner.
+var stdinScanner = bufio.NewScanner(os.Stdin)
 
 func Prompt(_ []Value) (Value, error) {
-	line, _, err := stdinReader.ReadLine()
-	if err != nil {
+	if stdinScanner.Scan() {
+		return Text(stdinScanner.Text()), nil
+	}
+
+	if err := stdinScanner.Err(); err != nil {
 		return nil, err
 	}
 
-	return Text(line), err
+	return Null{}, nil
 }
 
 func Random(_ []Value) (Value, error) {
