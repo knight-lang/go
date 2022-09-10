@@ -53,7 +53,7 @@ func populateDefaultFunctions(e *Environment) {
 	e.RegisterFunction(NewFunction('-', 2, Subtract))
 	e.RegisterFunction(NewFunction('*', 2, Multiply))
 	e.RegisterFunction(NewFunction('/', 2, Divide))
-	e.RegisterFunction(NewFunction('%', 2, Modulo))
+	e.RegisterFunction(NewFunction('%', 2, Remainder))
 	e.RegisterFunction(NewFunction('^', 2, Exponentiate))
 	e.RegisterFunction(NewFunction('<', 2, LessThan))
 	e.RegisterFunction(NewFunction('>', 2, GreaterThan))
@@ -67,7 +67,7 @@ func populateDefaultFunctions(e *Environment) {
 	e.RegisterFunction(NewFunction('I', 3, If))
 	e.RegisterFunction(NewFunction('G', 3, Get))
 
-	e.RegisterFunction(NewFunction('S', 4, Substitute))
+	e.RegisterFunction(NewFunction('S', 4, Set))
 }
 
 func runToText(value Value) (Text, error) {
@@ -115,6 +115,7 @@ func runToList(value Value) (List, error) {
 // this is a global variable because there's no way to read lines without a scanner.
 var stdinScanner = bufio.NewScanner(os.Stdin)
 
+// Prompt reads a line from stdin, returning `Null` if we're closed.
 func Prompt(_ []Value) (Value, error) {
 	if stdinScanner.Scan() {
 		return Text(stdinScanner.Text()), nil
@@ -127,11 +128,14 @@ func Prompt(_ []Value) (Value, error) {
 	return Null{}, nil
 }
 
+// Random returns a random `Number`.
 func Random(_ []Value) (Value, error) {
 	return Number(rand.Int63()), nil
 }
 
 /** ARITY ONE **/
+
+// Box creates a list of its sole argument
 func Box(args []Value) (Value, error) {
 	ran, err := args[0].Run()
 	if err != nil {
@@ -141,19 +145,34 @@ func Box(args []Value) (Value, error) {
 	return List{ran}, nil
 }
 
+// Head returns the first element/char of a list/string.
 func Head(args []Value) (Value, error) {
-	list, err := runToList(args[0])
+	ran, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	if len(list) == 0 {
-		return nil, fmt.Errorf("head of empty list")
-	}
+	switch container := ran.(type) {
+	case List:
+		if len(container) == 0 {
+			return nil, fmt.Errorf("head on empty list")
+		}
 
-	return list[0], nil
+		return container[0], nil
+
+	case Text:
+		if len(container) == 0 {
+			return nil, fmt.Errorf("head on empty text")
+		}
+
+		return Text(container[0]), nil
+
+	default:
+		return nil, fmt.Errorf("invalid type given to '[': %T", container)
+	}
 }
 
+// Tail returns a list/string of everything but the first element/char.
 func Tail(args []Value) (Value, error) {
 	ran, err := args[0].Run()
 	if err != nil {
@@ -180,10 +199,12 @@ func Tail(args []Value) (Value, error) {
 	}
 }
 
+// Block returns its argument unevaluated.
 func Block(args []Value) (Value, error) {
 	return args[0], nil
 }
 
+// Call runs its argument twice.
 func Call(args []Value) (Value, error) {
 	block, err := args[0].Run()
 	if err != nil {
@@ -193,6 +214,7 @@ func Call(args []Value) (Value, error) {
 	return block.Run()
 }
 
+// Quit exits the program with the given exit code.
 func Quit(args []Value) (Value, error) {
 	code, err := runToNumber(args[0])
 	if err != nil {
@@ -203,6 +225,7 @@ func Quit(args []Value) (Value, error) {
 	panic("<unreachable>")
 }
 
+// Not returns the logical negation of its argument
 func Not(args []Value) (Value, error) {
 	boolean, err := runToBoolean(args[0])
 	if err != nil {
@@ -212,6 +235,7 @@ func Not(args []Value) (Value, error) {
 	return !boolean, nil
 }
 
+// Length converts its argument to a list, then returns its length.
 func Length(args []Value) (Value, error) {
 	list, err := runToList(args[0])
 	if err != nil {
@@ -221,6 +245,7 @@ func Length(args []Value) (Value, error) {
 	return Number(len(list)), nil
 }
 
+// Dump prints a debugging representation of its argument to stdout, then returns it.
 func Dump(args []Value) (Value, error) {
 	ran, err := args[0].Run()
 	if err != nil {
@@ -233,6 +258,10 @@ func Dump(args []Value) (Value, error) {
 	return ran, nil
 }
 
+// Output writes its argument to stdout.
+//
+// If a `\` is the very last character, it's stripped and no newline is added. Otherwise, a newline
+// is also printed.
 func Output(args []Value) (Value, error) {
 	str, err := runToText(args[0])
 	if err != nil {
@@ -248,6 +277,7 @@ func Output(args []Value) (Value, error) {
 	return Null{}, nil
 }
 
+// Ascii is essentially equivalent to `chr`/`ord` in other langauges, depending on its argument.
 func Ascii(args []Value) (Value, error) {
 	ran, err := args[0].Run()
 	if err != nil {
@@ -275,6 +305,7 @@ func Ascii(args []Value) (Value, error) {
 	}
 }
 
+// Negate returns the numerical negation of its argument.
 func Negate(args []Value) (Value, error) {
 	number, err := runToNumber(args[0])
 	if err != nil {
@@ -286,6 +317,7 @@ func Negate(args []Value) (Value, error) {
 
 /** ARITY TWO **/
 
+// Add adds two numbers/strings/lists together; it coerces the second argument.
 func Add(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
@@ -327,6 +359,7 @@ func Add(args []Value) (Value, error) {
 	}
 }
 
+// Subtract subtracts one number from another.
 func Subtract(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
@@ -347,6 +380,7 @@ func Subtract(args []Value) (Value, error) {
 	}
 }
 
+// Multiply multiplies two numbers, or repeats lists/strings; last argument's converted to a number.
 func Multiply(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
@@ -395,6 +429,7 @@ func Multiply(args []Value) (Value, error) {
 	}
 }
 
+// Divide divides the first argument by the second; errors out of the second is zero.
 func Divide(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
@@ -418,7 +453,8 @@ func Divide(args []Value) (Value, error) {
 	}
 }
 
-func Modulo(args []Value) (Value, error) {
+// Remainder returns the remainder of `<arg1>/<arg2>`; errors out if second arg is zero.
+func Remainder(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
 		return nil, err
@@ -441,6 +477,8 @@ func Modulo(args []Value) (Value, error) {
 	}
 }
 
+// Exponentiate raises the first argument to the power of the second, or joins lists. errors out on
+// negative powers for integers.
 func Exponentiate(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
@@ -510,6 +548,7 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 	}
 }
 
+// LessThan returns whether the first argument is less than the second.
 func LessThan(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -529,6 +568,7 @@ func LessThan(args []Value) (Value, error) {
 	return Boolean(cmp < 0), nil
 }
 
+// GreaterThan returns whether the first argument is greater than the second.
 func GreaterThan(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -548,6 +588,7 @@ func GreaterThan(args []Value) (Value, error) {
 	return Boolean(cmp > 0), nil
 }
 
+// EqualTo returns whether its two arguments are equal to one other.
 func EqualTo(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
@@ -563,6 +604,8 @@ func EqualTo(args []Value) (Value, error) {
 	return Boolean(reflect.DeepEqual(lval, rval)), nil
 }
 
+// And evaluates the first argument, then either returns that if it's truthy, or otherwise evaluates
+// and returns the second argument.
 func And(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
@@ -576,6 +619,8 @@ func And(args []Value) (Value, error) {
 	return lval, nil
 }
 
+// Or evaluates the first argument, then either returns that if it's falsey, or otherwise evaluates
+// and returns the second argument.
 func Or(args []Value) (Value, error) {
 	lval, err := args[0].Run()
 	if err != nil {
@@ -589,6 +634,7 @@ func Or(args []Value) (Value, error) {
 	return lval, nil
 }
 
+// Then evaluates the first argument, then evaluates and returns the second argument.
 func Then(args []Value) (Value, error) {
 	if _, err := args[0].Run(); err != nil {
 		return nil, err
@@ -597,6 +643,7 @@ func Then(args []Value) (Value, error) {
 	return args[1].Run()
 }
 
+// Assign assigns the second argument to the first argument (which must be a `Variable`).
 func Assign(args []Value) (Value, error) {
 	variable, ok := args[0].(*Variable)
 	if !ok {
@@ -613,6 +660,7 @@ func Assign(args []Value) (Value, error) {
 	return value, nil
 }
 
+// While evaluates the second argument whilst the first is true.
 func While(args []Value) (Value, error) {
 	for {
 		cond, err := runToBoolean(args[0])
@@ -634,6 +682,7 @@ func While(args []Value) (Value, error) {
 
 /** ARITY THREE **/
 
+// If will evaluate and return either the 2nd or 3rd argument, depending on the 1st's truthiness
 func If(args []Value) (Value, error) {
 	cond, err := runToBoolean(args[0])
 	if err != nil {
@@ -647,6 +696,7 @@ func If(args []Value) (Value, error) {
 	return args[2].Run()
 }
 
+// Get returns a sublist/string with start and length of the second and third elements.
 func Get(args []Value) (Value, error) {
 	collection, err := args[0].Run()
 	if err != nil {
@@ -691,7 +741,8 @@ func Get(args []Value) (Value, error) {
 
 /** ARITY FOUR **/
 
-func Substitute(args []Value) (Value, error) {
+// Set returns a list/string where the range `[<arg2>, <arg2>+<arg3>)` is replaced by the fourth.
+func Set(args []Value) (Value, error) {
 	collection, err := args[0].Run()
 	if err != nil {
 		return nil, err

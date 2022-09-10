@@ -19,6 +19,7 @@ func NewAst(fun *Function, args []Value) *Ast {
 		panic(fmt.Sprintf("arg len mismatch (expected %d for %q, got %d)",
 			fun.arity, fun.name, len(args)))
 	}
+
 	return &Ast{fun: fun, args: args}
 }
 

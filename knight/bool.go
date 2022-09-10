@@ -31,7 +31,6 @@ func (b Boolean) ToNumber() Number {
 	if b {
 		return 1
 	}
-
 	return 0
 }
 
