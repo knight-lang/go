@@ -19,7 +19,7 @@ func (n Number) Run() (Value, error) {
 
 // Dump prints a debugging representation of `n` to stdout.
 func (n Number) Dump() {
-	fmt.Printf("Number(%d)", n)
+	fmt.Printf("%d", n)
 }
 
 // ToBoolean returns whether `n` is nonzero.

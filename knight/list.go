@@ -19,7 +19,7 @@ func (l List) Run() (Value, error) {
 
 // Dump prints a debugging representation of `l` to stdout.
 func (l List) Dump() {
-	fmt.Print("List(")
+	fmt.Print("[")
 
 	for i, ele := range l {
 		if i != 0 {
@@ -29,7 +29,7 @@ func (l List) Dump() {
 		ele.Dump()
 	}
 
-	fmt.Print(")")
+	fmt.Print("]")
 }
 
 // ToBoolean returns whether `l` is nonempty.

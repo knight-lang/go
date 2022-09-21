@@ -3,6 +3,8 @@ package knight
 import (
 	"fmt"
 	"unicode/utf8"
+	"unicode"
+	"strings"
 )
 
 // Text is the string type within Knight, and is simply a wrapper around `string`.
@@ -19,7 +21,7 @@ func (t Text) Run() (Value, error) {
 
 // Dump prints a debugging representation of `t` to stdout.
 func (t Text) Dump() {
-	fmt.Printf("String(%s)", t)
+	fmt.Printf("%q", t)
 }
 
 // ToBoolean returns whether `t` is nonempty.
@@ -30,7 +32,7 @@ func (t Text) ToBoolean() Boolean {
 // ToNumber converts `t` to an integer as defined by the knight spec.
 func (t Text) ToNumber() Number {
 	var ret Number
-	fmt.Sscanf(string(t), "%d", &ret)
+	fmt.Sscanf(strings.TrimLeftFunc(string(t), unicode.IsSpace), "%d", &ret)
 	return ret
 }
 

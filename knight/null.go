@@ -18,7 +18,7 @@ func (n Null) Run() (Value, error) {
 
 // Dump simply prints `Null()` to stdout.
 func (_ Null) Dump() {
-	fmt.Print("Null()")
+	fmt.Print("null")
 }
 
 // ToBoolean simply returns false.

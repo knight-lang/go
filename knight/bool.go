@@ -18,7 +18,7 @@ func (b Boolean) Run() (Value, error) {
 
 // Dump prints a debugging representation of `b` to stdout.
 func (b Boolean) Dump() {
-	fmt.Printf("Boolean(%s)", b.ToText())
+	fmt.Print(b.ToText())
 }
 
 // ToBoolean simply returns `b` unchanged.

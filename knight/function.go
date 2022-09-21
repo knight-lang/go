@@ -253,7 +253,6 @@ func Dump(args []Value) (Value, error) {
 	}
 
 	ran.Dump()
-	fmt.Println()
 
 	return ran, nil
 }
