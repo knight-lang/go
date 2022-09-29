@@ -118,7 +118,7 @@ var stdinScanner = bufio.NewScanner(os.Stdin)
 // Prompt reads a line from stdin, returning `Null` if we're closed.
 func Prompt(_ []Value) (Value, error) {
 	if stdinScanner.Scan() {
-		return Text(stdinScanner.Text()), nil
+		return Text(strings.TrimRight(stdinScanner.Text(), "\r")), nil
 	}
 
 	if err := stdinScanner.Err(); err != nil {
