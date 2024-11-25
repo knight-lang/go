@@ -72,6 +72,7 @@ func (l List) Join(separator string) string {
 		// `BLOCK`. However, this is OK, as the Knight specs don't require `BLOCK`'s return values to
 		// be convertible to strings.
 		sb.WriteString(string(element.(Convertible).ToString()))
+		// ^ TODO: fix my panic
 	}
 
 	return sb.String()

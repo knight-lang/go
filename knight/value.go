@@ -1,5 +1,9 @@
 package knight
 
+import (
+	"fmt"
+)
+
 // Value is the interface implemented by all types within our Knight implementation.
 //
 // This not only includes the `Integer`, `String`, `Boolean`, `Null`, and `List` types that the spec
@@ -25,4 +29,21 @@ type Convertible interface {
 
 	// ToList coerces the to a `List`.
 	ToList() List
+}
+
+func tryConvert[T interface{Boolean | bool | Integer | List | String}](value Value) (T, error) {
+	var t T
+
+	v, ok := value.(Convertible)
+	if !ok {
+		return t, fmt.Errorf("cannot convert %T to a %T", value, t)
+	}
+
+	switch any(t).(type) {
+	case Boolean: return any(v.ToBoolean()).(T), nil
+	case Integer: return any(v.ToInteger()).(T), nil
+	case String:  return any(v.ToString()).(T), nil
+	case List:    return any(v.ToList()).(T), nil
+	default: panic(fmt.Sprintf("<internal error> invalid value given to tryConvert: %T", t))
+	}
 }
