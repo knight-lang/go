@@ -9,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"slices"
 	"time"
 	"unicode/utf8"
 )
@@ -717,21 +718,22 @@ func get(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative length given to GET: '%d'", length)
 	}
 
+	stop := start + length
+
 	switch collection := collection.(type) {
 	case String:
-		if len(collection) < int(start + length) {
-			return nil, fmt.Errorf("out-of-bounds access onlen (%d) < start (%d) + len (%d)", len(collection), start, length)
+		if len(collection) < int(stop) {
+			return nil, fmt.Errorf("string index out of bounds for 'GET': %d < %d", len(collection), stop)
 		}
 
-		return collection[start : start+length], nil
+		return collection[start : stop], nil
 
 	case List:
-		if len(collection) < int(start + length) {
-			return nil, fmt.Errorf(
-				"'GET': list index out of bounds (%d < %d)", len(collection), start + length)
+		if len(collection) < int(stop) {
+			return nil, fmt.Errorf("list index out of bounds for 'GET': %d < %d", len(collection), stop)
 		}
 
-		return collection[start : start+length], nil
+		return collection[start : stop], nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to 'GET': %T", collection)
@@ -752,7 +754,7 @@ func set(args []Value) (Value, error) {
 		return nil, err
 	}
 	if start < 0 {
-		return nil, fmt.Errorf("negative start given to SET (%d)", start)
+		return nil, fmt.Errorf("negative start given to 'SET': %d", start)
 	}
 
 	length, err := runTo[Integer](args[2])
@@ -760,13 +762,15 @@ func set(args []Value) (Value, error) {
 		return nil, err
 	}
 	if length < 0 {
-		return nil, fmt.Errorf("negative length given to SET (%d)", length)
+		return nil, fmt.Errorf("negative length given to 'SET': %d", length)
 	}
+
+	stop := start + length
 
 	switch collection := collection.(type) {
 	case String:
-		if Integer(len(collection)) < start+length {
-			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
+		if len(collection) < int(stop) {
+			return nil, fmt.Errorf("string index out of bounds for 'SET': %d < %d", len(collection), stop)
 		}
 
 		replacement, err := runTo[String](args[3])
@@ -774,26 +778,25 @@ func set(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		return collection[:start] + replacement + collection[start+length:], nil
+		var sb strings.Builder
+		sb.WriteString(string(collection[:start]))
+		sb.WriteString(string(replacement))
+		sb.WriteString(string(collection[stop:]))
+		return String(sb.String()), nil
 
 	case List:
-		if Integer(len(collection)) < start+length {
-			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
+		if len(collection) < int(stop) {
+			return nil, fmt.Errorf("list index out of bounds for 'SET': %d < %d", len(collection), stop)
 		}
 
-		begin := collection[:start]
-		end := collection[start+length:]
-
-		middle, err := runTo[List](args[3])
+		replacement, err := runTo[List](args[3])
 		if err != nil {
 			return nil, err
 		}
 
-		ret := make(List, 0, len(collection)-int(length)+len(middle))
-		return append(append(append(ret, begin...), middle...), end...), nil
+		return slices.Concat(collection[:start], replacement, collection[stop:]), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to 'SET': %T", collection)
-
 	}
 }
