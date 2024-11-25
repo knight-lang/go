@@ -70,14 +70,14 @@ func populateDefaultFunctions(e *Environment) {
 	e.RegisterFunction(NewFunction('S', 4, Set))
 }
 
-func runToText(value Value) (Text, error) {
+func runToString(value Value) (String, error) {
 	ran, err := value.Run()
 
 	if err != nil {
 		return "", err
 	}
 
-	return ran.(Convertible).ToText(), nil
+	return ran.(Convertible).ToString(), nil
 }
 
 func runToInteger(value Value) (Integer, error) {
@@ -118,7 +118,7 @@ var stdinScanner = bufio.NewScanner(os.Stdin)
 // Prompt reads a line from stdin, returning `Null` if we're closed.
 func Prompt(_ []Value) (Value, error) {
 	if stdinScanner.Scan() {
-		return Text(strings.TrimRight(stdinScanner.Text(), "\r")), nil
+		return String(strings.TrimRight(stdinScanner.Text(), "\r")), nil
 	}
 
 	if err := stdinScanner.Err(); err != nil {
@@ -160,12 +160,12 @@ func Head(args []Value) (Value, error) {
 
 		return container[0], nil
 
-	case Text:
+	case String:
 		if len(container) == 0 {
 			return nil, fmt.Errorf("head on empty text")
 		}
 
-		return Text(container[0]), nil
+		return String(container[0]), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '[': %T", container)
@@ -187,7 +187,7 @@ func Tail(args []Value) (Value, error) {
 
 		return container[1:], nil
 
-	case Text:
+	case String:
 		if len(container) == 0 {
 			return nil, fmt.Errorf("tail on empty text")
 		}
@@ -262,7 +262,7 @@ func Dump(args []Value) (Value, error) {
 // If a `\` is the very last character, it's stripped and no newline is added. Otherwise, a newline
 // is also printed.
 func Output(args []Value) (Value, error) {
-	str, err := runToText(args[0])
+	str, err := runToString(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -289,9 +289,9 @@ func Ascii(args []Value) (Value, error) {
 			return nil, fmt.Errorf("invalid integer given to 'A': %d", value)
 		}
 
-		return Text(rune(value)), nil
+		return String(rune(value)), nil
 
-	case Text:
+	case String:
 		if value == "" {
 			return nil, fmt.Errorf("empty string given to 'A'")
 		}
@@ -332,8 +332,8 @@ func Add(args []Value) (Value, error) {
 
 		return lhs + rhs, nil
 
-	case Text:
-		rhs, err := runToText(args[1])
+	case String:
+		rhs, err := runToString(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -343,7 +343,7 @@ func Add(args []Value) (Value, error) {
 		sb.WriteString(string(lhs))
 		sb.WriteString(string(rhs))
 
-		return Text(sb.String()), nil
+		return String(sb.String()), nil
 
 	case List:
 		rhs, err := runToList(args[1])
@@ -395,7 +395,7 @@ func Multiply(args []Value) (Value, error) {
 
 		return lhs * rhs, nil
 
-	case Text:
+	case String:
 		amount, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
@@ -404,7 +404,7 @@ func Multiply(args []Value) (Value, error) {
 			return nil, fmt.Errorf("negative replication amount: %d", amount)
 		}
 
-		return Text(strings.Repeat(string(lhs), int(amount))), nil
+		return String(strings.Repeat(string(lhs), int(amount))), nil
 
 	case List:
 		amount, err := runToInteger(args[1])
@@ -499,12 +499,12 @@ func Exponentiate(args []Value) (Value, error) {
 		return Integer(math.Pow(float64(lhs), float64(rhs))), nil
 
 	case List:
-		sep, err := runToText(args[1])
+		sep, err := runToString(args[1])
 		if err != nil {
 			return nil, err
 		}
 
-		return Text(lhs.Join(string(sep))), nil
+		return String(lhs.Join(string(sep))), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '^': %T", lhs)
@@ -516,8 +516,8 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 	case Integer:
 		return int(lhs - rhs.(Convertible).ToInteger()), nil
 
-	case Text:
-		return strings.Compare(string(lhs), string(rhs.(Convertible).ToText())), nil
+	case String:
+		return strings.Compare(string(lhs), string(rhs.(Convertible).ToString())), nil
 
 	case Boolean:
 		return int(lhs.ToInteger() - rhs.(Convertible).ToBoolean().ToInteger()), nil
@@ -719,7 +719,7 @@ func Get(args []Value) (Value, error) {
 	}
 
 	switch collection := collection.(type) {
-	case Text:
+	case String:
 		if Integer(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
@@ -764,12 +764,12 @@ func Set(args []Value) (Value, error) {
 	}
 
 	switch collection := collection.(type) {
-	case Text:
+	case String:
 		if Integer(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
-		replacement, err := runToText(args[3])
+		replacement, err := runToString(args[3])
 		if err != nil {
 			return nil, err
 		}

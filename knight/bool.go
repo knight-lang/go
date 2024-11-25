@@ -21,7 +21,7 @@ func (b Boolean) Run() (Value, error) {
 
 // Dump prints a debugging representation of the boolean to stdout.
 func (b Boolean) Dump() {
-	fmt.Print(b.ToText())
+	fmt.Print(b.ToString())
 }
 
 // ToBoolean simply returns the boolean unchanged.
@@ -38,8 +38,8 @@ func (b Boolean) ToInteger() Integer {
 	return 0
 }
 
-// ToText returns the string representation of the boolean.
-func (b Boolean) ToText() Text {
+// ToString returns the string representation of the boolean.
+func (b Boolean) ToString() String {
 	if b {
 		return "true"
 	}

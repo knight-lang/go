@@ -35,9 +35,9 @@ func (i Integer) ToInteger() Integer {
 	return i
 }
 
-// ToText returns the string representation of the integer.
-func (i Integer) ToText() Text {
-	return Text(strconv.FormatInt(int64(i), 64))
+// ToString returns the string representation of the integer.
+func (i Integer) ToString() String {
+	return String(strconv.FormatInt(int64(i), 64))
 }
 
 // ToList returns the digits of the integer in base-10 format.

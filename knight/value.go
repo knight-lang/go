@@ -17,8 +17,8 @@ type Convertible interface {
 	// ToInteger coerces the `Convertible` to a `Integer`.
 	ToInteger() Integer
 
-	// ToText coerces the `Convertible` to a `Text`.
-	ToText() Text
+	// ToString coerces the `Convertible` to a `String`.
+	ToString() String
 
 	// ToList coerces the `Convertible` to a `List`.
 	ToList() List

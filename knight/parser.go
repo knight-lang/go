@@ -120,7 +120,7 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 		}
 
 		p.advance()
-		return Text(contents), nil
+		return String(contents), nil
 	}
 
 	// Everything else follows the function format, so remove it accordingly.

@@ -36,8 +36,8 @@ func (_ Null) ToInteger() Integer {
 	return 0
 }
 
-// ToText simply returns an empty string.
-func (_ Null) ToText() Text {
+// ToString simply returns an empty string.
+func (_ Null) ToString() String {
 	return ""
 }
 

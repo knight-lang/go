@@ -45,9 +45,9 @@ func (l List) ToInteger() Integer {
 	return Integer(len(l))
 }
 
-// ToText returns the list converted to a string by adding a newline between each element.
-func (l List) ToText() Text {
-	return Text(l.Join("\n"))
+// ToString returns the list converted to a string by adding a newline between each element.
+func (l List) ToString() String {
+	return String(l.Join("\n"))
 }
 
 // ToList simply returns the list unchanged.
@@ -71,7 +71,7 @@ func (l List) Join(separator string) string {
 		// doesn't implement `Convertible`, which can happen if the element's the return value of
 		// `BLOCK`. However, this is OK, as the Knight specs don't require `BLOCK`'s return values to
 		// be convertible to strings.
-		sb.WriteString(string(element.(Convertible).ToText()))
+		sb.WriteString(string(element.(Convertible).ToString()))
 	}
 
 	return sb.String()
