@@ -27,8 +27,8 @@ func (n Number) ToBoolean() Boolean {
 	return n != 0
 }
 
-// ToNumber simply returns `n` unchanged.
-func (n Number) ToNumber() Number {
+// ToInteger simply returns `n` unchanged.
+func (n Number) ToInteger() Number {
 	return n
 }
 

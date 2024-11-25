@@ -26,8 +26,8 @@ func (_ Null) ToBoolean() Boolean {
 	return false
 }
 
-// ToNumber simply returns zero.
-func (_ Null) ToNumber() Number {
+// ToInteger simply returns zero.
+func (_ Null) ToInteger() Number {
 	return 0
 }
 

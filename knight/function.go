@@ -80,14 +80,14 @@ func runToText(value Value) (Text, error) {
 	return ran.(Convertible).ToText(), nil
 }
 
-func runToNumber(value Value) (Number, error) {
+func runToInteger(value Value) (Number, error) {
 	ran, err := value.Run()
 
 	if err != nil {
 		return 0, err
 	}
 
-	return ran.(Convertible).ToNumber(), nil
+	return ran.(Convertible).ToInteger(), nil
 }
 
 func runToBoolean(value Value) (Boolean, error) {
@@ -216,7 +216,7 @@ func Call(args []Value) (Value, error) {
 
 // Quit exits the program with the given exit code.
 func Quit(args []Value) (Value, error) {
-	code, err := runToNumber(args[0])
+	code, err := runToInteger(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +306,7 @@ func Ascii(args []Value) (Value, error) {
 
 // Negate returns the numerical negation of its argument.
 func Negate(args []Value) (Value, error) {
-	number, err := runToNumber(args[0])
+	number, err := runToInteger(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +325,7 @@ func Add(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := runToNumber(args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -367,7 +367,7 @@ func Subtract(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := runToNumber(args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -388,7 +388,7 @@ func Multiply(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := runToNumber(args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -396,7 +396,7 @@ func Multiply(args []Value) (Value, error) {
 		return lhs * rhs, nil
 
 	case Text:
-		amount, err := runToNumber(args[1])
+		amount, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -407,7 +407,7 @@ func Multiply(args []Value) (Value, error) {
 		return Text(strings.Repeat(string(lhs), int(amount))), nil
 
 	case List:
-		amount, err := runToNumber(args[1])
+		amount, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -437,7 +437,7 @@ func Divide(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := runToNumber(args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -461,7 +461,7 @@ func Remainder(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := runToNumber(args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -486,7 +486,7 @@ func Exponentiate(args []Value) (Value, error) {
 
 	switch lhs := lval.(type) {
 	case Number:
-		rhs, err := runToNumber(args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -514,13 +514,13 @@ func Exponentiate(args []Value) (Value, error) {
 func compare(lhs, rhs Value, fn rune) (int, error) {
 	switch lhs := lhs.(type) {
 	case Number:
-		return int(lhs - rhs.(Convertible).ToNumber()), nil
+		return int(lhs - rhs.(Convertible).ToInteger()), nil
 
 	case Text:
 		return strings.Compare(string(lhs), string(rhs.(Convertible).ToText())), nil
 
 	case Boolean:
-		return int(lhs.ToNumber() - rhs.(Convertible).ToBoolean().ToNumber()), nil
+		return int(lhs.ToInteger() - rhs.(Convertible).ToBoolean().ToInteger()), nil
 
 	case List:
 		rhs := rhs.(Convertible).ToList()
@@ -702,7 +702,7 @@ func Get(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	start, err := runToNumber(args[1])
+	start, err := runToInteger(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -710,7 +710,7 @@ func Get(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to GET (%d)", start)
 	}
 
-	length, err := runToNumber(args[2])
+	length, err := runToInteger(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -747,7 +747,7 @@ func Set(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	start, err := runToNumber(args[1])
+	start, err := runToInteger(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -755,7 +755,7 @@ func Set(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to SET (%d)", start)
 	}
 
-	length, err := runToNumber(args[2])
+	length, err := runToInteger(args[2])
 	if err != nil {
 		return nil, err
 	}

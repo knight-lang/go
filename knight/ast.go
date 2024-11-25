@@ -27,12 +27,12 @@ func NewAst(fun *Function, args []Value) *Ast {
 	return &Ast{ fun: fun, args: args }
 }
 
-// Run executes the Ast by passing its arguments to its function.
+// Run executes the ast by passing its arguments to its function.
 func (a *Ast) Run() (Value, error) {
 	return a.fun.fn(a.args)
 }
 
-// Dump writes a debugging representation of the Ast to stdout.
+// Dump writes a debugging representation of the ast to stdout.
 func (a *Ast) Dump() {
 	fmt.Printf("Ast(%c", a.fun.name)
 

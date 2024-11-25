@@ -5,40 +5,43 @@ import (
 	"strings"
 )
 
-// List is the list type within Knight, and is simply a wrapper around `[]Value`.
+// List is the list type within Knight
+//
+// It's actually just a wrapper around `[]Value`.
 type List []Value
 
 // Compile-time assertion that `List`s implements the `Convertible` and `Value` interfaces.
 var _ Convertible = List{}
 var _ Value = List{}
 
-// Run simply returns `l` unchanged.
+// Run simply returns the list unchanged.
 func (l List) Run() (Value, error) {
 	return l, nil
 }
 
-// Dump prints a debugging representation of `l` to stdout.
+// Dump prints a debugging representation of the list to stdout.
 func (l List) Dump() {
 	fmt.Print("[")
 
-	for i, ele := range l {
+	for i, element := range l {
+		// Don't print a comma for the first argument
 		if i != 0 {
 			fmt.Print(", ")
 		}
 
-		ele.Dump()
+		element.Dump()
 	}
 
 	fmt.Print("]")
 }
 
-// ToBoolean returns whether `l` is nonempty.
+// ToBoolean returns whether or not the list is empty.
 func (l List) ToBoolean() Boolean {
 	return len(l) != 0
 }
 
-// ToNumber returns `l`'s length.
-func (l List) ToNumber() Number {
+// ToInteger returns `l`'s length.
+func (l List) ToInteger() Number {
 	return Number(len(l))
 }
 

@@ -14,8 +14,8 @@ type Convertible interface {
 	// ToBoolean coerces the `Convertible` to a `Boolean`.
 	ToBoolean() Boolean
 
-	// ToNumber coerces the `Convertible` to a `Number`.
-	ToNumber() Number
+	// ToInteger coerces the `Convertible` to a `Number`.
+	ToInteger() Number
 
 	// ToText coerces the `Convertible` to a `Text`.
 	ToText() Text
