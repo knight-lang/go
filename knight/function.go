@@ -21,53 +21,45 @@ type Function struct {
 	fn    func([]Value) (Value, error)
 }
 
-// NewFunction creates a new `Function` for the given args.
-func NewFunction(name rune, arity int, fn func([]Value) (Value, error)) *Function {
-	return &Function{name: name, arity: arity, fn: fn}
-}
+var (
+	builtinFunctions = map[rune]*Function{
+		'P': &Function{ name: 'P', arity: 0, fn: Prompt },
+		'R': &Function{ name: 'R', arity: 0, fn: Random },
+		'B': &Function{ name: 'B', arity: 1, fn: Block },
+		'C': &Function{ name: 'C', arity: 1, fn: Call },
+		'Q': &Function{ name: 'Q', arity: 1, fn: Quit },
+		'!': &Function{ name: '!', arity: 1, fn: Not },
+		'L': &Function{ name: 'L', arity: 1, fn: Length },
+		'D': &Function{ name: 'D', arity: 1, fn: Dump },
+		'O': &Function{ name: 'O', arity: 1, fn: Output },
+		'A': &Function{ name: 'A', arity: 1, fn: Ascii },
+		'~': &Function{ name: '~', arity: 1, fn: Negate },
+		',': &Function{ name: ',', arity: 1, fn: Box },
+		'[': &Function{ name: '[', arity: 1, fn: Head },
+		']': &Function{ name: ']', arity: 1, fn: Tail },
+		'+': &Function{ name: '+', arity: 2, fn: Add },
+		'-': &Function{ name: '-', arity: 2, fn: Subtract },
+		'*': &Function{ name: '*', arity: 2, fn: Multiply },
+		'/': &Function{ name: '/', arity: 2, fn: Divide },
+		'%': &Function{ name: '%', arity: 2, fn: Remainder },
+		'^': &Function{ name: '^', arity: 2, fn: Exponentiate },
+		'<': &Function{ name: '<', arity: 2, fn: LessThan },
+		'>': &Function{ name: '>', arity: 2, fn: GreaterThan },
+		'?': &Function{ name: '?', arity: 2, fn: EqualTo },
+		'&': &Function{ name: '&', arity: 2, fn: And },
+		'|': &Function{ name: '|', arity: 2, fn: Or },
+		';': &Function{ name: ';', arity: 2, fn: Then },
+		'=': &Function{ name: '=', arity: 2, fn: Assign },
+		'W': &Function{ name: 'W', arity: 2, fn: While },
+		'I': &Function{ name: 'I', arity: 3, fn: If },
+		'G': &Function{ name: 'G', arity: 3, fn: Get },
+		'S': &Function{ name: 'S', arity: 4, fn: Set },
+	}
+)
 
 // initialize the random number generator.
 func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-// Add all the default functions to `e`.
-func populateDefaultFunctions(e *Environment) {
-	e.RegisterFunction(NewFunction('P', 0, Prompt))
-	e.RegisterFunction(NewFunction('R', 0, Random))
-
-	e.RegisterFunction(NewFunction('B', 1, Block))
-	e.RegisterFunction(NewFunction('C', 1, Call))
-	e.RegisterFunction(NewFunction('Q', 1, Quit))
-	e.RegisterFunction(NewFunction('!', 1, Not))
-	e.RegisterFunction(NewFunction('L', 1, Length))
-	e.RegisterFunction(NewFunction('D', 1, Dump))
-	e.RegisterFunction(NewFunction('O', 1, Output))
-	e.RegisterFunction(NewFunction('A', 1, Ascii))
-	e.RegisterFunction(NewFunction('~', 1, Negate))
-	e.RegisterFunction(NewFunction(',', 1, Box))
-	e.RegisterFunction(NewFunction('[', 1, Head))
-	e.RegisterFunction(NewFunction(']', 1, Tail))
-
-	e.RegisterFunction(NewFunction('+', 2, Add))
-	e.RegisterFunction(NewFunction('-', 2, Subtract))
-	e.RegisterFunction(NewFunction('*', 2, Multiply))
-	e.RegisterFunction(NewFunction('/', 2, Divide))
-	e.RegisterFunction(NewFunction('%', 2, Remainder))
-	e.RegisterFunction(NewFunction('^', 2, Exponentiate))
-	e.RegisterFunction(NewFunction('<', 2, LessThan))
-	e.RegisterFunction(NewFunction('>', 2, GreaterThan))
-	e.RegisterFunction(NewFunction('?', 2, EqualTo))
-	e.RegisterFunction(NewFunction('&', 2, And))
-	e.RegisterFunction(NewFunction('|', 2, Or))
-	e.RegisterFunction(NewFunction(';', 2, Then))
-	e.RegisterFunction(NewFunction('=', 2, Assign))
-	e.RegisterFunction(NewFunction('W', 2, While))
-
-	e.RegisterFunction(NewFunction('I', 3, If))
-	e.RegisterFunction(NewFunction('G', 3, Get))
-
-	e.RegisterFunction(NewFunction('S', 4, Set))
+	rand.Seed(time.Now().UnixNano())	
 }
 
 func runToString(value Value) (String, error) {

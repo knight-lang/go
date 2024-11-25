@@ -16,7 +16,7 @@ import (
 // Variables are exclusively created via the `Environment` type's `Lookup` function. See it for more
 // details.
 type Variable struct {
-	// name of the variable.
+	// name is the name of the variable.
 	name  string
 
 	// value is the variable's current value
@@ -33,7 +33,7 @@ var _ Value = &Variable{}
 
 // variablesMap is the list of all registered variables. It's used by `NewVariable` to ensure that
 // all variables of the same name point to the same value.
-var variablesMap map[string]*Variable
+var variablesMap map[string]*Variable = make(map[string]*Variable)
 
 // NewVariable returns the variable corresponding to `name`; if it doesn't exist, it's created.
 func NewVariable(name string) *Variable {
