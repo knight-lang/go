@@ -173,7 +173,7 @@ func call(args []Value) (Value, error) {
 
 // quit exits the program with the given exit code.
 func quit(args []Value) (Value, error) {
-	exitStatus, err := runTo[Integer](args[0])
+	exitStatus, err := runTo[int64](args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +231,7 @@ func dump(args []Value) (Value, error) {
 // If a `\` is the very last character, it's stripped and no newline is added. Otherwise, a newline
 // is also printed.
 func output(args []Value) (Value, error) {
-	string, err := runTo[String](args[0])
+	string, err := runTo[string](args[0])
 	if err != nil {
 		return nil, err
 	}
