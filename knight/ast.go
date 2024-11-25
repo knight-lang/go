@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// Ast represents a Knight code.
+// Ast represents a function and its arguments in knight
 type Ast struct {
 	fun  *Function
 	args []Value
@@ -16,19 +16,23 @@ var _ Value = &Ast{}
 // NewAst creates an `Ast`.
 func NewAst(fun *Function, args []Value) *Ast {
 	if len(args) != fun.arity {
-		panic(fmt.Sprintf("arg len mismatch (expected %d for %q, got %d)",
-			fun.arity, fun.name, len(args)))
+		bug(
+			"arg len mismatch (expected %d for %q, got %d)",
+			fun.arity,
+			fun.name,
+			len(args),
+		)
 	}
 
-	return &Ast{fun: fun, args: args}
+	return &Ast{ fun: fun, args: args }
 }
 
-// Run passes `a`'s arguments to `a`'s function.
+// Run executes the Ast by passing its arguments to its function.
 func (a *Ast) Run() (Value, error) {
 	return a.fun.fn(a.args)
 }
 
-// Dump writes a debugging representation of `a` to stdout.
+// Dump writes a debugging representation of the Ast to stdout.
 func (a *Ast) Dump() {
 	fmt.Printf("Ast(%c", a.fun.name)
 

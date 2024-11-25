@@ -7,34 +7,35 @@ import (
 // Boolean is the boolean type within Knight, and is simply a wrapper around `bool`.
 type Boolean bool
 
-// Compile-time assertion that `Boolean`s implements the `Convertible` and `Value` interfaces.
+// Compile-time assertion that `Boolean` implements the `Convertible` and `Value` interfaces.
 var _ Convertible = Boolean(true)
 var _ Value = Boolean(true)
 
-// Run simply returns `b` unchanged.
+// Run simply returns a boolean unchanged.
 func (b Boolean) Run() (Value, error) {
 	return b, nil
 }
 
-// Dump prints a debugging representation of `b` to stdout.
+// Dump prints a debugging representation of the boolean to stdout.
 func (b Boolean) Dump() {
 	fmt.Print(b.ToText())
 }
 
-// ToBoolean simply returns `b` unchanged.
+// ToBoolean simply returns the boolean unchanged.
 func (b Boolean) ToBoolean() Boolean {
 	return b
 }
 
-// ToNumber returns `1` if `b` is true, `0` otherwise.
+// ToNumber returns `1` if the boolean is true, `0` otherwise.
 func (b Boolean) ToNumber() Number {
 	if b {
 		return 1
 	}
+
 	return 0
 }
 
-// ToText returns the string representation of `b`.
+// ToText returns the string representation of the boolean.
 func (b Boolean) ToText() Text {
 	if b {
 		return "true"
@@ -42,10 +43,12 @@ func (b Boolean) ToText() Text {
 	return "false"
 }
 
-// ToList returns `b`'s `List` representation: An empty `List` when false and `List{b}` when true.
+// ToList returns an empty `List` when the boolean is false, or a list of just the boolean when
+// the boolean is true.
 func (b Boolean) ToList() List {
 	if b {
 		return List{b}
 	}
+
 	return nil
 }
