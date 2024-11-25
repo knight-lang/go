@@ -10,7 +10,7 @@ import (
 func Play(source string) (Value, error) {
 	parser := NewParser(source)
 
-	value, err := parser.NextValue()
+	value, err := parser.ParseNextValue()
 	if err != nil {
 		return nil, fmt.Errorf("compile error: %v", err)
 	}

@@ -28,8 +28,16 @@ var (
 	stdinScanner = bufio.NewScanner(os.Stdin)
 
 	KnownFunctions = map[rune]*Function{
+		// Arity 0
+		'T': &Function{name: 'T', arity: 0, fn: true_},
+		'F': &Function{name: 'F', arity: 0, fn: false_},
+		'N': &Function{name: 'N', arity: 0, fn: null},
+		'@': &Function{name: '@', arity: 0, fn: emptyList},
 		'P': &Function{name: 'P', arity: 0, fn: prompt},
 		'R': &Function{name: 'R', arity: 0, fn: random},
+
+		// Arity 1
+		':': &Function{name: ':', arity: 1, fn: noop},
 		'B': &Function{name: 'B', arity: 1, fn: block},
 		'C': &Function{name: 'C', arity: 1, fn: call},
 		'Q': &Function{name: 'Q', arity: 1, fn: quit},
@@ -42,6 +50,8 @@ var (
 		',': &Function{name: ',', arity: 1, fn: box},
 		'[': &Function{name: '[', arity: 1, fn: head},
 		']': &Function{name: ']', arity: 1, fn: tail},
+
+		// Arity 2
 		'+': &Function{name: '+', arity: 2, fn: add},
 		'-': &Function{name: '-', arity: 2, fn: subtract},
 		'*': &Function{name: '*', arity: 2, fn: multiply},
@@ -56,8 +66,12 @@ var (
 		';': &Function{name: ';', arity: 2, fn: then},
 		'=': &Function{name: '=', arity: 2, fn: assign},
 		'W': &Function{name: 'W', arity: 2, fn: while},
+
+		// Arity 3
 		'I': &Function{name: 'I', arity: 3, fn: if_},
 		'G': &Function{name: 'G', arity: 3, fn: get},
+
+		// Arity 4
 		'S': &Function{name: 'S', arity: 4, fn: set},
 	}
 )
@@ -68,6 +82,21 @@ func init() {
 }
 
 /** ARITY ZERO **/
+func true_(_ []Value) (Value, error) {
+	return Boolean(true), nil
+}
+
+func false_(_ []Value) (Value, error) {
+	return Boolean(false), nil
+}
+
+func null(_ []Value) (Value, error) {
+	return &Null{}, nil
+}
+
+func emptyList(_ []Value) (Value, error) {
+	return &List{}, nil
+}
 
 // prompt reads a line from stdin, returning `Null` if we're closed.
 func prompt(_ []Value) (Value, error) {
@@ -88,6 +117,11 @@ func random(_ []Value) (Value, error) {
 }
 
 /** ARITY ONE **/
+
+// noop simply executes its only argument and returns it
+func noop(args []Value) (Value, error) {
+	return args[0].Run()
+}
 
 // box creates a list of its sole argument
 func box(args []Value) (Value, error) {
