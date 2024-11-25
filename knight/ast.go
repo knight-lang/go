@@ -12,6 +12,14 @@ type Ast struct {
 	arguments []Value
 }
 
+func NewAst(function *Function, arguments []Value) *Ast {
+	if function.arity != len(arguments) {
+		panic(fmt.Sprint("function arity mismatch: expected", function.arity, "got", len(arguments)))
+	}
+
+	return &Ast{function: function, arguments: arguments}
+}
+
 // Compile-time assertion that `Ast`s implements the `Value` interface.
 var _ Value = &Ast{}
 

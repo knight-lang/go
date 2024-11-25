@@ -114,68 +114,81 @@ func (p *Parser) stripWhitespaceAndComments() {
 	}
 }
 
+// parseError is a helper function which adds a line number to the start of an error message.
+func (p *Parser) parseError(startIndex int, fmt string, rest ...any) error {
+	return fmt.Errorf("[line %d] " + fmt, p.linenoAt(startIndex), rest...)
+}
+
 // EndOfInput indicates that Parser.NextValue was called when the input source was empty.
 //
 // This is a user error: They either provided a program which was exclusively whitespace/comments,
 // or didn't provide enough arguments to a function (eg `DUMP + 1`).
 var EndOfInput = errors.New("source was empty")
 
-// NextValue gets the next Value in the input source, returning `EndOfInput` when there's no Values
-// left to parse.
+// func (p *Parser) nextInteger() Integer {
+// 	num, _ := strconv.Atoi(p.takeWhile(isDigit))
+// 	return Integer(num), nil
+// }
+
+// NextValue gets the next Value in the input source, returning an error åt end of file or when a
+// token has a syntax error.
 func (p *Parser) NextValue() (Value, error) {
 	// Remove any leading whitespace and comments
 	p.stripWhitespaceAndComments()
+
+	// Get the start index; it's used for error messages so we know what line the parsing started on.
+	startIndex := p.index
 
 	// If there's nothing left, then that means we're at the end of the input.
 	if p.isEOF() {
 		return nil, EndOfInput
 	}
 
-	// Now, try to parse the next token based on the first charcater.
-	next := p.peek()
-	switch {
-	// Parse integers.
-	case isDigit(next):
+	// Now, try to parse the next token based on the first character.
+	tokenStart := p.peek()
+
+	// Integers
+	if isDigit(tokenStart) {
 		num, _ := strconv.Atoi(p.takeWhile(isDigit))
 		return Integer(num), nil
+	}
 
-	// Parse variables.
-	case isLower(next):
+	// Variables
+	if isLower(tokenStart) {
 		return NewVariable(p.takeWhile(isLowerOrDigit)), nil
+	}
 
-	// Parse strings.
-	case next == '\'' || next == '"':
+	// Strings
+	if tokenStart == '\'' || tokenStart == '"' {
 		p.advance() // Consume the starting quote.
-
-		// Keep the start index for the error message
-		startIndex := p.index
 
 		// Read until we hit the ending quote, but don't actually consume it.
 		contents := p.takeWhile(func(r rune) bool {
-			return r != next
+			return r != tokenStart
 		})
 
 		// If we reached end of file, that means we never found the ending quote.
 		if p.isEOF() {
-			return nil, fmt.Errorf("[line %d] unterminated %q string", p.linenoAt(startIndex), next)
+			return nil, p.parseError(startIndex," unterminated %q string", tokenStart)
 		}
 
 		// Consume the ending quote, and return the contents of the string.
 		p.advance()
 		return String(contents), nil
+	}
 
 	// Last up is functions. Here we strip out the function name, and then exit the switch statement
 	// so we can parse the arguments to the function. (We check for invalid function names below.)
-	case isUpper(next):
+	if isUpper(tokenStart) {
 		p.takeWhile(isUpper)
-	default:
+	} else {
 		p.advance()
 	}
 
 	// Special-case "function literals": Functions which take no arguments and always return the same
 	// value (`TRUE`, `FALSE`, `NULL`, and the empty array `@`). They can be parsed as literals as an
 	// optimization, and not have to go through the whole "AST" shebang below.
-	switch next {
+	switch tokenStart {
 	case 'T':
 		return Boolean(true), nil
 	case 'F':
@@ -186,20 +199,14 @@ func (p *Parser) NextValue() (Value, error) {
 		return &List{}, nil
 	}
 
-	// Keep the start index for the error message
-	startIndex := p.index
-
 	// Get the function definition. If it doesn't exist, then the user's given us an invalid program,
 	// and we error out.
-	function, ok := KnownFunctions[next]
+	function, ok := KnownFunctions[tokenStart]
 	if !ok {
-		return nil, fmt.Errorf("[line %d] unknown token start: %q", p.linenoAt(startIndex), next)
+		return nil, p.parseError(startIndex, "unknown token start: %q", tokenStart)
 	}
 
-	ast := &Ast{
-		function:  function,
-		arguments: make([]Value, function.arity), // Pre-allocate enough room to store all args.
-	}
+	arguments: make([]Value, function.arity), // Pre-allocate enough room to store all args.
 
 	// Parse each argument and add them to the `arguments`.
 	for i := 0; i < ast.function.arity; i++ {
@@ -216,18 +223,12 @@ func (p *Parser) NextValue() (Value, error) {
 
 		// Special case: If the error was `EndOfInput`, provide a better error message.
 		if err == EndOfInput {
-			err = fmt.Errorf(
-				"[line %d] missing argument %d for function %q",
-				p.linenoAt(startIndex),
-				i,
-				ast.function.name,
-			)
+			err = p.parseError("missing argument %d for function %q", i + 1, ast.function.name)
 		}
 
 		// Return the error
 		return nil, err
 	}
 
-	// Create the AST and return it.
-	return ast, nil
+	return NewAst(function, arguments)
 }
