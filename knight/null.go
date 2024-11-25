@@ -7,6 +7,9 @@ import (
 // Null is the null type within knight.
 //
 // It's an empty struct, as there's only one null instance, and it doesn't require additional info.
+//
+// Knight code can access `Null` via the `NULL` function, and a handful of other functions which
+// return `NULL` (eg `OUTPUT`.)
 type Null struct{}
 
 // Compile-time assertion that `Null` implements the `Convertible` and `Value` interfaces.

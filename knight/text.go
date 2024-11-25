@@ -7,14 +7,17 @@ import (
 	"strings"
 )
 
-// Text is the string type within Knight, and is simply a wrapper around `string`.
+// Text is the string type within Knight.
+//
+// Knight's required encoding is a subset of ASCII; since `string` is UTF-8 encoded, it's already a
+// superset, and thus is compliant.
 type Text string
 
 // Compile-time assertion that `Text`s implements the `Convertible` and `Value` interfaces.
 var _ Convertible = Text("")
 var _ Value = Text("")
 
-// Run simply returns the `t` unchanged.
+// Run simply returns the text unchanged.
 func (t Text) Run() (Value, error) {
 	return t, nil
 }

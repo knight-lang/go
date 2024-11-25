@@ -4,7 +4,10 @@ import (
 	"fmt"
 )
 
-// Boolean is the boolean type within Knight, and is simply a wrapper around `bool`.
+// Boolean is the boolean type within Knight.
+//
+// Knight code can access `Boolean`s via the functions which return booleans (notably `TRUE` and
+// `FALSE`, along with comparison operators).
 type Boolean bool
 
 // Compile-time assertion that `Boolean` implements the `Convertible` and `Value` interfaces.
