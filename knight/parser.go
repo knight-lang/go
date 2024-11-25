@@ -1,6 +1,7 @@
 package knight
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"unicode"
@@ -139,7 +140,7 @@ func (p *Parser) stripWhitespaceAndComments() {
 //
 // This is a user error: They either provided a program which was exclusively whitespace/comments,
 // or didn't provide enough arguments to a function (eg `DUMP + 1`).
-var EndOfInput = fmt.Errorf("source was empty")
+var EndOfInput = errors.New("source was empty")
 
 // Parse returns the next `Value` for the parser.
 //

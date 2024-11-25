@@ -173,7 +173,7 @@ func call(args []Value) (Value, error) {
 
 // quit exits the program with the given exit code.
 func quit(args []Value) (Value, error) {
-	exitStatus, err := runTo[int64](args[0])
+	exitStatus, err := runTo[Integer](args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func quit(args []Value) (Value, error) {
 
 // not returns the logical negation of its argument
 func not(args []Value) (Value, error) {
-	boolean, err := runTo[bool](args[0])
+	boolean, err := runTo[Boolean](args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,14 @@ func length(args []Value) (Value, error) {
 		return Integer(len(container)), nil
 
 	default:
-		return nil, fmt.Errorf("invalid type given to 'LENGTH': %T", container)
+		list, err := TryConvert[List](container)
+		if err != nil {
+			return nil, err
+		}
+		return Integer(len(list)), nil
+
+	// default:
+	// 	return nil, fmt.Errorf("invalid type given to 'LENGTH': %T", container)
 	}
 }
 
@@ -231,7 +238,7 @@ func dump(args []Value) (Value, error) {
 // If a `\` is the very last character, it's stripped and no newline is added. Otherwise, a newline
 // is also printed.
 func output(args []Value) (Value, error) {
-	string, err := runTo[string](args[0])
+	string, err := runTo[String](args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +269,7 @@ func ascii(args []Value) (Value, error) {
 
 	case String:
 		if value == "" {
-			return nil, fmt.Errorf("empty string given to 'ASCII'")
+			return nil, errors.New("empty string given to 'ASCII'")
 		}
 
 		rune, _ := utf8.DecodeRuneInString(string(value))
@@ -416,12 +423,12 @@ func divide(args []Value) (Value, error) {
 
 // remainder returns the remainder of `<arg1>/<arg2>`; errors out if second arg is zero.
 func remainder(args []Value) (Value, error) {
-	lval, err := args[0].Run()
+	lhs, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	switch lhs := lval.(type) {
+	switch lhs := lhs.(type) {
 	case Integer:
 		rhs, err := runTo[Integer](args[1])
 		if err != nil {
@@ -442,12 +449,12 @@ func remainder(args []Value) (Value, error) {
 // exponentiate raises the first argument to the power of the second, or joins lists. errors out on
 // negative powers for integers.
 func exponentiate(args []Value) (Value, error) {
-	lval, err := args[0].Run()
+	lhs, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	switch lhs := lval.(type) {
+	switch lhs := lhs.(type) {
 	case Integer:
 		rhs, err := runTo[Integer](args[1])
 		if err != nil {
@@ -572,7 +579,7 @@ func greaterThan(args []Value) (Value, error) {
 
 // equalTo returns whether its two arguments are equal to one other.
 func equalTo(args []Value) (Value, error) {
-	lval, err := args[0].Run()
+	lhs, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
@@ -583,7 +590,7 @@ func equalTo(args []Value) (Value, error) {
 	}
 
 	// `DeepEqual` happens to correspond exactly to Knight's equality semantics
-	return Boolean(reflect.DeepEqual(lval, rval)), nil
+	return Boolean(reflect.DeepEqual(lhs, rval)), nil
 }
 
 // and evaluates the first argument, then either returns that if it's truthy, or otherwise evaluates
@@ -654,12 +661,12 @@ func assign(args []Value) (Value, error) {
 // while evaluates the second argument whilst the first is true.
 func while(args []Value) (Value, error) {
 	for {
-		cond, err := runTo[Boolean](args[0])
+		condition, err := runTo[Boolean](args[0])
 		if err != nil {
 			return nil, err
 		}
 
-		if !cond {
+		if !condition {
 			break
 		}
 
@@ -675,12 +682,12 @@ func while(args []Value) (Value, error) {
 
 // if will evaluate and return either the 2nd or 3rd argument, depending on the 1st's truthiness
 func if_(args []Value) (Value, error) {
-	cond, err := runTo[Boolean](args[0])
+	condition, err := runTo[Boolean](args[0])
 	if err != nil {
 		return nil, err
 	}
 
-	if cond {
+	if condition {
 		return args[1].Run()
 	}
 
@@ -699,7 +706,7 @@ func get(args []Value) (Value, error) {
 		return nil, err
 	}
 	if start < 0 {
-		return nil, fmt.Errorf("negative start given to GET (%d)", start)
+		return nil, fmt.Errorf("negative start given to 'GET': %d", start)
 	}
 
 	length, err := runTo[Integer](args[2])
@@ -707,20 +714,21 @@ func get(args []Value) (Value, error) {
 		return nil, err
 	}
 	if length < 0 {
-		return nil, fmt.Errorf("negative length given to GET (%d)", length)
+		return nil, fmt.Errorf("negative length given to GET: '%d'", length)
 	}
 
 	switch collection := collection.(type) {
 	case String:
-		if Integer(len(collection)) < start+length {
-			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
+		if len(collection) < int(start + length) {
+			return nil, fmt.Errorf("out-of-bounds access onlen (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
 		return collection[start : start+length], nil
 
 	case List:
-		if Integer(len(collection)) < start+length {
-			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
+		if len(collection) < int(start + length) {
+			return nil, fmt.Errorf(
+				"'GET': list index out of bounds (%d < %d)", len(collection), start + length)
 		}
 
 		return collection[start : start+length], nil
