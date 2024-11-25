@@ -2,6 +2,7 @@ package knight
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -25,7 +26,7 @@ var (
 	// this is a global variable because there's no way to read lines without a scanner.
 	stdinScanner = bufio.NewScanner(os.Stdin)
 
-	builtinFunctions = map[rune]*Function{
+	KnownFunctions = map[rune]*Function{
 		'P': &Function{ name: 'P', arity: 0, fn: prompt },
 		'R': &Function{ name: 'R', arity: 0, fn: random },
 		'B': &Function{ name: 'B', arity: 1, fn: block },
@@ -65,6 +66,11 @@ func init() {
 	rand.Seed(time.Now().UnixNano())	
 }
 
+func invalidType(fnName rune, value any) error {
+	return fmt.Errorf("invalid type given to '%c': %T", fnName, value)
+}
+
+// runToString runs the `value` and then converts it to a string.
 func runToString(value Value) (String, error) {
 	ran, err := value.Run()
 	if err != nil {
@@ -74,6 +80,7 @@ func runToString(value Value) (String, error) {
 	return ran.(Convertible).ToString(), nil
 }
 
+// runToInteger runs the `value` and then converts it to an integer.
 func runToInteger(value Value) (Integer, error) {
 	ran, err := value.Run()
 	if err != nil {
@@ -83,6 +90,7 @@ func runToInteger(value Value) (Integer, error) {
 	return ran.(Convertible).ToInteger(), nil
 }
 
+// runToInteger runs the `value` and then converts it to a boolean.
 func runToBoolean(value Value) (Boolean, error) {
 	ran, err := value.Run()
 	if err != nil {
@@ -92,6 +100,7 @@ func runToBoolean(value Value) (Boolean, error) {
 	return ran.(Convertible).ToBoolean(), nil
 }
 
+// runToInteger runs the `value` and then converts it to a list.
 func runToList(value Value) (List, error) {
 	ran, err := value.Run()
 	if err != nil {
@@ -133,7 +142,9 @@ func box(args []Value) (Value, error) {
 	return List{ran}, nil
 }
 
-// head returns the first element/char of a list/string.
+// head returns the first element/character of a list/string.
+//
+// This returns an error if the argument is not a list or string, or is empty.
 func head(args []Value) (Value, error) {
 	ran, err := args[0].Run()
 	if err != nil {
@@ -143,24 +154,24 @@ func head(args []Value) (Value, error) {
 	switch container := ran.(type) {
 	case List:
 		if len(container) == 0 {
-			return nil, fmt.Errorf("head on empty list")
+			return nil, errors.New("head on empty list")
 		}
-
 		return container[0], nil
 
 	case String:
 		if len(container) == 0 {
-			return nil, fmt.Errorf("head on empty text")
+			return nil, errors.New("head on empty string")
 		}
-
 		return String(container[0]), nil
 
 	default:
-		return nil, fmt.Errorf("invalid type given to '[': %T", container)
+		return nil, invalidType('[', container)
 	}
 }
 
 // tail returns a list/string of everything but the first element/char.
+//
+// This returns an error if the argument is not a list or string, or is empty.
 func tail(args []Value) (Value, error) {
 	ran, err := args[0].Run()
 	if err != nil {
@@ -170,20 +181,18 @@ func tail(args []Value) (Value, error) {
 	switch container := ran.(type) {
 	case List:
 		if len(container) == 0 {
-			return nil, fmt.Errorf("tail on empty list")
+			return nil, errors.New("tail on empty list")
 		}
-
 		return container[1:], nil
 
 	case String:
 		if len(container) == 0 {
-			return nil, fmt.Errorf("tail on empty text")
+			return nil, errors.New("tail on empty string")
 		}
-
 		return container[1:], nil
 
 	default:
-		return nil, fmt.Errorf("invalid type given to ']': %T", container)
+		return nil, invalidType(']', container)
 	}
 }
 
@@ -204,12 +213,12 @@ func call(args []Value) (Value, error) {
 
 // quit exits the program with the given exit code.
 func quit(args []Value) (Value, error) {
-	code, err := runToInteger(args[0])
+	exitStatus, err := runToInteger(args[0])
 	if err != nil {
 		return nil, err
 	}
 
-	os.Exit(int(code))
+	os.Exit(int(exitStatus))
 	panic("<unreachable>")
 }
 
@@ -224,40 +233,53 @@ func not(args []Value) (Value, error) {
 }
 
 // length converts its argument to a list, then returns its length.
+//
+// This returns an error if the argument is not a list or string.
 func length(args []Value) (Value, error) {
-	list, err := runToList(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	return Integer(len(list)), nil
-}
-
-// dump prints a debugging representation of its argument to stdout, then returns it.
-func dump(args []Value) (Value, error) {
 	ran, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	ran.Dump()
-	return ran, nil
+	// There need to be two conditions, even though they're identical, as the `len` function is
+	// operating on a different type (and so `case List, String:` wouldn't work).
+	switch container := ran.(type) {
+	case List:
+		return Integer(len(container)), nil
+
+	case String:
+		return Integer(len(container)), nil
+
+	default:
+		return nil, invalidType('L', container)
+	}
 }
 
-// output writes its argument to stdout.
-//
-// If a `\` is the very last character, it's stripped and no newline is added. Otherwise, a newline
-// is also printed.
-func output(args []Value) (Value, error) {
-	str, err := runToString(args[0])
+// dump prints a debugging representation of its argument to stdout, then returns it.
+func dump(args []Value) (Value, error) {
+	value, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	if str != "" && str[len(str)-1] == '\\' {
-		fmt.Print(str[:len(str)-1])
+	value.Dump()
+	return value, nil
+}
+
+// output writes its argument to stdout, and returns null.
+//
+// If a `\` is the very last character, it's stripped and no newline is added. Otherwise, a newline
+// is also printed.
+func output(args []Value) (Value, error) {
+	outputString, err := runToString(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	if outputString != "" && outputString[len(outputString) - 1] == '\\' {
+		fmt.Print(outputString[:len(outputString) - 1])
 	} else {
-		fmt.Println(str)
+		fmt.Println(outputString)
 	}
 
 	return Null{}, nil
@@ -270,7 +292,7 @@ func ascii(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	switch value := ran.(type) {
+	switch ran := value.(type) {
 	case Integer:
 		if !utf8.ValidRune(rune(value)) {
 			return nil, fmt.Errorf("invalid integer given to 'A': %d", value)
@@ -285,10 +307,10 @@ func ascii(args []Value) (Value, error) {
 
 		// We know the rune's not empty, so the panic's not a owrry.
 		rune, _, _ := value.SplitFirstRune()
-		return Integer(rune), nil
+		return Integer(rune[0]), nil
 
 	default:
-		return nil, fmt.Errorf("invalid type given to 'A': %T", value)
+		return nil, invalidType('A', value)
 	}
 }
 

@@ -52,6 +52,5 @@ func (b Boolean) ToList() List {
 	if b {
 		return List{b}
 	}
-
 	return nil
 }

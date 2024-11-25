@@ -182,7 +182,9 @@ func (p *Parser) Parse() (Value, error) {
 		startIndex := p.index
 
 		// Read until we hit the ending quote, but don't actually consume it.
-		contents := p.takeWhile(func(r rune) bool { return r != next })
+		contents := p.takeWhile(func(r rune) bool {
+			return r != next
+		})
 
 		// If we reached end of file, that means we never found the ending quote.
 		if p.isEOF() {
@@ -220,7 +222,7 @@ func (p *Parser) Parse() (Value, error) {
 
 	// Get the function definition. If it doesn't exist, then the user's given us an invalid program,
 	// and we error out.
-	function, ok := builtinFunctions[next]
+	function, ok := KnownFunctions[next]
 	if !ok {
 		return nil, fmt.Errorf("[line %d] unknown token start: %q", p.linenoAt(startIndex), next)
 	}
