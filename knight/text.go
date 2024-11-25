@@ -30,8 +30,8 @@ func (t Text) ToBoolean() Boolean {
 }
 
 // ToInteger converts `t` to an integer as defined by the knight spec.
-func (t Text) ToInteger() Number {
-	var ret Number
+func (t Text) ToInteger() Integer {
+	var ret Integer
 	fmt.Sscanf(strings.TrimLeftFunc(string(t), unicode.IsSpace), "%d", &ret)
 	return ret
 }

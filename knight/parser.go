@@ -100,7 +100,7 @@ func (p *Parser) Parse(e *Environment) (Value, error) {
 	// Parse numbers.
 	if isDigit(head) {
 		num, _ := strconv.Atoi(p.takeWhile(isDigit))
-		return Number(num), nil
+		return Integer(num), nil
 	}
 
 	// Parse identifiers.

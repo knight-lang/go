@@ -80,7 +80,7 @@ func runToText(value Value) (Text, error) {
 	return ran.(Convertible).ToText(), nil
 }
 
-func runToInteger(value Value) (Number, error) {
+func runToInteger(value Value) (Integer, error) {
 	ran, err := value.Run()
 
 	if err != nil {
@@ -128,9 +128,9 @@ func Prompt(_ []Value) (Value, error) {
 	return Null{}, nil
 }
 
-// Random returns a random `Number`.
+// Random returns a random `Integer`.
 func Random(_ []Value) (Value, error) {
-	return Number(rand.Int63()), nil
+	return Integer(rand.Int63()), nil
 }
 
 /** ARITY ONE **/
@@ -242,7 +242,7 @@ func Length(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	return Number(len(list)), nil
+	return Integer(len(list)), nil
 }
 
 // Dump prints a debugging representation of its argument to stdout, then returns it.
@@ -284,7 +284,7 @@ func Ascii(args []Value) (Value, error) {
 	}
 
 	switch value := ran.(type) {
-	case Number:
+	case Integer:
 		if !utf8.ValidRune(rune(value)) {
 			return nil, fmt.Errorf("invalid integer given to 'A': %d", value)
 		}
@@ -297,7 +297,7 @@ func Ascii(args []Value) (Value, error) {
 		}
 
 		rune, _ := value.FirstRune()
-		return Number(rune), nil
+		return Integer(rune), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to 'A': %T", value)
@@ -324,7 +324,7 @@ func Add(args []Value) (Value, error) {
 	}
 
 	switch lhs := lval.(type) {
-	case Number:
+	case Integer:
 		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
@@ -366,7 +366,7 @@ func Subtract(args []Value) (Value, error) {
 	}
 
 	switch lhs := lval.(type) {
-	case Number:
+	case Integer:
 		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
@@ -387,7 +387,7 @@ func Multiply(args []Value) (Value, error) {
 	}
 
 	switch lhs := lval.(type) {
-	case Number:
+	case Integer:
 		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
@@ -436,7 +436,7 @@ func Divide(args []Value) (Value, error) {
 	}
 
 	switch lhs := lval.(type) {
-	case Number:
+	case Integer:
 		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
@@ -460,7 +460,7 @@ func Remainder(args []Value) (Value, error) {
 	}
 
 	switch lhs := lval.(type) {
-	case Number:
+	case Integer:
 		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
@@ -485,7 +485,7 @@ func Exponentiate(args []Value) (Value, error) {
 	}
 
 	switch lhs := lval.(type) {
-	case Number:
+	case Integer:
 		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
@@ -496,7 +496,7 @@ func Exponentiate(args []Value) (Value, error) {
 
 		// All 32 bit number exponentiations that can be represented in 32 bits can be done with
 		// 64 bit floats and a "powf" function.
-		return Number(math.Pow(float64(lhs), float64(rhs))), nil
+		return Integer(math.Pow(float64(lhs), float64(rhs))), nil
 
 	case List:
 		sep, err := runToText(args[1])
@@ -513,7 +513,7 @@ func Exponentiate(args []Value) (Value, error) {
 
 func compare(lhs, rhs Value, fn rune) (int, error) {
 	switch lhs := lhs.(type) {
-	case Number:
+	case Integer:
 		return int(lhs - rhs.(Convertible).ToInteger()), nil
 
 	case Text:
@@ -720,14 +720,14 @@ func Get(args []Value) (Value, error) {
 
 	switch collection := collection.(type) {
 	case Text:
-		if Number(len(collection)) < start+length {
+		if Integer(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
 		return collection[start : start+length], nil
 
 	case List:
-		if Number(len(collection)) < start+length {
+		if Integer(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
@@ -765,7 +765,7 @@ func Set(args []Value) (Value, error) {
 
 	switch collection := collection.(type) {
 	case Text:
-		if Number(len(collection)) < start+length {
+		if Integer(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 
@@ -777,7 +777,7 @@ func Set(args []Value) (Value, error) {
 		return collection[:start] + replacement + collection[start+length:], nil
 
 	case List:
-		if Number(len(collection)) < start+length {
+		if Integer(len(collection)) < start+length {
 			return nil, fmt.Errorf("len (%d) < start (%d) + len (%d)", len(collection), start, length)
 		}
 

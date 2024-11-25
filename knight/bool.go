@@ -27,7 +27,7 @@ func (b Boolean) ToBoolean() Boolean {
 }
 
 // ToInteger returns `1` if the boolean is true, `0` otherwise.
-func (b Boolean) ToInteger() Number {
+func (b Boolean) ToInteger() Integer {
 	if b {
 		return 1
 	}

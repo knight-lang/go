@@ -27,7 +27,7 @@ func (_ Null) ToBoolean() Boolean {
 }
 
 // ToInteger simply returns zero.
-func (_ Null) ToInteger() Number {
+func (_ Null) ToInteger() Integer {
 	return 0
 }
 

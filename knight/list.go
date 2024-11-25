@@ -41,8 +41,8 @@ func (l List) ToBoolean() Boolean {
 }
 
 // ToInteger returns `l`'s length.
-func (l List) ToInteger() Number {
-	return Number(len(l))
+func (l List) ToInteger() Integer {
+	return Integer(len(l))
 }
 
 // ToText returns `l` converted to a string by adding a newline between each element.
