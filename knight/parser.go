@@ -125,11 +125,6 @@ func (p *Parser) parseError(startIndex int, fmt string, rest ...any) error {
 // or didn't provide enough arguments to a function (eg `DUMP + 1`).
 var EndOfInput = errors.New("source was empty")
 
-// func (p *Parser) nextInteger() Integer {
-// 	num, _ := strconv.Atoi(p.takeWhile(isDigit))
-// 	return Integer(num), nil
-// }
-
 // NextValue gets the next Value in the input source, returning an error åt end of file or when a
 // token has a syntax error.
 func (p *Parser) NextValue() (Value, error) {
@@ -206,16 +201,16 @@ func (p *Parser) NextValue() (Value, error) {
 		return nil, p.parseError(startIndex, "unknown token start: %q", tokenStart)
 	}
 
-	arguments: make([]Value, function.arity), // Pre-allocate enough room to store all args.
+	arguments := make([]Value, function.arity) // Pre-allocate enough room to store all args.
 
 	// Parse each argument and add them to the `arguments`.
-	for i := 0; i < ast.function.arity; i++ {
+	for i := 0; i < function.arity; i++ {
 		// Try to parse the argument
 		argument, err := p.NextValue()
 
 		// If there were no problems parsing, then just assign and keep going
 		if err == nil {
-			ast.arguments[i] = argument
+			arguments[i] = argument
 			continue
 		}
 
@@ -223,12 +218,12 @@ func (p *Parser) NextValue() (Value, error) {
 
 		// Special case: If the error was `EndOfInput`, provide a better error message.
 		if err == EndOfInput {
-			err = p.parseError("missing argument %d for function %q", i + 1, ast.function.name)
+			err = p.parseError(startIndex, "missing argument %d for function %q", i + 1, function.name)
 		}
 
 		// Return the error
 		return nil, err
 	}
 
-	return NewAst(function, arguments)
+	return NewAst(function, arguments), nil
 }
