@@ -296,7 +296,8 @@ func Ascii(args []Value) (Value, error) {
 			return nil, fmt.Errorf("empty string given to 'A'")
 		}
 
-		rune, _ := value.FirstRune()
+		// We know the rune's not empty, so the panic's not a owrry.
+		rune, _, _ := value.SplitFirstRune()
 		return Integer(rune), nil
 
 	default:

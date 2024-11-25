@@ -1,6 +1,7 @@
 package knight
 
 import (
+	"errors"
 	"fmt"
 	"unicode/utf8"
 	"unicode"
@@ -17,52 +18,58 @@ type String string
 var _ Convertible = String("")
 var _ Value = String("")
 
-// Run simply returns the text unchanged.
+// Run simply returns the string unchanged.
 func (s String) Run() (Value, error) {
 	return s, nil
 }
 
-// Dump prints a debugging representation of `s` to stdout.
+// Dump prints a debugging representation of the string to stdout.
 func (s String) Dump() {
+	// It just so happens that golang's `%q` specifier exactly matches what Knight's `DUMP` expects.
 	fmt.Printf("%q", s)
 }
 
-// ToBoolean returns whether `s` is nonempty.
+// ToBoolean returns whether the string is nonempty.
 func (s String) ToBoolean() Boolean {
 	return s != ""
 }
 
-// ToInteger converts `s` to an integer as defined by the knight spec.
+// ToInteger converts the string to an integer as defined by the knight spec.
 func (s String) ToInteger() Integer {
 	var ret Integer
 	fmt.Sscanf(strings.TrimLeftFunc(string(s), unicode.IsSpace), "%d", &ret)
 	return ret
 }
 
-// ToString simply returns `s`.
+// ToString simply returns the string unchanged.
 func (s String) ToString() String {
 	return s
 }
 
-// FirstRune returns the first rune of `s` along with a `String` with that rune removed.
+// StringIsEmpty is an error that's returned by `SplitFirstRune` when a string is empty.
+var StringIsEmpty = errors.New("SplitFirstRune called on an empty string")
+
+// SplitFirstRune returns the first rune of the string and a `String` with that rune removed.
 //
-// If `s` is empty, this function panics.
-func (s String) FirstRune() (rune, String) {
+// If the string is empty, this function returns an `error`.
+func (s String) SplitFirstRune() (rune, String, error) {
 	if s == "" {
-		panic("FirstRune called on an empty string")
+		return 0, "", StringIsEmpty
 	}
 
-	r, i := utf8.DecodeRuneInString(string(s))
-	return r, s[i:]
+	rune, idx := utf8.DecodeRuneInString(string(s))
+	return rune, s[idx:], nil
 }
 
-// ToList returns a `List` of all the `rune`s within `s`.
+// ToList returns a list of all the `rune`s within the string.
 func (s String) ToList() List {
 	list := make(List, 0, utf8.RuneCountInString(string(s)))
 
 	for s != "" {
+		// We know that `SplitFirstRune` can't fail as we just checked to see if it was empty.
 		var rune rune
-		rune, s = s.FirstRune()
+		rune, s, _ = s.SplitFirstRune()
+
 		list = append(list, String(rune))
 	}
 
