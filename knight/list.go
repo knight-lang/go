@@ -40,31 +40,38 @@ func (l List) ToBoolean() Boolean {
 	return len(l) != 0
 }
 
-// ToInteger returns `l`'s length.
+// ToInteger returns the list's length length.
 func (l List) ToInteger() Integer {
 	return Integer(len(l))
 }
 
-// ToText returns `l` converted to a string by adding a newline between each element.
+// ToText returns the list converted to a string by adding a newline between each element.
 func (l List) ToText() Text {
 	return Text(l.Join("\n"))
 }
 
-// ToList simply returns `l`.
+// ToList simply returns the list unchanged.
 func (l List) ToList() List {
 	return l
 }
 
-// Join concatenates all the elements of `l` together into a big string, with `sep` interspersed.
-func (l List) Join(sep string) string {
+// Join concatenates all the elements of the list together into a big string, with `separator`
+// interspersed between the elements.
+func (l List) Join(separator string) string {
+	// Use a `strings.Builder` for efficiency, as we'll be doing multiple concatenations.
 	var sb strings.Builder
 
-	for i, ele := range l {
+	for i, element := range l {
+		// Don't add the separator during the first iteration
 		if i != 0 {
-			sb.WriteString(sep)
+			sb.WriteString(separator)
 		}
 
-		sb.WriteString(string(ele.(Convertible).ToText()))
+		// Add the element to the end. Note that `element.(Convertible)` will panic if `element`
+		// doesn't implement `Convertible`, which can happen if the element's the return value of
+		// `BLOCK`. However, this is OK, as the Knight specs don't require `BLOCK`'s return values to
+		// be convertible to strings.
+		sb.WriteString(string(element.(Convertible).ToText()))
 	}
 
 	return sb.String()

@@ -4,19 +4,21 @@ import (
 	"fmt"
 )
 
-// Null is the null type within knight, and is simply an empty struct.
+// Null is the null type within knight.
+//
+// It's an empty struct, as there's only one null instance, and it doesn't require additional info.
 type Null struct{}
 
 // Compile-time assertion that `Null` implements the `Convertible` and `Value` interfaces.
 var _ Convertible = Null{}
 var _ Value = Null{}
 
-// Run simply returns `n` unchanged.
+// Run simply returns the null unchanged.
 func (n Null) Run() (Value, error) {
 	return n, nil
 }
 
-// Dump simply prints `Null()` to stdout.
+// Dump simply prints `null` to stdout.
 func (_ Null) Dump() {
 	fmt.Print("null")
 }
@@ -31,7 +33,7 @@ func (_ Null) ToInteger() Integer {
 	return 0
 }
 
-// ToText simply returns `"null"`.
+// ToText simply returns an empty string.
 func (_ Null) ToText() Text {
 	return ""
 }

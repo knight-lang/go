@@ -5,51 +5,55 @@ import (
 	"strconv"
 )
 
-// Integer is the numeric type within Knight, and is simply a wrapper around `int64`.
+// Integer is the numeric type within Knight.
+//
+// Technically the specs only require supporting up to `int32`. However, we support up to `int64`,
+// as a convenience to end-users.
 type Integer int64
 
 // Compile-time assertion that `Integer`s implements the `Convertible` and `Value` interfaces.
 var _ Convertible = Integer(0)
 var _ Value = Integer(0)
 
-// Run simply returns `n` unchanged.
-func (n Integer) Run() (Value, error) {
-	return n, nil
+// Run simply returns the integer unchanged.
+func (i Integer) Run() (Value, error) {
+	return i, nil
 }
 
-// Dump prints a debugging representation of `n` to stdout.
-func (n Integer) Dump() {
-	fmt.Printf("%d", n)
+// Dump prints a debugging representation of `i` to stdout.
+func (i Integer) Dump() {
+	fmt.Printf("%d", i)
 }
 
-// ToBoolean returns whether `n` is nonzero.
-func (n Integer) ToBoolean() Boolean {
-	return n != 0
+// ToBoolean returns whether the integer is nonzero.
+func (i Integer) ToBoolean() Boolean {
+	return i != 0
 }
 
-// ToInteger simply returns `n` unchanged.
-func (n Integer) ToInteger() Integer {
-	return n
+// ToInteger simply returns the integer unchanged.
+func (i Integer) ToInteger() Integer {
+	return i
 }
 
-// ToText returns the string representation of `n`.
-func (n Integer) ToText() Text {
-	return Text(strconv.Itoa(int(n)))
+// ToText returns the string representation of the integer.
+func (i Integer) ToText() Text {
+	return Text(strconv.FormatInt(int64(i), 64))
 }
 
-// ToList returns the the list of digits for `n`.
+// ToList returns the digits of the integer in base-10 format.
 //
-// While not required by the specs, if `n` is negative, `-1` is prepended to the list of digits.
-func (n Integer) ToList() List {
-	if n == 0 {
-		return List{n}
+// While not required by the specs, if the integer is negative, each digit is negated. (i.e. 
+// `Integer(-123).ToList()` is `{-1, -2, -3}`).
+func (i Integer) ToList() List {
+	// Special case for when we're just given 0
+	if i == 0 {
+		return List{i}
 	}
 
-	// TODO: maybe this could be optimized?
 	var list List
-	for n != 0 {
-		list = append(List{n % 10}, list...)
-		n /= 10
+	for i != 0 {
+		list = append(List{i % 10}, list...)
+		i /= 10
 	}
 
 	return list
