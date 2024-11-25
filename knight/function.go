@@ -8,8 +8,8 @@ import (
 	"math/rand"
 	"os"
 	"reflect"
-	"strings"
 	"slices"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -28,43 +28,43 @@ var (
 	stdinScanner = bufio.NewScanner(os.Stdin)
 
 	KnownFunctions = map[rune]*Function{
-		'P': &Function{ name: 'P', arity: 0, fn: prompt },
-		'R': &Function{ name: 'R', arity: 0, fn: random },
-		'B': &Function{ name: 'B', arity: 1, fn: block },
-		'C': &Function{ name: 'C', arity: 1, fn: call },
-		'Q': &Function{ name: 'Q', arity: 1, fn: quit },
-		'!': &Function{ name: '!', arity: 1, fn: not },
-		'L': &Function{ name: 'L', arity: 1, fn: length },
-		'D': &Function{ name: 'D', arity: 1, fn: dump },
-		'O': &Function{ name: 'O', arity: 1, fn: output },
-		'A': &Function{ name: 'A', arity: 1, fn: ascii },
-		'~': &Function{ name: '~', arity: 1, fn: negate },
-		',': &Function{ name: ',', arity: 1, fn: box },
-		'[': &Function{ name: '[', arity: 1, fn: head },
-		']': &Function{ name: ']', arity: 1, fn: tail },
-		'+': &Function{ name: '+', arity: 2, fn: add },
-		'-': &Function{ name: '-', arity: 2, fn: subtract },
-		'*': &Function{ name: '*', arity: 2, fn: multiply },
-		'/': &Function{ name: '/', arity: 2, fn: divide },
-		'%': &Function{ name: '%', arity: 2, fn: remainder },
-		'^': &Function{ name: '^', arity: 2, fn: exponentiate },
-		'<': &Function{ name: '<', arity: 2, fn: lessThan },
-		'>': &Function{ name: '>', arity: 2, fn: greaterThan },
-		'?': &Function{ name: '?', arity: 2, fn: equalTo },
-		'&': &Function{ name: '&', arity: 2, fn: and },
-		'|': &Function{ name: '|', arity: 2, fn: or },
-		';': &Function{ name: ';', arity: 2, fn: then },
-		'=': &Function{ name: '=', arity: 2, fn: assign },
-		'W': &Function{ name: 'W', arity: 2, fn: while },
-		'I': &Function{ name: 'I', arity: 3, fn: if_ },
-		'G': &Function{ name: 'G', arity: 3, fn: get },
-		'S': &Function{ name: 'S', arity: 4, fn: set },
+		'P': &Function{name: 'P', arity: 0, fn: prompt},
+		'R': &Function{name: 'R', arity: 0, fn: random},
+		'B': &Function{name: 'B', arity: 1, fn: block},
+		'C': &Function{name: 'C', arity: 1, fn: call},
+		'Q': &Function{name: 'Q', arity: 1, fn: quit},
+		'!': &Function{name: '!', arity: 1, fn: not},
+		'L': &Function{name: 'L', arity: 1, fn: length},
+		'D': &Function{name: 'D', arity: 1, fn: dump},
+		'O': &Function{name: 'O', arity: 1, fn: output},
+		'A': &Function{name: 'A', arity: 1, fn: ascii},
+		'~': &Function{name: '~', arity: 1, fn: negate},
+		',': &Function{name: ',', arity: 1, fn: box},
+		'[': &Function{name: '[', arity: 1, fn: head},
+		']': &Function{name: ']', arity: 1, fn: tail},
+		'+': &Function{name: '+', arity: 2, fn: add},
+		'-': &Function{name: '-', arity: 2, fn: subtract},
+		'*': &Function{name: '*', arity: 2, fn: multiply},
+		'/': &Function{name: '/', arity: 2, fn: divide},
+		'%': &Function{name: '%', arity: 2, fn: remainder},
+		'^': &Function{name: '^', arity: 2, fn: exponentiate},
+		'<': &Function{name: '<', arity: 2, fn: lessThan},
+		'>': &Function{name: '>', arity: 2, fn: greaterThan},
+		'?': &Function{name: '?', arity: 2, fn: equalTo},
+		'&': &Function{name: '&', arity: 2, fn: and},
+		'|': &Function{name: '|', arity: 2, fn: or},
+		';': &Function{name: ';', arity: 2, fn: then},
+		'=': &Function{name: '=', arity: 2, fn: assign},
+		'W': &Function{name: 'W', arity: 2, fn: while},
+		'I': &Function{name: 'I', arity: 3, fn: if_},
+		'G': &Function{name: 'G', arity: 3, fn: get},
+		'S': &Function{name: 'S', arity: 4, fn: set},
 	}
 )
 
 // initialize the random number generator.
 func init() {
-	rand.Seed(time.Now().UnixNano())	
+	rand.Seed(time.Now().UnixNano())
 }
 
 /** ARITY ZERO **/
@@ -218,8 +218,8 @@ func length(args []Value) (Value, error) {
 		}
 		return Integer(len(list)), nil
 
-	// default:
-	// 	return nil, fmt.Errorf("invalid type given to 'LENGTH': %T", container)
+		// default:
+		// 	return nil, fmt.Errorf("invalid type given to 'LENGTH': %T", container)
 	}
 }
 
@@ -244,8 +244,8 @@ func output(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	if string != "" && string[len(string) - 1] == '\\' {
-		fmt.Print(string[:len(string) - 1])
+	if string != "" && string[len(string)-1] == '\\' {
+		fmt.Print(string[:len(string)-1])
 	} else {
 		fmt.Println(string)
 	}
@@ -726,14 +726,14 @@ func get(args []Value) (Value, error) {
 			return nil, fmt.Errorf("string index out of bounds for 'GET': %d < %d", len(collection), stop)
 		}
 
-		return collection[start : stop], nil
+		return collection[start:stop], nil
 
 	case List:
 		if len(collection) < int(stop) {
 			return nil, fmt.Errorf("list index out of bounds for 'GET': %d < %d", len(collection), stop)
 		}
 
-		return collection[start : stop], nil
+		return collection[start:stop], nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to 'GET': %T", collection)

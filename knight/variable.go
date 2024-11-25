@@ -9,7 +9,7 @@ import (
 // Normally this type is opaque to the end-user, as whenever it's executed it gives a value (or an
 // error) back. However, this implementation is designed such that `BLOCK <expr>` returns `<expr>`
 // unchanged, so it's possible for Knight programs to "interact" with variables via `DUMP BLOCK hi`.
-// 
+//
 // Knight's specs are very explicit about what `BLOCK`'s return value can be used for---not much,
 // other than `CALL`. As such, the `Variable` type doesn't need to implement `Convertible`.
 //
@@ -17,7 +17,7 @@ import (
 // details.
 type Variable struct {
 	// name is the name of the variable.
-	name  string
+	name string
 
 	// value is the variable's current value
 	//
@@ -43,11 +43,10 @@ func NewVariable(name string) *Variable {
 	}
 
 	// The variable doesn't exist. Create it, add it to `variablesMap`, then return it.
-	variable := &Variable{ name: name }
+	variable := &Variable{name: name}
 	variablesMap[name] = variable
 	return variable
 }
-
 
 // Run looks up the last-assigned value for the variable, returning an error if the variable hasn't
 // been assigned yet.

@@ -31,7 +31,9 @@ type Convertible interface {
 	ToList() List
 }
 
-type ConversionTarget interface { ~bool | ~int64 | ~[]Value | ~string }
+type ConversionTarget interface {
+	~bool | ~int64 | ~[]Value | ~string
+}
 
 func TryConvert[T ConversionTarget](value Value) (T, error) {
 	var t T
@@ -42,15 +44,24 @@ func TryConvert[T ConversionTarget](value Value) (T, error) {
 	}
 
 	switch any(t).(type) {
-	case Boolean: return any(v.ToBoolean()).(T), nil
-	case bool:    return any(bool(v.ToBoolean())).(T), nil
-	case Integer: return any(v.ToInteger()).(T), nil
-	case int64:   return any(int64(v.ToInteger())).(T), nil
-	case String:  return any(v.ToString()).(T), nil
-	case string:  return any(string(v.ToString())).(T), nil
-	case List:    return any(v.ToList()).(T), nil
-	case []Value: return any([]Value(v.ToList())).(T), nil
-	default: panic(fmt.Sprintf("<internal error> invalid value given to TryConvert: %T", t))
+	case Boolean:
+		return any(v.ToBoolean()).(T), nil
+	case bool:
+		return any(bool(v.ToBoolean())).(T), nil
+	case Integer:
+		return any(v.ToInteger()).(T), nil
+	case int64:
+		return any(int64(v.ToInteger())).(T), nil
+	case String:
+		return any(v.ToString()).(T), nil
+	case string:
+		return any(string(v.ToString())).(T), nil
+	case List:
+		return any(v.ToList()).(T), nil
+	case []Value:
+		return any([]Value(v.ToList())).(T), nil
+	default:
+		panic(fmt.Sprintf("<internal error> invalid value given to TryConvert: %T", t))
 	}
 }
 

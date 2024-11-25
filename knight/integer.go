@@ -42,7 +42,7 @@ func (i Integer) ToString() String {
 
 // ToList returns the digits of the integer in base-10 format.
 //
-// While not required by the specs, if the integer is negative, each digit is negated. (i.e. 
+// While not required by the specs, if the integer is negative, each digit is negated. (i.e.
 // `Integer(-123).ToList()` is `{-1, -2, -3}`).
 func (i Integer) ToList() List {
 	// Special case for when we're just given 0

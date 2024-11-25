@@ -29,7 +29,7 @@ type Parser struct {
 func NewParser(source string) Parser {
 	return Parser{
 		source: []rune(source),
-		index: 0,
+		index:  0,
 	}
 }
 
@@ -87,7 +87,6 @@ func (p *Parser) takeWhile(cond func(rune) bool) string {
 
 	return string(p.source[start:p.index])
 }
-
 
 // stripWhitespaceAndComments removes leading whitespace and comments from `source`, ensuring after
 // it returns that the stream is either at EOF (which indicates a syntax error on the user's part),
@@ -228,7 +227,7 @@ func (p *Parser) Parse() (Value, error) {
 		return nil, fmt.Errorf("[line %d] unknown token start: %q", p.linenoAt(startIndex), next)
 	}
 
-	ast := &Ast {
+	ast := &Ast{
 		function:  function,
 		arguments: make([]Value, function.arity), // Pre-allocate enough room to store all args.
 	}

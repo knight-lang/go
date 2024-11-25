@@ -3,3 +3,9 @@ This is a [Knight 2.0.1](https://github.com/knight-lang/knight-lang) implementat
 
 # Compiling
 Simply run `go build .` to build it. You can then execute it via `./go (-e 'expr' | -f filename)`.
+
+## Exemplar
+This implementation is meant to be one of the "exemplar" implementations, very clean and easy to understand. 
+
+## UTF-8
+Knight only requires a subset of ASCII to be supported, but this project supports arbitrary unicode characters as a fun extension.

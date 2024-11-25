@@ -3,9 +3,9 @@ package knight
 import (
 	"errors"
 	"fmt"
-	"unicode/utf8"
-	"unicode"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // String is the string type within Knight.
