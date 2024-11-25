@@ -40,7 +40,7 @@ func tryConvert[T interface{Boolean | bool | Integer | List | String}](value Val
 	}
 
 	switch any(t).(type) {
-	case Boolean: return any(v.ToBoolean()).(T), nil
+	case Boolean, bool: return any(v.ToBoolean()).(T), nil
 	case Integer: return any(v.ToInteger()).(T), nil
 	case String:  return any(v.ToString()).(T), nil
 	case List:    return any(v.ToList()).(T), nil
