@@ -37,7 +37,7 @@ func (i Integer) ToInteger() Integer {
 
 // ToString returns the string representation of the integer.
 func (i Integer) ToString() String {
-	return String(strconv.FormatInt(int64(i), 64))
+	return String(strconv.FormatInt(int64(i), 10))
 }
 
 // ToList returns the digits of the integer in base-10 format.
