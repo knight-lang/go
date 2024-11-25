@@ -241,7 +241,6 @@ func dump(args []Value) (Value, error) {
 	}
 
 	ran.Dump()
-
 	return ran, nil
 }
 

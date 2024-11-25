@@ -64,7 +64,6 @@ func (p *Parser) peek() rune {
 	return p.source[p.index]
 }
 
-
 // advance consumes the next character.
 //
 // It'll panic if the input stream is at the end (in which case there's nothing left to read).
@@ -112,13 +111,13 @@ func (p *Parser) stripWhitespaceAndComments() {
 		// Knight programs much easier to write.)
 		//
 		// The braces might look weird. The Knight spec requires conforming programs to balance their
-		// `()` and `{}` (but notably not `[` or `]`, as they're actual functions) around whole expre-
-		// ssions (eg `(+ 1 2)` is valid but `+ (1 2)` is not); Outside of that, they have no meaning.
-		// Since all valid Knight programs will have balanced `()` / `{}`, we can completely ignore
-		// them. (We'd pay more attention to them if we want to provide error messages to users that
-		// their programs are ill-formed, but since we don't need to worry about ill-formed programs
-		// (spec-compliant programs can can assume all inputs programs are valid), we ignore them.)
-		return unicode.IsSpace(r) || r == ':' || r == '(' || r == ')' || r == '{' || r == '}'
+		// `(` and `)` around whole expressions (eg `(+ 1 2)` is valid but `+ (1 2)` is not); Outside
+		// of that, they have no meaning. Since all valid Knight programs will have balanced `(` and
+		// `)`, we can completely ignore them. (We'd pay more attention to them if we want to provide
+		// error messages to users that their programs are ill-formed, but since we don't need to
+		// worry about ill-formed programs (spec-compliant programs can can assume all inputs programs
+		// are valid), we ignore them.)
+		return unicode.IsSpace(r) || r == ':' || r == '(' || r == ')'
 	}
 
 	for {

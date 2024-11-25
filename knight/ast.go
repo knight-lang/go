@@ -4,7 +4,9 @@ import (
 	"fmt"
 )
 
-// Ast represents a function and its arguments in knight
+// Ast is the `Value` that represents a function call (eg `+ 1 2`) in Knight.
+//
+// `Ast`s are only constructed within `Parser.Parse`.
 type Ast struct {
 	function  *Function
 	arguments []Value
