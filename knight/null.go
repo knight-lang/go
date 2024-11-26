@@ -28,7 +28,7 @@ func (_ Null) ToBoolean() (Boolean, error) {
 	return false, nil
 }
 
-// ToInteger simply returns zero.
+// ToInteger simply returns 0.
 func (_ Null) ToInteger() (Integer, error) {
 	return 0, nil
 }
@@ -40,5 +40,6 @@ func (_ Null) ToString() (String, error) {
 
 // ToList simply returns an empty list.
 func (_ Null) ToList() (List, error) {
+	// In go, nil is equivalent to an empty slice (and Lists are wrappers around slices).
 	return nil, nil
 }

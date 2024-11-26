@@ -8,10 +8,10 @@ import (
 	"unicode/utf8"
 )
 
-// String is the string type within Knight.
+// String is the type for holding text within Knight.
 //
-// Knight's required encoding is a subset of ASCII; since `string` is UTF-8 encoded, it's already a
-// superset, and thus is compliant.
+// Knight's specs only require implementations to support a specific subset of ASCII. However, as a
+// convenience to end-users, String *also* supports all of UTF-8.
 type String string
 
 // Compile-time assertion that String implements the Value interface.
@@ -34,6 +34,10 @@ func (s String) ToBoolean() (Boolean, error) {
 }
 
 // ToInteger converts the string to an integer as defined by the knight spec.
+//
+// More specifically, this is equivalent to matching the string against the regex `/^\s+([-+]?\d+)/`
+// and converting the first capture group (the `[-+]?\d+`) to a string. If the regex doesn't match,
+// then zero is used.
 func (s String) ToInteger() (Integer, error) {
 	var ret Integer
 	fmt.Sscanf(strings.TrimLeftFunc(string(s), unicode.IsSpace), "%d", &ret)

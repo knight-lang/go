@@ -33,6 +33,10 @@ type Value interface {
 	ToList() (List, error)
 }
 
+//
+// The following are helper functions for executing Values.
+//
+
 // runToBoolean is a helper function that combines Value.Run and Value.ToBoolean.
 func runToBoolean(value Value) (Boolean, error) {
 	ran, err := value.Run()
