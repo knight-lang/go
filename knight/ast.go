@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Ast represents a function call (eg `+ 1 2`) in Knight. They implement Value, but unconditionally
+// Ast represents a function call (eg `+ 1 2`) in Knight. It implements Value, but unconditionally
 // raise errors for all the conversion methods.
 type Ast struct {
 	function  *Function
@@ -50,7 +50,7 @@ var (
 	NoToListDefinedForAst    = errors.New("Ast doesn't define list conversions")
 )
 
-func (_ *Ast) ToString() (String, error) { return "", NoToStringDefinedForAst }
+func (_ *Ast) ToString() (String, error)   { return "", NoToStringDefinedForAst }
 func (_ *Ast) ToInteger() (Integer, error) { return 0, NoToIntegerDefinedForAst }
 func (_ *Ast) ToBoolean() (Boolean, error) { return false, NoToBooleanDefinedForAst }
-func (_ *Ast) ToList() (List, error) { return nil, NoToListDefinedForAst }
+func (_ *Ast) ToList() (List, error)       { return nil, NoToListDefinedForAst }

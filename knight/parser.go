@@ -88,10 +88,10 @@ func (p *Parser) TakeWhile(condition func(rune) bool) string {
 /**
  * Functions used within `TakeWhile`
  **/
-func isntNewLine(r rune) bool { return r != '\n' }
-func isDigit(r rune) bool { return '0' <= r && r <= '9' }
-func isVariableStart(r rune) bool { return unicode.IsLower(r) || r == '_' }
-func isVariableCharacter(r rune) bool { return isVariableStart(r) || unicode.IsNumber(r) }
+func isntNewLine(r rune) bool             { return r != '\n' }
+func isDigit(r rune) bool                 { return '0' <= r && r <= '9' }
+func isVariableStart(r rune) bool         { return unicode.IsLower(r) || r == '_' }
+func isVariableCharacter(r rune) bool     { return isVariableStart(r) || unicode.IsNumber(r) }
 func isWordFunctionCharacter(r rune) bool { return unicode.IsUpper(r) || r == '_' }
 func isWhitespace(r rune) bool {
 	// Note: The parenthesis are also included here because they may also safely be considered
@@ -134,7 +134,7 @@ func (p *Parser) ParseNextValue() (Value, error) {
 	// Strings
 	case c == '\'' || c == '"':
 		startIndex := p.index // for error msgs
-		p.Advance() // Consume the starting quote.
+		p.Advance()           // Consume the starting quote.
 
 		// Read until we hit the ending quote, but don't actually consume it.
 		contents := p.TakeWhile(func(r rune) bool { return r != c })
@@ -174,8 +174,8 @@ func (p *Parser) ParseNextValue() (Value, error) {
 			if err != nil {
 				// Special case: If the error was `EndOfInput`, provide a better error message.
 				if err == EndOfInput {
-					return nil, fmt.Errorf("[line %d] missing argument %d for function %q",
-							p.linenoAt(startIndex), i + 1, function.name)
+					err = fmt.Errorf("[line %d] missing argument %d for function %q",
+						p.linenoAt(startIndex), i+1, function.name)
 				}
 				return nil, err
 			}

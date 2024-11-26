@@ -49,7 +49,7 @@ func (i Integer) ToList() (List, error) {
 		return List{i}, nil
 	}
 
-	if i < 0 {
+	if i < 0 && !shouldSupportKnightVersion_2_0_1 {
 		return nil, fmt.Errorf("attempted to convert a negative integer to list: %d", i)
 	}
 

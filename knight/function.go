@@ -14,91 +14,98 @@ import (
 	"unicode/utf8"
 )
 
-// Function is a type representing a function within Knight.
-//
-// Each `Function`'s `fn` expects to receive exactly `arity` arguments
+// Function represents a Knight function (eg `DUMP`, `+`, `=`, etc.).
 type Function struct {
-	name  rune
+	// The user-friendly name of the function. Used within syntax error and Ast.Dump.
+	name string
+
+	// The amount of arguments that `fn` expects.
 	arity int
-	fn    func([]Value) (Value, error)
+
+	// The go function associated with this function.
+	fn func([]Value) (Value, error)
 }
 
 var (
-	// this is a global variable because there's no way to read lines without a scanner.
-	stdinScanner = bufio.NewScanner(os.Stdin)
-
+	// KnownFunctions is a list of all known functions. The Parser uses this to recognize functions
+	// in the source code, so modifying this map will change what functions the Parser knows about.
 	KnownFunctions = map[rune]*Function{
 		// Arity 0
-		'T': &Function{name: 'T', arity: 0, fn: true_},
-		'F': &Function{name: 'F', arity: 0, fn: false_},
-		'N': &Function{name: 'N', arity: 0, fn: null},
-		'@': &Function{name: '@', arity: 0, fn: emptyList},
-		'P': &Function{name: 'P', arity: 0, fn: prompt},
-		'R': &Function{name: 'R', arity: 0, fn: random},
+		'T': &Function{name: "TRUE", arity: 0, fn: true_},
+		'F': &Function{name: "FALSE", arity: 0, fn: false_},
+		'N': &Function{name: "NULL", arity: 0, fn: null},
+		'@': &Function{name: "@", arity: 0, fn: emptyList},
+		'P': &Function{name: "PROMPT", arity: 0, fn: prompt},
+		'R': &Function{name: "RANDOM", arity: 0, fn: random},
 
 		// Arity 1
-		':': &Function{name: ':', arity: 1, fn: noop},
-		'B': &Function{name: 'B', arity: 1, fn: block},
-		'C': &Function{name: 'C', arity: 1, fn: call},
-		'Q': &Function{name: 'Q', arity: 1, fn: quit},
-		'!': &Function{name: '!', arity: 1, fn: not},
-		'L': &Function{name: 'L', arity: 1, fn: length},
-		'D': &Function{name: 'D', arity: 1, fn: dump},
-		'O': &Function{name: 'O', arity: 1, fn: output},
-		'A': &Function{name: 'A', arity: 1, fn: ascii},
-		'~': &Function{name: '~', arity: 1, fn: negate},
-		',': &Function{name: ',', arity: 1, fn: box},
-		'[': &Function{name: '[', arity: 1, fn: head},
-		']': &Function{name: ']', arity: 1, fn: tail},
+		':': &Function{name: ":", arity: 1, fn: noop},
+		'B': &Function{name: "BLOCK", arity: 1, fn: block},
+		'C': &Function{name: "CALL", arity: 1, fn: call},
+		'Q': &Function{name: "QUIT", arity: 1, fn: quit},
+		'!': &Function{name: "!", arity: 1, fn: not},
+		'L': &Function{name: "LENGTH", arity: 1, fn: length},
+		'D': &Function{name: "DUMP", arity: 1, fn: dump},
+		'O': &Function{name: "OUTPUT", arity: 1, fn: output},
+		'A': &Function{name: "ASCII", arity: 1, fn: ascii},
+		'~': &Function{name: "~", arity: 1, fn: negate},
+		',': &Function{name: ",", arity: 1, fn: box},
+		'[': &Function{name: "[", arity: 1, fn: head},
+		']': &Function{name: "]", arity: 1, fn: tail},
 
 		// Arity 2
-		'+': &Function{name: '+', arity: 2, fn: add},
-		'-': &Function{name: '-', arity: 2, fn: subtract},
-		'*': &Function{name: '*', arity: 2, fn: multiply},
-		'/': &Function{name: '/', arity: 2, fn: divide},
-		'%': &Function{name: '%', arity: 2, fn: remainder},
-		'^': &Function{name: '^', arity: 2, fn: exponentiate},
-		'<': &Function{name: '<', arity: 2, fn: lessThan},
-		'>': &Function{name: '>', arity: 2, fn: greaterThan},
-		'?': &Function{name: '?', arity: 2, fn: equalTo},
-		'&': &Function{name: '&', arity: 2, fn: and},
-		'|': &Function{name: '|', arity: 2, fn: or},
-		';': &Function{name: ';', arity: 2, fn: then},
-		'=': &Function{name: '=', arity: 2, fn: assign},
-		'W': &Function{name: 'W', arity: 2, fn: while},
+		'+': &Function{name: "+", arity: 2, fn: add},
+		'-': &Function{name: "-", arity: 2, fn: subtract},
+		'*': &Function{name: "*", arity: 2, fn: multiply},
+		'/': &Function{name: "/", arity: 2, fn: divide},
+		'%': &Function{name: "%", arity: 2, fn: remainder},
+		'^': &Function{name: "^", arity: 2, fn: exponentiate},
+		'<': &Function{name: "<", arity: 2, fn: lessThan},
+		'>': &Function{name: ">", arity: 2, fn: greaterThan},
+		'?': &Function{name: "?", arity: 2, fn: equalTo},
+		'&': &Function{name: "&", arity: 2, fn: and},
+		'|': &Function{name: "|", arity: 2, fn: or},
+		';': &Function{name: ";", arity: 2, fn: then},
+		'=': &Function{name: "=", arity: 2, fn: assign},
+		'W': &Function{name: "WHILE", arity: 2, fn: while},
 
 		// Arity 3
-		'I': &Function{name: 'I', arity: 3, fn: if_},
-		'G': &Function{name: 'G', arity: 3, fn: get},
+		'I': &Function{name: "IF", arity: 3, fn: if_},
+		'G': &Function{name: "GET", arity: 3, fn: get},
 
 		// Arity 4
-		'S': &Function{name: 'S', arity: 4, fn: set},
+		'S': &Function{name: "SET", arity: 4, fn: set},
 	}
+
+	// stdinScanner is used by prompt to read lines from the standard input.
+	stdinScanner = bufio.NewScanner(os.Stdin)
 )
 
-// initialize the random number generator.
+// initialize the random number generator. (For non-go-folks, go ensures that all functions named
+// `init` will be executed before `main` is run.)
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-/** ARITY ZERO **/
-func true_(_ []Value) (Value, error) {
-	return Boolean(true), nil
+/**************************************************************************************************
+ *                                                                                                *
+ *                                            Arity 0                                             *
+ *                                                                                                *
+ **************************************************************************************************/
+
+// "Literal" functions---functions which take no arguments and always return the same value.
+func true_(_ []Value) (Value, error)     { return Boolean(true), nil }
+func false_(_ []Value) (Value, error)    { return Boolean(false), nil }
+func null(_ []Value) (Value, error)      { return Null{}, nil }
+func emptyList(_ []Value) (Value, error) { return List{}, nil }
+
+// random returns a random `Integer`.
+func random(_ []Value) (Value, error) {
+	// Note that `rand` is seeded in this file's `init` function.
+	return Integer(rand.Int63()), nil
 }
 
-func false_(_ []Value) (Value, error) {
-	return Boolean(false), nil
-}
-
-func null(_ []Value) (Value, error) {
-	return &Null{}, nil
-}
-
-func emptyList(_ []Value) (Value, error) {
-	return &List{}, nil
-}
-
-// prompt reads a line from stdin, returning `Null` if we're closed.
+// prompt reads a line from stdin, returning Null if stdin is empty.
 func prompt(_ []Value) (Value, error) {
 	if stdinScanner.Scan() {
 		return String(strings.TrimRight(stdinScanner.Text(), "\r")), nil
@@ -111,38 +118,36 @@ func prompt(_ []Value) (Value, error) {
 	return Null{}, nil
 }
 
-// random returns a random `Integer`.
-func random(_ []Value) (Value, error) {
-	return Integer(rand.Int63()), nil
-}
-
-/** ARITY ONE **/
+/**************************************************************************************************
+ *                                                                                                *
+ *                                            Arity 1                                             *
+ *                                                                                                *
+ **************************************************************************************************/
 
 // noop simply executes its only argument and returns it
 func noop(args []Value) (Value, error) {
 	return args[0].Run()
 }
 
-// box creates a list of its sole argument
+// box creates a list just containing its argument.
 func box(args []Value) (Value, error) {
-	value, err := args[0].Run()
+	ran, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	return List{value}, nil
+	return List{ran}, nil
 }
 
-// head returns the first element/character of a list/string.
-//
-// This returns an error if the argument is not a list or string, or is empty.
+// head returns the first element/rune of a list/string. It returns an error if the container is
+// empty, or if the argument isn't a list or string.
 func head(args []Value) (Value, error) {
-	container, err := args[0].Run()
+	ran, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	switch container := container.(type) {
+	switch container := ran.(type) {
 	case List:
 		if len(container) == 0 {
 			return nil, errors.New("empty list given to '['")
@@ -162,16 +167,15 @@ func head(args []Value) (Value, error) {
 	}
 }
 
-// tail returns a list/string of everything but the first element/char.
-//
-// This returns an error if the argument is not a list or string, or is empty.
+// tail returns a list/string of everything but the first element/rune. It returns an error if the
+// container is empty, or if the argument isn't a list or string.
 func tail(args []Value) (Value, error) {
-	container, err := args[0].Run()
+	ran, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	switch container := container.(type) {
+	switch container := ran.(type) {
 	case List:
 		if len(container) == 0 {
 			return nil, errors.New("empty list given to ']'")
@@ -191,12 +195,14 @@ func tail(args []Value) (Value, error) {
 	}
 }
 
-// block returns its argument unevaluated.
+// block returns its argument unevaluated. This is intended to be used in conjunction with call (see
+// below) to defer evaluation to a later point in time.
 func block(args []Value) (Value, error) {
 	return args[0], nil
 }
 
-// call runs its argument twice.
+// call runs its argument, and then returns the result of running _that_ value. This allows us to
+// defer execution of `BLOCK`s until later on.
 func call(args []Value) (Value, error) {
 	block, err := args[0].Run()
 	if err != nil {
@@ -206,7 +212,7 @@ func call(args []Value) (Value, error) {
 	return block.Run()
 }
 
-// quit exits the program with the given exit code.
+// quit exits the program with the given exit status code.
 func quit(args []Value) (Value, error) {
 	exitStatus, err := runToInteger(args[0])
 	if err != nil {
@@ -214,7 +220,7 @@ func quit(args []Value) (Value, error) {
 	}
 
 	os.Exit(int(exitStatus))
-	panic("<unreachable>")
+	panic("<unreachable>") // Go isn't smart enough to recognize `os.Exit` never returns.
 }
 
 // not returns the logical negation of its argument
@@ -227,17 +233,26 @@ func not(args []Value) (Value, error) {
 	return Boolean(!boolean), nil
 }
 
-// length converts its argument to a list, then returns its length.
-//
-// This returns an error if the argument is not a list or string.
+// negate returns the numerical negation of its argument.
+func negate(args []Value) (Value, error) {
+	integer, err := runToInteger(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return -integer, nil
+}
+
+// length returns the length of a list/string. It returns an error if the argument isn't a
+// list or string.
 func length(args []Value) (Value, error) {
 	container, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	// There need to be two conditions, even though they're identical, as the `len` function is
-	// operating on a different type (and so `case List, String:` wouldn't work).
+	// (Note: There need to be two branches here even though their contents are identical because the
+	// `len` function is operating on two different types).
 	switch container := container.(type) {
 	case List:
 		return Integer(len(container)), nil
@@ -246,14 +261,18 @@ func length(args []Value) (Value, error) {
 		return Integer(len(container)), nil
 
 	default:
-		list, err := container.ToList()
-		if err != nil {
-			return nil, err
+		// Knight 2.0.1 required `LENGTH` to coerce its arguments to lists, instead of having it be
+		// undefined behaviour
+		if shouldSupportKnightVersion_2_0_1 {
+			list, err := container.ToList()
+			if err != nil {
+				return nil, err
+			}
+			return Integer(len(list)), nil
 		}
-		return Integer(len(list)), nil
 
-		// default:
-		// 	return nil, fmt.Errorf("invalid type given to 'LENGTH': %T", container)
+		return nil, fmt.Errorf("invalid type given to 'LENGTH': %T", container)
+
 	}
 }
 
@@ -268,10 +287,9 @@ func dump(args []Value) (Value, error) {
 	return value, nil
 }
 
-// output writes its argument to stdout, and returns null.
-//
-// If a `\` is the very last character, it's stripped and no newline is added. Otherwise, a newline
-// is also printed.
+// output writes its argument to stdout and returns null. Normally, a newline is added after its
+// argument, however if the argument ends in a `\`, the backslash is removed and no newline is
+// printed.
 func output(args []Value) (Value, error) {
 	string, err := runToString(args[0])
 	if err != nil {
@@ -280,6 +298,10 @@ func output(args []Value) (Value, error) {
 
 	if string != "" && string[len(string)-1] == '\\' {
 		fmt.Print(string[:len(string)-1])
+
+		// Since we're not printing a newline, we flush stdout so that the output is always visible.
+		// (The error is explicitly ignored to be consistent with how `fmt.Print{,ln}` works.)
+		_ = os.Stdout.Sync()
 	} else {
 		fmt.Println(string)
 	}
@@ -287,7 +309,9 @@ func output(args []Value) (Value, error) {
 	return Null{}, nil
 }
 
-// ascii is essentially equivalent to `chr`/`ord` in other langauges, depending on its argument.
+// ascii is the equivalent of `chr()` and `ord()` functions in other languages. An error is returned
+// if an empty string, an integer which doesn't correspond to a rune, or a non int-non-string type
+// is given.
 func ascii(args []Value) (Value, error) {
 	value, err := args[0].Run()
 	if err != nil {
@@ -315,26 +339,21 @@ func ascii(args []Value) (Value, error) {
 	}
 }
 
-// negate returns the numerical negation of its argument.
-func negate(args []Value) (Value, error) {
-	number, err := runToInteger(args[0])
-	if err != nil {
-		return nil, err
-	}
+/**************************************************************************************************
+ *                                                                                                *
+ *                                            Arity 2                                             *
+ *                                                                                                *
+ **************************************************************************************************/
 
-	return -number, nil
-}
-
-/** ARITY TWO **/
-
-// add adds two numbers/strings/lists together; it coerces the second argument.
+// add adds two integers/strings/lists together by coercing the second argument. Passing in any
+// other type will yield an error.
 func add(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	ran, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	switch lhs := lhs.(type) {
+	switch lhs := ran.(type) {
 	case Integer:
 		rhs, err := runToInteger(args[1])
 		if err != nil {
@@ -353,7 +372,6 @@ func add(args []Value) (Value, error) {
 		var sb strings.Builder
 		sb.WriteString(string(lhs))
 		sb.WriteString(string(rhs))
-
 		return String(sb.String()), nil
 
 	case List:
@@ -362,14 +380,14 @@ func add(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		return append(lhs, rhs...), nil
+		return slices.Concat(lhs, rhs), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '+': %T", lhs)
 	}
 }
 
-// subtract subtracts one number from another.
+// subtract subtracts one integer from another. It returns an error for other types.
 func subtract(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -390,14 +408,15 @@ func subtract(args []Value) (Value, error) {
 	}
 }
 
-// multiply multiplies two numbers, or repeats lists/strings; last argument's converted to a number.
+// multiply an integer by another, or repeats a list or string. It returns an error for other types.
 func multiply(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
 		return nil, err
 	}
 
-	// It just so happens that all three multiply cases need integers as the second argument
+	// It just so happens that all three multiply cases need integers as the second argument, so
+	// just do the coercion before the typecheck.
 	rhs, err := runToInteger(args[1])
 	if err != nil {
 		return nil, err
@@ -419,12 +438,7 @@ func multiply(args []Value) (Value, error) {
 			return nil, fmt.Errorf("negative replication amount for a list in '*': %d", rhs)
 		}
 
-		slice := make(List, 0, len(lhs)*int(rhs))
-		for i := 0; i < int(rhs); i++ {
-			slice = append(slice, lhs...)
-		}
-
-		return slice, nil
+		return slices.Repeat(lhs, int(rhs)), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '*': %T", lhs)
