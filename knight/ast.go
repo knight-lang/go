@@ -12,7 +12,7 @@ type Ast struct {
 	arguments []Value
 }
 
-// Compile-time assertion that `Ast`s implements the `Value` interface.
+// Compile-time assertion that Ast implements the Value interface.
 var _ Value = &Ast{}
 
 // NewAst constructs a new ast, and panics if the amount of arguments given isn't equal to the arity

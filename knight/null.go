@@ -6,13 +6,11 @@ import (
 
 // Null is the null type within knight.
 //
-// It's an empty struct, as there's only one null instance, and it doesn't require additional info.
-//
-// Knight code can access `Null` via the `NULL` function, and a handful of other functions which
+// Knight code can access Null via the `NULL` function, and a handful of other functions which
 // return `NULL` (eg `OUTPUT`.)
 type Null struct{}
 
-// Compile-time assertion that `Null` implements the `Value` interface.
+// Compile-time assertion that Null implements the Value interface.
 var _ Value = Null{}
 
 // Run simply returns the null unchanged.
@@ -20,7 +18,7 @@ func (n Null) Run() (Value, error) {
 	return n, nil
 }
 
-// Dump simply prints `null` to stdout.
+// Dump simply prints "null" to stdout.
 func (_ Null) Dump() {
 	fmt.Print("null")
 }

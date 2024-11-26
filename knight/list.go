@@ -7,10 +7,11 @@ import (
 
 // List is the list type within Knight
 //
-// It's actually just a wrapper around `[]Value`.
+// The list literal in Knight code is `@`; Lists can be created by `,X` which creates a one-element
+// list of just `X`, or via coercions such as `+ @ 123` (which yields `[1, 2, 3]`.)
 type List []Value
 
-// Compile-time assertion that `List`s implements the `Value` interfaces.
+// Compile-time assertion that List implements the Value interfaces.
 var _ Value = List{}
 
 // Run simply returns the list unchanged.
@@ -44,7 +45,9 @@ func (l List) ToInteger() (Integer, error) {
 	return Integer(len(l)), nil
 }
 
-// ToString returns the list converted to a string by adding a newline between each element.
+// ToString returns the list converted to a string by adding a newline between each element. This
+// will return an error if the list contains elements which aren't convertible to strings, such as
+// `BLOCK`'s return value.
 func (l List) ToString() (String, error) {
 	joined, err := l.Join("\n")
 	if err != nil {
@@ -60,7 +63,8 @@ func (l List) ToList() (List, error) {
 }
 
 // Join concatenates all the elements of the list together into a big string, with `separator`
-// interspersed between the elements.
+// interspersed between the elements. An error is returned if an element isn't convertible to a
+// string.
 func (l List) Join(separator string) (string, error) {
 	// Use a `strings.Builder` for efficiency, as we'll be doing multiple concatenations.
 	var sb strings.Builder
@@ -71,12 +75,12 @@ func (l List) Join(separator string) (string, error) {
 			sb.WriteString(separator)
 		}
 
-		repr, err := element.ToString()
+		stringRepresentation, err := element.ToString()
 		if err != nil {
 			return "", err
 		}
 
-		sb.WriteString(string(repr))
+		sb.WriteString(string(stringRepresentation))
 	}
 
 	return sb.String(), nil

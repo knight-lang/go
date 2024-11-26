@@ -15,7 +15,7 @@ var EndOfInput = errors.New("source was empty")
 
 // Parser is used to construct Values from source code.
 //
-// This parses Knight programs in terms of `rune`s (golang speak for utf-8 characters), not bytes.
+// This parses Knight programs in terms of "rune"s (golang speak for utf-8 characters), not bytes.
 // This is technically unnecessary as Knight only requires implementations to support a specific
 // subset of ASCII, but we're supporting them as an extension.
 //
@@ -86,7 +86,7 @@ func (p *Parser) TakeWhile(condition func(rune) bool) string {
 }
 
 /**
- * Functions used within `TakeWhile`
+ * Functions used within TakeWhile
  **/
 func isntNewLine(r rune) bool             { return r != '\n' }
 func isDigit(r rune) bool                 { return '0' <= r && r <= '9' }
@@ -168,11 +168,11 @@ func (p *Parser) ParseNextValue() (Value, error) {
 		// Pre-allocate enough room to store all args.
 		arguments := make([]Value, function.arity)
 
-		// Parse each argument and add them to the `arguments`.
+		// Parse each argument and add them to the arguments.
 		for i := 0; i < function.arity; i++ {
 			argument, err := p.ParseNextValue()
 			if err != nil {
-				// Special case: If the error was `EndOfInput`, provide a better error message.
+				// Special case: If the error was EndOfInput, provide a better error message.
 				if err == EndOfInput {
 					err = fmt.Errorf("[line %d] missing argument %d for function %q",
 						p.linenoAt(startIndex), i+1, function.name)

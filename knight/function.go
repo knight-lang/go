@@ -99,7 +99,7 @@ func false_(_ []Value) (Value, error)    { return Boolean(false), nil }
 func null(_ []Value) (Value, error)      { return Null{}, nil }
 func emptyList(_ []Value) (Value, error) { return List{}, nil }
 
-// random returns a random `Integer`.
+// random returns a random Integer.
 func random(_ []Value) (Value, error) {
 	// Note that `rand` is seeded in this file's `init` function.
 	return Integer(rand.Int63()), nil
@@ -220,7 +220,7 @@ func quit(args []Value) (Value, error) {
 	}
 
 	os.Exit(int(exitStatus))
-	panic("<unreachable>") // Go isn't smart enough to recognize `os.Exit` never returns.
+	panic("<unreachable>") // Go isn't smart enough to recognize os.Exit never returns.
 }
 
 // not returns the logical negation of its argument
@@ -368,7 +368,7 @@ func add(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		// using `strings.Builder` is a bit more efficient than concating and stuff.
+		// using strings.Builder is a bit more efficient than concating and stuff.
 		var sb strings.Builder
 		sb.WriteString(string(lhs))
 		sb.WriteString(string(rhs))

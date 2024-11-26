@@ -2,11 +2,17 @@ package knight
 
 // Value is the interface implemented by all types that are usable in Knight programs.
 //
-// This not only includes the `Integer`, `String`, `Boolean`, `Null`, and `List` types that the spec
-// defines, but also the `Variable` and the `Ast` types as well. See each type for more details.
+// This not only includes the Integer, String, Boolean, Null, and List types that the spec
+// defines, but also the Variable and the Ast types as well. See each type for more details.
 //
 // All types must define the conversion functions, however types which don't have a defined
 // conversion (such as `BLOCK`'s return values) are free to always return `error`s.
+//
+// NOTE::: The conversion functions here return `error`s because a handful of them _are_ fallible
+// (such as converting a list of `BLOCK`s to a string). However, the Knight specs say that doing
+// any of these fallible conversions is undefined behaviour. As such, we could do whatever we liked
+// in these cases (`panic`, use a default, etc). I chose the `error` route to make error messages
+// for the end-user a bit cleaner.
 type Value interface {
 	// Run executes the value, returning the result or whatever error may have occurred.
 	Run() (Value, error)
