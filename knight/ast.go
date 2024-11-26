@@ -5,14 +5,18 @@ import (
 	"fmt"
 )
 
-// Ast is the `Value` that represents a function call (eg `+ 1 2`) in Knight.
-//
-// `Ast`s are only constructed within `Parser.Parse`.
+// Ast represents a function call (eg `+ 1 2`) in Knight. They implement Value, but unconditionally
+// raise errors for all the conversion methods.
 type Ast struct {
 	function  *Function
 	arguments []Value
 }
 
+// Compile-time assertion that `Ast`s implements the `Value` interface.
+var _ Value = &Ast{}
+
+// NewAst constructs a new ast, and panics if the amount of arguments given isn't equal to the arity
+// of the function.
 func NewAst(function *Function, arguments []Value) *Ast {
 	if function.arity != len(arguments) {
 		panic(fmt.Sprint("function arity mismatch: expected", function.arity, "got", len(arguments)))
@@ -20,9 +24,6 @@ func NewAst(function *Function, arguments []Value) *Ast {
 
 	return &Ast{function: function, arguments: arguments}
 }
-
-// Compile-time assertion that `Ast`s implements the `Value` interface.
-var _ Value = &Ast{}
 
 // Run executes the ast by passing its arguments to its function.
 func (a *Ast) Run() (Value, error) {
@@ -41,6 +42,7 @@ func (a *Ast) Dump() {
 	fmt.Print(")")
 }
 
+// Errors for string conversions
 var (
 	NoToStringDefinedForAst  = errors.New("Ast doesn't define string conversions")
 	NoToIntegerDefinedForAst = errors.New("Ast doesn't define integer conversions")
