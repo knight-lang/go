@@ -10,8 +10,7 @@ import (
 // It's actually just a wrapper around `[]Value`.
 type List []Value
 
-// Compile-time assertion that `List`s implements the `Convertible` and `Value` interfaces.
-var _ Convertible = List{}
+// Compile-time assertion that `List`s implements the `Value` interfaces.
 var _ Value = List{}
 
 // Run simply returns the list unchanged.
@@ -36,24 +35,28 @@ func (l List) Dump() {
 }
 
 // ToBoolean returns whether or not the list is empty.
-func (l List) ToBoolean() Boolean {
-	return len(l) != 0
+func (l List) ToBoolean() (Boolean, error) {
+	return len(l) != 0, nil
 }
 
 // ToInteger returns the list's length length.
-func (l List) ToInteger() Integer {
-	return Integer(len(l))
+func (l List) ToInteger() (Integer, error) {
+	return Integer(len(l)), nil
 }
 
 // ToString returns the list converted to a string by adding a newline between each element.
-func (l List) ToString() String {
-	joined, _ := l.Join("\n")
-	return String(joined)
+func (l List) ToString() (String, error) {
+	joined, err := l.Join("\n")
+	if err != nil {
+		return "", err
+	}
+
+	return String(joined), nil
 }
 
 // ToList simply returns the list unchanged.
-func (l List) ToList() List {
-	return l
+func (l List) ToList() (List, error) {
+	return l, nil
 }
 
 // Join concatenates all the elements of the list together into a big string, with `separator`
@@ -61,7 +64,6 @@ func (l List) ToList() List {
 func (l List) Join(separator string) (string, error) {
 	// Use a `strings.Builder` for efficiency, as we'll be doing multiple concatenations.
 	var sb strings.Builder
-	var err error
 
 	for i, element := range l {
 		// Don't add the separator during the first iteration
@@ -69,13 +71,13 @@ func (l List) Join(separator string) (string, error) {
 			sb.WriteString(separator)
 		}
 
-		if element, ok := element.(Convertible); ok {
-			sb.WriteString(string(element.ToString()))
-		} else {
-			sb.WriteString("<invalid>")
-			err = fmt.Errorf("unable to convert %T to a string", element)
+		repr, err := element.ToString()
+		if err != nil {
+			return "", err
 		}
+
+		sb.WriteString(string(repr))
 	}
 
-	return sb.String(), err
+	return sb.String(), nil
 }

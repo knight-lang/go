@@ -1,6 +1,7 @@
 package knight
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -67,3 +68,15 @@ func (v *Variable) Dump() {
 func (v *Variable) Assign(value Value) {
 	v.value = value
 }
+
+var (
+	NoToStringDefinedForVariable  = errors.New("Variable doesn't define string conversions")
+	NoToIntegerDefinedForVariable = errors.New("Variable doesn't define integer conversions")
+	NoToBooleanDefinedForVariable = errors.New("Variable doesn't define boolean conversions")
+	NoToListDefinedForVariable    = errors.New("Variable doesn't define list conversions")
+)
+
+func (_ *Variable) ToString() (String, error) { return "", NoToStringDefinedForVariable }
+func (_ *Variable) ToInteger() (Integer, error) { return 0, NoToIntegerDefinedForVariable }
+func (_ *Variable) ToBoolean() (Boolean, error) { return false, NoToBooleanDefinedForVariable }
+func (_ *Variable) ToList() (List, error) { return nil, NoToListDefinedForVariable }

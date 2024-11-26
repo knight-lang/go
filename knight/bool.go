@@ -10,8 +10,7 @@ import (
 // `FALSE`, along with comparison operators).
 type Boolean bool
 
-// Compile-time assertion that `Boolean` implements the `Convertible` and `Value` interfaces.
-var _ Convertible = Boolean(true)
+// Compile-time assertion that `Boolean` implements the `Value` interface.
 var _ Value = Boolean(true)
 
 // Run simply returns a boolean unchanged.
@@ -25,32 +24,31 @@ func (b Boolean) Dump() {
 }
 
 // ToBoolean simply returns the boolean unchanged.
-func (b Boolean) ToBoolean() Boolean {
-	return b
+func (b Boolean) ToBoolean() (Boolean, error) {
+	return b, nil
 }
 
 // ToInteger returns `1` if the boolean is true, `0` otherwise.
-func (b Boolean) ToInteger() Integer {
+func (b Boolean) ToInteger() (Integer, error) {
 	if b {
-		return 1
+		return 1, nil
 	}
-
-	return 0
+	return 0, nil
 }
 
 // ToString returns the string representation of the boolean.
-func (b Boolean) ToString() String {
+func (b Boolean) ToString() (String, error) {
 	if b {
-		return "true"
+		return "true", nil
 	}
-	return "false"
+	return "false", nil
 }
 
 // ToList returns an empty `List` when the boolean is false, or a list of just the boolean when
 // the boolean is true.
-func (b Boolean) ToList() List {
+func (b Boolean) ToList() (List, error) {
 	if b {
-		return List{b}
+		return List{b}, nil
 	}
-	return nil
+	return nil, nil
 }

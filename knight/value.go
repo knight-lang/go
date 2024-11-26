@@ -1,9 +1,5 @@
 package knight
 
-import (
-	"fmt"
-)
-
 // Value is the interface implemented by all types within our Knight implementation.
 //
 // This not only includes the `Integer`, `String`, `Boolean`, `Null`, and `List` types that the spec
@@ -12,24 +8,22 @@ type Value interface {
 	// Run executes the value, returning the result or whatever error may have occurred.
 	Run() (Value, error)
 
-	// Dump writes a debugging representation of the vaue` to stdout.
+	// Dump writes a debugging representation of the value to stdout.
 	Dump()
-}
 
-// Convertible is implemented by types that can be coerced to the four conversion" tpyes
-type Convertible interface {
 	// ToBoolean coerces to a `Boolean`.
-	ToBoolean() Boolean
+	ToBoolean() (Boolean, error)
 
 	// ToInteger coerces to a `Integer`.
-	ToInteger() Integer
+	ToInteger() (Integer, error)
 
 	// ToString coerces to a `String`.
-	ToString() String
+	ToString() (String, error)
 
 	// ToList coerces to a `List`.
-	ToList() List
+	ToList() (List, error)
 }
+
 
 func runToInteger(value Value) (Integer, error) {
 	ran, err := value.Run()
@@ -37,12 +31,7 @@ func runToInteger(value Value) (Integer, error) {
 		return 0, err
 	}
 
-	convertible, ok := ran.(Convertible)
-	if !ok {
-		return 0, fmt.Errorf("cannot convert %T to an Integer", ran)
-	}
-
-	return convertible.ToInteger(), nil
+	return ran.ToInteger()
 }
 
 func runToString(value Value) (String, error) {
@@ -51,12 +40,7 @@ func runToString(value Value) (String, error) {
 		return "", err
 	}
 
-	convertible, ok := ran.(Convertible)
-	if !ok {
-		return "", fmt.Errorf("cannot convert %T to a String", ran)
-	}
-
-	return convertible.ToString(), nil
+	return ran.ToString()
 }
 
 func runToList(value Value) (List, error) {
@@ -65,12 +49,7 @@ func runToList(value Value) (List, error) {
 		return nil, err
 	}
 
-	convertible, ok := ran.(Convertible)
-	if !ok {
-		return nil, fmt.Errorf("cannot convert %T to a List", ran)
-	}
-
-	return convertible.ToList(), nil
+	return ran.ToList()
 }
 
 func runToBoolean(value Value) (Boolean, error) {
@@ -79,10 +58,5 @@ func runToBoolean(value Value) (Boolean, error) {
 		return false, err
 	}
 
-	convertible, ok := ran.(Convertible)
-	if !ok {
-		return false, fmt.Errorf("cannot convert %T to a Boolean", ran)
-	}
-
-	return convertible.ToBoolean(), nil
+	return ran.ToBoolean()
 }

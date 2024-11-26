@@ -14,8 +14,7 @@ import (
 // superset, and thus is compliant.
 type String string
 
-// Compile-time assertion that `String`s implements the `Convertible` and `Value` interfaces.
-var _ Convertible = String("")
+// Compile-time assertion that `String`s implements the `Value` interface.
 var _ Value = String("")
 
 // Run simply returns the string unchanged.
@@ -30,20 +29,20 @@ func (s String) Dump() {
 }
 
 // ToBoolean returns whether the string is nonempty.
-func (s String) ToBoolean() Boolean {
-	return s != ""
+func (s String) ToBoolean() (Boolean, error) {
+	return s != "", nil
 }
 
 // ToInteger converts the string to an integer as defined by the knight spec.
-func (s String) ToInteger() Integer {
+func (s String) ToInteger() (Integer, error) {
 	var ret Integer
 	fmt.Sscanf(strings.TrimLeftFunc(string(s), unicode.IsSpace), "%d", &ret)
-	return ret
+	return ret, nil
 }
 
 // ToString simply returns the string unchanged.
-func (s String) ToString() String {
-	return s
+func (s String) ToString() (String, error) {
+	return s, nil
 }
 
 // StringIsEmpty is an error that's returned by `SplitFirstRune` when a string is empty.
@@ -62,7 +61,7 @@ func (s String) SplitFirstRune() (rune, String, error) {
 }
 
 // ToList returns a list of all the `rune`s within the string.
-func (s String) ToList() List {
+func (s String) ToList() (List, error) {
 	list := make(List, 0, utf8.RuneCountInString(string(s)))
 
 	for s != "" {
@@ -73,5 +72,5 @@ func (s String) ToList() List {
 		list = append(list, String(rune))
 	}
 
-	return list
+	return list, nil
 }

@@ -246,7 +246,7 @@ func length(args []Value) (Value, error) {
 		return Integer(len(container)), nil
 
 	default:
-		list, err := TryConvertList(container)
+		list, err := container.ToList()
 		if err != nil {
 			return nil, err
 		}
@@ -525,7 +525,7 @@ func exponentiate(args []Value) (Value, error) {
 func compare(lhs, rhs Value, fn rune) (int, error) {
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := TryConvertInteger(rhs)
+		rhs, err := rhs.ToInteger()
 		if err != nil {
 			return 0, err
 		}
@@ -533,7 +533,7 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 		return int(lhs - rhs), nil
 
 	case String:
-		rhs, err := TryConvert[String](rhs)
+		rhs, err := rhs.ToString()
 		if err != nil {
 			return 0, err
 		}
@@ -541,15 +541,21 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 		return strings.Compare(string(lhs), string(rhs)), nil
 
 	case Boolean:
-		rhs, err := TryConvertBoolean(rhs)
+		rhs, err := rhs.ToBoolean()
 		if err != nil {
 			return 0, err
 		}
 
-		return int(lhs.ToInteger() - rhs.ToInteger()), nil
+		if lhs == rhs {
+			return 0, nil
+		} else if lhs && !rhs {
+			return 1, nil
+		} else {
+			return -1, nil
+		}
 
 	case List:
-		rhs, err := TryConvertList(rhs)
+		rhs, err := rhs.ToList()
 		if err != nil {
 			return 0, err
 		}
@@ -641,7 +647,7 @@ func and(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	isTruthy, err := TryConvertBoolean(lhs)
+	isTruthy, err := lhs.ToBoolean()
 	if err != nil {
 		return nil, err
 	}
@@ -661,7 +667,7 @@ func or(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	isTruthy, err := TryConvertBoolean(lhs)
+	isTruthy, err := lhs.ToBoolean()
 	if err != nil {
 		return nil, err
 	}

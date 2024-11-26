@@ -11,8 +11,7 @@ import (
 // as a convenience to end-users.
 type Integer int64
 
-// Compile-time assertion that `Integer`s implements the `Convertible` and `Value` interfaces.
-var _ Convertible = Integer(0)
+// Compile-time assertion that `Integer`s implements the `Value` interface.
 var _ Value = Integer(0)
 
 // Run simply returns the integer unchanged.
@@ -26,28 +25,32 @@ func (i Integer) Dump() {
 }
 
 // ToBoolean returns whether the integer is nonzero.
-func (i Integer) ToBoolean() Boolean {
-	return i != 0
+func (i Integer) ToBoolean() (Boolean, error) {
+	return i != 0, nil
 }
 
 // ToInteger simply returns the integer unchanged.
-func (i Integer) ToInteger() Integer {
-	return i
+func (i Integer) ToInteger() (Integer, error) {
+	return i, nil
 }
 
 // ToString returns the string representation of the integer.
-func (i Integer) ToString() String {
-	return String(strconv.FormatInt(int64(i), 10))
+func (i Integer) ToString() (String, error) {
+	return String(strconv.FormatInt(int64(i), 10)), nil
 }
 
 // ToList returns the digits of the integer in base-10 format.
 //
 // While not required by the specs, if the integer is negative, each digit is negated. (i.e.
 // `Integer(-123).ToList()` is `{-1, -2, -3}`).
-func (i Integer) ToList() List {
+func (i Integer) ToList() (List, error) {
 	// Special case for when we're just given 0
 	if i == 0 {
-		return List{i}
+		return List{i}, nil
+	}
+
+	if i < 0 {
+		return nil, fmt.Errorf("attempted to convert a negative integer to list: %d", i)
 	}
 
 	var list List
@@ -56,5 +59,5 @@ func (i Integer) ToList() List {
 		i /= 10
 	}
 
-	return list
+	return list, nil
 }

@@ -1,6 +1,7 @@
 package knight
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -39,3 +40,15 @@ func (a *Ast) Dump() {
 
 	fmt.Print(")")
 }
+
+var (
+	NoToStringDefinedForAst  = errors.New("Ast doesn't define string conversions")
+	NoToIntegerDefinedForAst = errors.New("Ast doesn't define integer conversions")
+	NoToBooleanDefinedForAst = errors.New("Ast doesn't define boolean conversions")
+	NoToListDefinedForAst    = errors.New("Ast doesn't define list conversions")
+)
+
+func (_ *Ast) ToString() (String, error) { return "", NoToStringDefinedForAst }
+func (_ *Ast) ToInteger() (Integer, error) { return 0, NoToIntegerDefinedForAst }
+func (_ *Ast) ToBoolean() (Boolean, error) { return false, NoToBooleanDefinedForAst }
+func (_ *Ast) ToList() (List, error) { return nil, NoToListDefinedForAst }
