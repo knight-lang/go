@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-const shouldSupportKnightVersion_2_0_1 = false
+const shouldSupportKnightVersion_2_0_1 = true
 
 // Play parses `source` as Knight code, and then executes it.
 //

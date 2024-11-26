@@ -20,7 +20,8 @@ func (b Boolean) Run() (Value, error) {
 
 // Dump prints a debugging representation of the boolean to stdout.
 func (b Boolean) Dump() {
-	fmt.Print(b.ToString())
+	string, _ := b.ToString()
+	fmt.Print(string)
 }
 
 // ToBoolean simply returns the boolean unchanged.

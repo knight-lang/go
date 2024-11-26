@@ -445,7 +445,8 @@ func multiply(args []Value) (Value, error) {
 	}
 }
 
-// divide divides the first argument by the second; errors out of the second is zero.
+// divide divides an integer by another. It returns an error for other types, or if the second
+// argument is zero.
 func divide(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -470,7 +471,8 @@ func divide(args []Value) (Value, error) {
 	}
 }
 
-// remainder returns the remainder of `<arg1>/<arg2>`; errors out if second arg is zero.
+// remainder gets the remainder of the first argument and the second. It returns an error for other
+// types, or if the second argument is zero.
 func remainder(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -495,8 +497,9 @@ func remainder(args []Value) (Value, error) {
 	}
 }
 
-// exponentiate raises the first argument to the power of the second, or joins lists. errors out on
-// negative powers for integers.
+// exponentiate raises the first argument to the power of the second, or joins lists. It returns an
+// error for other types, if an integer is raised to a negative power, or if the list contains types
+// which cannot be converted to strings (such as `BLOCK`'s return value).
 func exponentiate(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -514,8 +517,11 @@ func exponentiate(args []Value) (Value, error) {
 			return nil, fmt.Errorf("negative exponent given to '^': %d", rhs)
 		}
 
-		// All 32 bit number exponentiations that can be represented in 32 bits can be done with
-		// 64 bit floats and a "powf" function.
+		// Knight only requires us support 32 bit integers, and only support exponentiations which
+		// don't overflow those bounds. This requirement can be satisfied by converting to float64s,
+		// as they can losslessly represent 32 bit integers. While this does mean that excessively
+		// large 64 bit integers won't yield exactly correct results, this method is much faster and
+		// cleaner than having to do exponentiation ourselves.
 		return Integer(math.Pow(float64(lhs), float64(rhs))), nil
 
 	case List:
@@ -524,7 +530,7 @@ func exponentiate(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		joined, err := lhs.Join(string(sep))
+		joined, err := lhs.Join(string(sep)) // Join can fail if the list contains Asts or Variables.
 		if err != nil {
 			return nil, err
 		}
@@ -536,7 +542,10 @@ func exponentiate(args []Value) (Value, error) {
 	}
 }
 
-func compare(lhs, rhs Value, fn rune) (int, error) {
+// compare returns a negative, zero, or positive integer depending on whether lhs is less than,
+// equal to, or greater than the second. The functionName argument is just used for error messages
+// if an invalid type is provided.
+func compare(lhs, rhs Value, functionName rune) (int, error) {
 	switch lhs := lhs.(type) {
 	case Integer:
 		rhs, err := rhs.ToInteger()
@@ -544,6 +553,7 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 			return 0, err
 		}
 
+		// Subtraction actually is all that's needed for integers.
 		return int(lhs - rhs), nil
 
 	case String:
@@ -552,6 +562,7 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 			return 0, err
 		}
 
+		// strings.Compare does lexicographical comparisons
 		return strings.Compare(string(lhs), string(rhs)), nil
 
 	case Boolean:
@@ -560,12 +571,13 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 			return 0, err
 		}
 
-		if lhs == rhs {
-			return 0, nil
+		// Just manually enumerate all the cases for booleans.
+		if !lhs && rhs {
+			return -1, nil
 		} else if lhs && !rhs {
 			return 1, nil
 		} else {
-			return -1, nil
+			return 0, nil
 		}
 
 	case List:
@@ -579,8 +591,9 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 			minLen = len(rhs)
 		}
 
+		// Check element-wise, and return the first non-equal comparison.
 		for i := 0; i < minLen; i++ {
-			cmp, err := compare(lhs[i], rhs[i], fn)
+			cmp, err := compare(lhs[i], rhs[i], functionName)
 			if err != nil {
 				return 0, err
 			}
@@ -590,14 +603,17 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 			}
 		}
 
+		// All elements were equal, now check their lengths.
 		return len(lhs) - len(rhs), nil
 
 	default:
-		return 0, fmt.Errorf("invalid type given to %q: %T", fn, lhs)
+		return 0, fmt.Errorf("invalid type given to %q: %T", functionName, lhs)
 	}
 }
 
-// lessThan returns whether the first argument is less than the second.
+// lessThan returns whether the first argument is less than the second. An error is returned if
+// the first argument isn't a boolean, integer, string, or list, or if a list that's passed contains
+// an invalid argument.
 func lessThan(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -617,7 +633,9 @@ func lessThan(args []Value) (Value, error) {
 	return Boolean(cmp < 0), nil
 }
 
-// greaterThan returns whether the first argument is greater than the second.
+// greaterThan returns whether the first argument is greater than the second. An error is returned
+// if the first argument isn't a boolean, integer, string, or list, or if a list that's passed
+// contains an invalid argument.
 func greaterThan(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -637,7 +655,8 @@ func greaterThan(args []Value) (Value, error) {
 	return Boolean(cmp > 0), nil
 }
 
-// equalTo returns whether its two arguments are equal to one other.
+// equalTo returns whether its two arguments are equal to one other. Unlike the `<` and `>`
+// functions, this doesn't coerce the second argument to the type of the first.
 func equalTo(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -649,12 +668,12 @@ func equalTo(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	// `DeepEqual` happens to correspond exactly to Knight's equality semantics
+	// reflect.DeepEqual happens to correspond exactly to Knight's equality semantics.
 	return Boolean(reflect.DeepEqual(lhs, rval)), nil
 }
 
-// and evaluates the first argument, then either returns that if it's truthy, or otherwise evaluates
-// and returns the second argument.
+// and evaluates the first argument and returns it if it's falsey. When it's truthy, it returns the
+// second argument.
 func and(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -673,8 +692,8 @@ func and(args []Value) (Value, error) {
 	return lhs, nil
 }
 
-// or evaluates the first argument, then either returns that if it's falsey, or otherwise evaluates
-// and returns the second argument.
+// or evaluates the first argument and returns it if it's truthy. When it's falsey, it returns the
+// second argument.
 func or(args []Value) (Value, error) {
 	lhs, err := args[0].Run()
 	if err != nil {
@@ -701,7 +720,8 @@ func then(args []Value) (Value, error) {
 	return args[1].Run()
 }
 
-// assign assigns the second argument to the first argument (which must be a `Variable`).
+// assign is used to assign values to variables. The first argument must be a Variable, or an error
+// is returned. The second argument is evaluated, and after assignment is returned.
 func assign(args []Value) (Value, error) {
 	variable, ok := args[0].(*Variable)
 	if !ok {
@@ -718,7 +738,7 @@ func assign(args []Value) (Value, error) {
 	return value, nil
 }
 
-// while evaluates the second argument whilst the first is true.
+// while evaluates the second argument whilst the first is true, and returns Null.
 func while(args []Value) (Value, error) {
 	for {
 		condition, err := runToBoolean(args[0])
@@ -738,9 +758,14 @@ func while(args []Value) (Value, error) {
 	return Null{}, nil
 }
 
-/** ARITY THREE **/
+/**************************************************************************************************
+ *                                                                                                *
+ *                                            Arity 2                                             *
+ *                                                                                                *
+ **************************************************************************************************/
 
-// if will evaluate and return either the 2nd or 3rd argument, depending on the 1st's truthiness
+// if_ evaluates and returns the second argument if the first is truthy; if it's falsey, if_
+// evaluates and returns the third argument instead.
 func if_(args []Value) (Value, error) {
 	condition, err := runToBoolean(args[0])
 	if err != nil {
@@ -754,7 +779,9 @@ func if_(args []Value) (Value, error) {
 	return args[2].Run()
 }
 
-// get returns a sublist/string with start and length of the second and third elements.
+// get returns a sublist/substring with start and length of the second and third arguments. It
+// returns an error if the start or length are negative, if `start + length` is larger than
+// the collection's length, or if a non-list/string element is provided.
 func get(args []Value) (Value, error) {
 	collection, err := args[0].Run()
 	if err != nil {
@@ -799,9 +826,16 @@ func get(args []Value) (Value, error) {
 	}
 }
 
-/** ARITY FOUR **/
+/**************************************************************************************************
+ *                                                                                                *
+ *                                            Arity 4                                             *
+ *                                                                                                *
+ **************************************************************************************************/
 
-// set returns a list/string where the range `[<arg2>, <arg2>+<arg3>)` is replaced by the fourth.
+// set returns a list/string where the range `[start, start+length)` (where start and length are the
+// second and third parameters, respectively) is replaced by the fourth parameter. An error is
+// returned if either the start or length are negative, if `start+length` is larger than the size
+// of the container, or if the first argument isn't a list or string.
 func set(args []Value) (Value, error) {
 	collection, err := args[0].Run()
 	if err != nil {
