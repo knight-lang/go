@@ -18,61 +18,71 @@ type Value interface {
 
 // Convertible is implemented by types that can be coerced to the four conversion" tpyes
 type Convertible interface {
-	// ToBoolean coerces the to a `Boolean`.
+	// ToBoolean coerces to a `Boolean`.
 	ToBoolean() Boolean
 
-	// ToInteger coerces the to a `Integer`.
+	// ToInteger coerces to a `Integer`.
 	ToInteger() Integer
 
-	// ToString coerces the to a `String`.
+	// ToString coerces to a `String`.
 	ToString() String
 
-	// ToList coerces the to a `List`.
+	// ToList coerces to a `List`.
 	ToList() List
 }
 
-type ConversionTarget interface {
-	~bool | ~int64 | ~[]Value | ~string
-}
-
-func TryConvert[T ConversionTarget](value Value) (T, error) {
-	var t T
-
-	v, ok := value.(Convertible)
-	if !ok {
-		return t, fmt.Errorf("cannot convert %T to a %T", value, t)
-	}
-
-	switch any(t).(type) {
-	case Boolean:
-		return any(v.ToBoolean()).(T), nil
-	case bool:
-		return any(bool(v.ToBoolean())).(T), nil
-	case Integer:
-		return any(v.ToInteger()).(T), nil
-	case int64:
-		return any(int64(v.ToInteger())).(T), nil
-	case String:
-		return any(v.ToString()).(T), nil
-	case string:
-		return any(string(v.ToString())).(T), nil
-	case List:
-		return any(v.ToList()).(T), nil
-	case []Value:
-		return any([]Value(v.ToList())).(T), nil
-	default:
-		panic(fmt.Sprintf("<internal error> invalid value given to TryConvert: %T", t))
-	}
-}
-
-// runTo runs the `value` and then converts its type
-func runTo[T ConversionTarget](value Value) (T, error) {
+func runToInteger(value Value) (Integer, error) {
 	ran, err := value.Run()
-
 	if err != nil {
-		var t T
-		return t, err
+		return 0, err
 	}
 
-	return TryConvert[T](ran)
+	convertible, ok := ran.(Convertible)
+	if !ok {
+		return 0, fmt.Errorf("cannot convert %T to an Integer", ran)
+	}
+
+	return convertible.ToInteger(), nil
+}
+
+func runToString(value Value) (String, error) {
+	ran, err := value.Run()
+	if err != nil {
+		return "", err
+	}
+
+	convertible, ok := ran.(Convertible)
+	if !ok {
+		return "", fmt.Errorf("cannot convert %T to a String", ran)
+	}
+
+	return convertible.ToString(), nil
+}
+
+func runToList(value Value) (List, error) {
+	ran, err := value.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	convertible, ok := ran.(Convertible)
+	if !ok {
+		return nil, fmt.Errorf("cannot convert %T to a List", ran)
+	}
+
+	return convertible.ToList(), nil
+}
+
+func runToBoolean(value Value) (Boolean, error) {
+	ran, err := value.Run()
+	if err != nil {
+		return false, err
+	}
+
+	convertible, ok := ran.(Convertible)
+	if !ok {
+		return false, fmt.Errorf("cannot convert %T to a Boolean", ran)
+	}
+
+	return convertible.ToBoolean(), nil
 }

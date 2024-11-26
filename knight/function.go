@@ -208,7 +208,7 @@ func call(args []Value) (Value, error) {
 
 // quit exits the program with the given exit code.
 func quit(args []Value) (Value, error) {
-	exitStatus, err := runTo[Integer](args[0])
+	exitStatus, err := runToInteger(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func quit(args []Value) (Value, error) {
 
 // not returns the logical negation of its argument
 func not(args []Value) (Value, error) {
-	boolean, err := runTo[Boolean](args[0])
+	boolean, err := runToBoolean(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func length(args []Value) (Value, error) {
 		return Integer(len(container)), nil
 
 	default:
-		list, err := TryConvert[List](container)
+		list, err := TryConvertList(container)
 		if err != nil {
 			return nil, err
 		}
@@ -273,7 +273,7 @@ func dump(args []Value) (Value, error) {
 // If a `\` is the very last character, it's stripped and no newline is added. Otherwise, a newline
 // is also printed.
 func output(args []Value) (Value, error) {
-	string, err := runTo[String](args[0])
+	string, err := runToString(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -317,7 +317,7 @@ func ascii(args []Value) (Value, error) {
 
 // negate returns the numerical negation of its argument.
 func negate(args []Value) (Value, error) {
-	number, err := runTo[Integer](args[0])
+	number, err := runToInteger(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +336,7 @@ func add(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := runTo[Integer](args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -344,7 +344,7 @@ func add(args []Value) (Value, error) {
 		return lhs + rhs, nil
 
 	case String:
-		rhs, err := runTo[String](args[1])
+		rhs, err := runToString(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -357,7 +357,7 @@ func add(args []Value) (Value, error) {
 		return String(sb.String()), nil
 
 	case List:
-		rhs, err := runTo[List](args[1])
+		rhs, err := runToList(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -378,7 +378,7 @@ func subtract(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := runTo[Integer](args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -398,7 +398,7 @@ func multiply(args []Value) (Value, error) {
 	}
 
 	// It just so happens that all three multiply cases need integers as the second argument
-	rhs, err := runTo[Integer](args[1])
+	rhs, err := runToInteger(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +440,7 @@ func divide(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := runTo[Integer](args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -465,7 +465,7 @@ func remainder(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := runTo[Integer](args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -491,7 +491,7 @@ func exponentiate(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := runTo[Integer](args[1])
+		rhs, err := runToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -505,7 +505,7 @@ func exponentiate(args []Value) (Value, error) {
 		return Integer(math.Pow(float64(lhs), float64(rhs))), nil
 
 	case List:
-		sep, err := runTo[String](args[1])
+		sep, err := runToString(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -525,7 +525,7 @@ func exponentiate(args []Value) (Value, error) {
 func compare(lhs, rhs Value, fn rune) (int, error) {
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := TryConvert[Integer](rhs)
+		rhs, err := TryConvertInteger(rhs)
 		if err != nil {
 			return 0, err
 		}
@@ -541,7 +541,7 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 		return strings.Compare(string(lhs), string(rhs)), nil
 
 	case Boolean:
-		rhs, err := TryConvert[Boolean](rhs)
+		rhs, err := TryConvertBoolean(rhs)
 		if err != nil {
 			return 0, err
 		}
@@ -549,7 +549,7 @@ func compare(lhs, rhs Value, fn rune) (int, error) {
 		return int(lhs.ToInteger() - rhs.ToInteger()), nil
 
 	case List:
-		rhs, err := TryConvert[List](rhs)
+		rhs, err := TryConvertList(rhs)
 		if err != nil {
 			return 0, err
 		}
@@ -641,7 +641,7 @@ func and(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	isTruthy, err := TryConvert[Boolean](lhs)
+	isTruthy, err := TryConvertBoolean(lhs)
 	if err != nil {
 		return nil, err
 	}
@@ -661,7 +661,7 @@ func or(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	isTruthy, err := TryConvert[Boolean](lhs)
+	isTruthy, err := TryConvertBoolean(lhs)
 	if err != nil {
 		return nil, err
 	}
@@ -701,7 +701,7 @@ func assign(args []Value) (Value, error) {
 // while evaluates the second argument whilst the first is true.
 func while(args []Value) (Value, error) {
 	for {
-		condition, err := runTo[Boolean](args[0])
+		condition, err := runToBoolean(args[0])
 		if err != nil {
 			return nil, err
 		}
@@ -722,7 +722,7 @@ func while(args []Value) (Value, error) {
 
 // if will evaluate and return either the 2nd or 3rd argument, depending on the 1st's truthiness
 func if_(args []Value) (Value, error) {
-	condition, err := runTo[Boolean](args[0])
+	condition, err := runToBoolean(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -741,7 +741,7 @@ func get(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	start, err := runTo[Integer](args[1])
+	start, err := runToInteger(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -749,7 +749,7 @@ func get(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to 'GET': %d", start)
 	}
 
-	length, err := runTo[Integer](args[2])
+	length, err := runToInteger(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -788,7 +788,7 @@ func set(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	start, err := runTo[Integer](args[1])
+	start, err := runToInteger(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -796,7 +796,7 @@ func set(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to 'SET': %d", start)
 	}
 
-	length, err := runTo[Integer](args[2])
+	length, err := runToInteger(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -812,7 +812,7 @@ func set(args []Value) (Value, error) {
 			return nil, fmt.Errorf("string index out of bounds for 'SET': %d < %d", len(collection), stop)
 		}
 
-		replacement, err := runTo[String](args[3])
+		replacement, err := runToString(args[3])
 		if err != nil {
 			return nil, err
 		}
@@ -828,7 +828,7 @@ func set(args []Value) (Value, error) {
 			return nil, fmt.Errorf("list index out of bounds for 'SET': %d < %d", len(collection), stop)
 		}
 
-		replacement, err := runTo[List](args[3])
+		replacement, err := runToList(args[3])
 		if err != nil {
 			return nil, err
 		}
