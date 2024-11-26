@@ -47,7 +47,8 @@ func (l List) ToInteger() Integer {
 
 // ToString returns the list converted to a string by adding a newline between each element.
 func (l List) ToString() String {
-	return String(l.Join("\n"))
+	joined, _ := l.Join("\n")
+	return String(joined)
 }
 
 // ToList simply returns the list unchanged.
@@ -57,9 +58,10 @@ func (l List) ToList() List {
 
 // Join concatenates all the elements of the list together into a big string, with `separator`
 // interspersed between the elements.
-func (l List) Join(separator string) string {
+func (l List) Join(separator string) (string, error) {
 	// Use a `strings.Builder` for efficiency, as we'll be doing multiple concatenations.
 	var sb strings.Builder
+	var err error
 
 	for i, element := range l {
 		// Don't add the separator during the first iteration
@@ -67,13 +69,13 @@ func (l List) Join(separator string) string {
 			sb.WriteString(separator)
 		}
 
-		// Add the element to the end. Note that `element.(Convertible)` will panic if `element`
-		// doesn't implement `Convertible`, which can happen if the element's the return value of
-		// `BLOCK`. However, this is OK, as the Knight specs don't require `BLOCK`'s return values to
-		// be convertible to strings.
-		sb.WriteString(string(element.(Convertible).ToString()))
-		// ^ TODO: fix my panic
+		if element, ok := element.(Convertible); ok {
+			sb.WriteString(string(element.ToString()))
+		} else {
+			sb.WriteString("<invalid>")
+			err = fmt.Errorf("unable to convert %T to a string", element)
+		}
 	}
 
-	return sb.String()
+	return sb.String(), err
 }

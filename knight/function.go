@@ -510,7 +510,12 @@ func exponentiate(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		return String(lhs.Join(string(sep))), nil
+		joined, err := lhs.Join(string(sep))
+		if err != nil {
+			return nil, err
+		}
+
+		return String(joined), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '^': %T", lhs)
