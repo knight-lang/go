@@ -34,7 +34,7 @@ func (i Integer) ToInteger() (Integer, error) {
 	return i, nil
 }
 
-// ToString returns the string representation of the integer.
+// ToString returns the string representation of the integer in base-10.
 func (i Integer) ToString() (String, error) {
 	return String(strconv.FormatInt(int64(i), 10)), nil
 }

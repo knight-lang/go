@@ -8,11 +8,11 @@ package knight
 // All types must define the conversion functions, however types which don't have a defined
 // conversion (such as `BLOCK`'s return values) are free to always return `error`s.
 //
-// NOTE::: The conversion functions here return `error`s because a handful of them _are_ fallible
-// (such as converting a list of `BLOCK`s to a string). However, the Knight specs say that doing
-// any of these fallible conversions is undefined behaviour. As such, we could do whatever we liked
-// in these cases (`panic`, use a default, etc). I chose the `error` route to make error messages
-// for the end-user a bit cleaner.
+// NOTE: The conversion functions here return `error`s because a handful of them _are_ fallible (eg
+// converting a list of `BLOCK`s to a string). However, the Knight specs say that doing any of these
+// fallible conversions is undefined behaviour. As such, we _could_ do whatever we liked in these
+// cases (`panic`, use a default, return an error, etc). I chose the `error` route to make error
+// messages for the end-user a bit cleaner.
 type Value interface {
 	// Run executes the value, returning the result or whatever error may have occurred.
 	Run() (Value, error)

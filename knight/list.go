@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-// List is the list type within Knight
+// List is the "container" type within Knight.
 //
-// The list literal in Knight code is `@`; Lists can be created by `,X` which creates a one-element
-// list of just `X`, or via coercions such as `+ @ 123` (which yields `[1, 2, 3]`.)
+// Empty lists in Knight are represented via `@`. Lists can be created via `,` (eg `,3`), which
+// create a one-element list, or via coercions such as `+ @ 123` (which yields `[1, 2, 3]`.)
 type List []Value
 
-// Compile-time assertion that List implements the Value interfaces.
+// Compile-time assertion that List implements the Value interface.
 var _ Value = List{}
 
 // Run simply returns the list unchanged.
@@ -35,12 +35,12 @@ func (l List) Dump() {
 	fmt.Print("]")
 }
 
-// ToBoolean returns whether or not the list is empty.
+// ToBoolean returns whether the list is nonempty.
 func (l List) ToBoolean() (Boolean, error) {
 	return len(l) != 0, nil
 }
 
-// ToInteger returns the list's length length.
+// ToInteger returns the list's length.
 func (l List) ToInteger() (Integer, error) {
 	return Integer(len(l)), nil
 }

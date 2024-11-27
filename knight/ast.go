@@ -15,8 +15,8 @@ type Ast struct {
 // Compile-time assertion that Ast implements the Value interface.
 var _ Value = &Ast{}
 
-// NewAst constructs a new ast, and panics if the amount of arguments given isn't equal to the arity
-// of the function.
+// NewAst constructs a new ast. It'll panic if the amount of arguments given isn't equal to the
+// arity of the function.
 func NewAst(function *Function, arguments []Value) *Ast {
 	if function.arity != len(arguments) {
 		panic(fmt.Sprint("function arity mismatch: expected", function.arity, "got", len(arguments)))
@@ -42,14 +42,15 @@ func (a *Ast) Dump() {
 	fmt.Print(")")
 }
 
-// Errors for string conversions
+//
+// Conversions: They always return errors, as asts cannot be converted to other types.
+//
 var (
 	NoToStringDefinedForAst  = errors.New("Ast doesn't define string conversions")
 	NoToIntegerDefinedForAst = errors.New("Ast doesn't define integer conversions")
 	NoToBooleanDefinedForAst = errors.New("Ast doesn't define boolean conversions")
 	NoToListDefinedForAst    = errors.New("Ast doesn't define list conversions")
 )
-
 func (_ *Ast) ToString() (String, error)   { return "", NoToStringDefinedForAst }
 func (_ *Ast) ToInteger() (Integer, error) { return 0, NoToIntegerDefinedForAst }
 func (_ *Ast) ToBoolean() (Boolean, error) { return false, NoToBooleanDefinedForAst }

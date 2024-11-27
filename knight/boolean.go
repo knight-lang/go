@@ -6,19 +6,18 @@ import (
 
 // Boolean is the boolean type within Knight.
 //
-// Knight code can access Booleans via the functions which return booleans (notably `TRUE` and
-// `FALSE`, along with comparison operators).
+// Knight code can access Booleans via functions which return booleans (notably `TRUE` and `FALSE`).
 type Boolean bool
 
 // Compile-time assertion that Boolean implements the Value interface.
-var _ Value = Boolean(true)
+var _ Value = Boolean(false)
 
-// Run simply returns a boolean unchanged.
+// Run simply returns the boolean unchanged.
 func (b Boolean) Run() (Value, error) {
 	return b, nil
 }
 
-// Dump prints a "true" or "false" to stdout.
+// Dump prints "true" or "false" to stdout.
 func (b Boolean) Dump() {
 	string, _ := b.ToString()
 	fmt.Print(string)
@@ -29,7 +28,7 @@ func (b Boolean) ToBoolean() (Boolean, error) {
 	return b, nil
 }
 
-// ToInteger returns 1 if the boolean is true, 0 otherwise.
+// ToInteger returns 1 if the boolean is true and 0 if it is false.
 func (b Boolean) ToInteger() (Integer, error) {
 	if b {
 		return 1, nil

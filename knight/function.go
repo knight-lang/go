@@ -15,8 +15,10 @@ import (
 )
 
 // Function represents a Knight function (eg `DUMP`, `+`, `=`, etc.).
+//
+// These are used within Ast to store which function the AST should be executing.
 type Function struct {
-	// The user-friendly name of the function. Used within syntax error and Ast.Dump.
+	// The user-friendly name of the function. Used within syntax error and `Ast.Dump`.
 	name string
 
 	// The amount of arguments that `fn` expects.
@@ -93,11 +95,25 @@ func init() {
  *                                                                                                *
  **************************************************************************************************/
 
-// "Literal" functions---functions which take no arguments and always return the same value.
-func true_(_ []Value) (Value, error)     { return Boolean(true), nil }
-func false_(_ []Value) (Value, error)    { return Boolean(false), nil }
-func null(_ []Value) (Value, error)      { return Null{}, nil }
-func emptyList(_ []Value) (Value, error) { return List{}, nil }
+// true_ always returns the true Boolean.
+func true_(_ []Value) (Value, error) {
+	return Boolean(true), nil
+}
+
+// false_ always returns the false Boolean.
+func false_(_ []Value) (Value, error) {
+	return Boolean(false), nil
+}
+
+// null always returns Null.
+func null(_ []Value) (Value, error) {
+	return Null{}, nil
+}
+
+// emptyList always returns an empty List
+func emptyList(_ []Value) (Value, error) {
+	return List{}, nil
+}
 
 // random returns a random Integer.
 func random(_ []Value) (Value, error) {
@@ -107,15 +123,27 @@ func random(_ []Value) (Value, error) {
 
 // prompt reads a line from stdin, returning Null if stdin is empty.
 func prompt(_ []Value) (Value, error) {
-	if stdinScanner.Scan() {
-		return String(strings.TrimRight(stdinScanner.Text(), "\r")), nil
+	// If there was a problem getting the line...
+	if !stdinScanner.Scan() {
+		// EOF doesn't cause errors; this is something like permission denied.
+		if err := stdinScanner.Err(); err != nil {
+			return nil, fmt.Errorf("unable to 'PROMPT': %v", err)
+		}
+
+		// EOF was reached, return null.
+		return Null{}, nil
 	}
 
-	if err := stdinScanner.Err(); err != nil {
-		return nil, err
+	// The line was scanned properly, extract it.
+	line := stdinScanner.Text()
+
+	// Knight version 2.0.1 requires _all_ trailing `\r`s to be stripped. Knight 2.1 only requires
+	// one to be stripped (which `.Text()` does for us).
+	if shouldSupportKnightVersion_2_0_1 {
+		line = strings.TrimRight(line, "\r")
 	}
 
-	return Null{}, nil
+	return String(line), nil
 }
 
 /**************************************************************************************************
@@ -230,7 +258,7 @@ func not(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	return Boolean(!boolean), nil
+	return !boolean, nil
 }
 
 // negate returns the numerical negation of its argument.

@@ -15,9 +15,9 @@ var EndOfInput = errors.New("source was empty")
 
 // Parser is used to construct Values from source code.
 //
-// This parses Knight programs in terms of "rune"s (golang speak for utf-8 characters), not bytes.
-// This is technically unnecessary as Knight only requires implementations to support a specific
-// subset of ASCII, but we're supporting them as an extension.
+// This parses Knight programs in terms of "rune"s (golang speak for unicode codepoints), instead of
+// bytes, as an extension: Our implementation supports all of Unicode, in addition to the restricted
+// subset that Knight requires.
 //
 // The strategy we use to parse out knight programs is to examine each rune at a time from the
 // source, which lets us know what to do next. Knight's spec is designed so that the next expression
@@ -81,58 +81,63 @@ func (p *Parser) TakeWhile(condition func(rune) bool) string {
 		p.Advance()
 	}
 
-	// (You have to use string() to convert from []rune to a string.)
+	// (You have to use `string()` to convert from a `[]rune` to a `string`.)
 	return string(p.source[start:p.index])
 }
 
-/**
- * Functions used within TakeWhile
- **/
+//
+// Functions used within ParseNextValue as arguments to TakeWhile.
+// 
 func isntNewLine(r rune) bool             { return r != '\n' }
 func isDigit(r rune) bool                 { return '0' <= r && r <= '9' }
 func isVariableStart(r rune) bool         { return unicode.IsLower(r) || r == '_' }
-func isVariableCharacter(r rune) bool     { return isVariableStart(r) || unicode.IsNumber(r) }
+func isVariableBody(r rune) bool     { return isVariableStart(r) || unicode.IsNumber(r) }
 func isWordFunctionCharacter(r rune) bool { return unicode.IsUpper(r) || r == '_' }
 func isWhitespace(r rune) bool {
 	// Note: The parenthesis are also included here because they may also safely be considered
 	// whitespace by implementations. (There's an optional extension where implementations can give
-	// syntax errors on unbalanced parenthesis if they want, but this implementation isn't doing that.)
+	// syntax errors on unbalanced parenthesis, but this implementation isn't doing that.)
 	return unicode.IsSpace(r) || r == '(' || r == ')'
 }
 
 // ParseNextValue returns the next Value in the source code. EndOfInput is returned if there's no
 // Values left. Syntax errors (such as missing an ending quote) are also returned.
 func (p *Parser) ParseNextValue() (Value, error) {
-	// If we're at the end, then just return.
+	// If we're at the end, return EndOfInput.
 	if p.IsAtEnd() {
 		return nil, EndOfInput
 	}
 
-	// Determine what to do solely based upon the next character. (Knight's designed in such a way
-	// that you can always unambiguously parse based on just the next character in the input stream.)
+	// Determine what to do solely based upon the next character---Knight's specs are designed in
+	// such a way that you can unambiguously determine what to do solely based on the next character
+	// in the input stream.
 	c := p.Peek()
-	switch {
-	// Whitespace, delete it and go again.
-	case isWhitespace(c):
+
+	// Whitespace, delete it and parse again.
+	if isWhitespace(c) {
 		p.Advance()
 		return p.ParseNextValue()
+	}
 
-	// Comment, delete it and go again.
-	case c == '#':
-		_ = p.TakeWhile(isntNewLine)
+	// Comment, delete it and parse again.
+	if c == '#' {
+		_ = p.TakeWhile(isntNewLine) // ignore the comment line that was parsed
 		return p.ParseNextValue()
+	}
 
 	// Integers
-	case isDigit(c):
+	if isDigit(c) {
 		integer, _ := strconv.Atoi(p.TakeWhile(isDigit))
 		return Integer(integer), nil
+	}
 
 	// Variables
-	case isVariableStart(c):
-		return NewVariable(p.TakeWhile(isVariableCharacter)), nil
+	if isVariableStart(c) {
+		return NewVariable(p.TakeWhile(isVariableBody)), nil
+	}
 
 	// Strings
-	case c == '\'' || c == '"':
+	if c == '\'' || c == '"' {
 		startIndex := p.index // for error msgs
 		p.Advance()           // Consume the starting quote.
 
@@ -147,42 +152,51 @@ func (p *Parser) ParseNextValue() (Value, error) {
 		// Consume the ending quote, and return the contents of the string.
 		p.Advance()
 		return String(contents), nil
+	}
 
+	//
 	// Everything else is a function, or invalid (which we check for below).
-	default:
-		startIndex := p.index // used for error msgs
+	//
 
-		// Delete the function name out
-		if isWordFunctionCharacter(c) {
-			_ = p.TakeWhile(isWordFunctionCharacter)
-		} else {
-			p.Advance()
-		}
+	// Delete the function name out of the input stream
+	if isWordFunctionCharacter(c) {
+		_ = p.TakeWhile(isWordFunctionCharacter) // ignore the remainder of the word function
+	} else {
+		p.Advance()
+	}
 
-		// Get the function definition; If it doesn't exist, then we've been given an invalid token.
-		function, ok := KnownFunctions[c]
-		if !ok {
-			return nil, fmt.Errorf("[line %d] unknown token start: %c", p.linenoAt(startIndex), c)
-		}
+	startIndex := p.index // used for syntax error messages
 
-		// Pre-allocate enough room to store all args.
-		arguments := make([]Value, function.arity)
+	// Get the function definition; If it doesn't exist, then we've been given an invalid token.
+	function, ok := KnownFunctions[c]
+	if !ok {
+		return nil, fmt.Errorf("[line %d] unknown token start: %c", p.linenoAt(startIndex), c)
+	}
 
-		// Parse each argument and add them to the arguments.
-		for i := 0; i < function.arity; i++ {
-			argument, err := p.ParseNextValue()
-			if err != nil {
-				// Special case: If the error was EndOfInput, provide a better error message.
-				if err == EndOfInput {
-					err = fmt.Errorf("[line %d] missing argument %d for function %q",
-						p.linenoAt(startIndex), i+1, function.name)
-				}
-				return nil, err
+	// Create a slice with enough room to store all the arguments.
+	arguments := make([]Value, function.arity)
+
+	// Parse each argument to the function, returning any errors that might occur. As a special case,
+	// we handle EndOfInput errors specially, which allows us to provide a better error message when
+	// arguments to a function are missing.
+	for i := 0; i < function.arity; i++ {
+		var err error
+
+		arguments[i], err = p.ParseNextValue()
+		if err != nil {
+			// Special case: If the error was EndOfInput, provide a better error message.
+			if err == EndOfInput {
+				err = fmt.Errorf(
+					"[line %d] missing argument %d for function %q",
+					p.linenoAt(startIndex),
+					i+1,
+					function.name,
+				)
 			}
 
-			arguments[i] = argument
+			return nil, err
 		}
-
-		return NewAst(function, arguments), nil
 	}
+
+	return NewAst(function, arguments), nil
 }

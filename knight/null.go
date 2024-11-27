@@ -7,8 +7,8 @@ import (
 // Null is the null type within knight.
 //
 // Knight code can access Null via the `NULL` function, and a handful of other functions which
-// return `NULL` (eg `OUTPUT`.)
-type Null struct{}
+// return `NULL` (eg `OUTPUT`).
+type Null struct{} // empty struct because there's only ever one null
 
 // Compile-time assertion that Null implements the Value interface.
 var _ Value = Null{}
@@ -40,6 +40,5 @@ func (_ Null) ToString() (String, error) {
 
 // ToList simply returns an empty list.
 func (_ Null) ToList() (List, error) {
-	// In go, nil is equivalent to an empty slice (and Lists are wrappers around slices).
-	return nil, nil
+	return nil, nil // nil is equivalent to an empty slice (and Lists are wrappers around slices).
 }
