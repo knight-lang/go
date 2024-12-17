@@ -8,7 +8,7 @@ import (
 	"github.com/knight-lang/go/knight"
 )
 
-// printAndExit 
+// printAndExit
 func printAndExit(isErr bool, fmtstr string, rest ...interface{}) {
 	var out *os.File
 
@@ -17,7 +17,6 @@ func printAndExit(isErr bool, fmtstr string, rest ...interface{}) {
 	} else {
 		out = os.Stdout
 	}
-
 
 	fmt.Fprintf(out, fmtstr, rest...)
 	fmt.Fprint(out, "\n")
@@ -29,7 +28,7 @@ func printAndExit(isErr bool, fmtstr string, rest ...interface{}) {
 	}
 }
 
-// Prints the usage and exits. isErr should be 
+// Prints the usage and exits. isErr should be
 func usage(isErr bool) {
 	printAndExit(isErr, "usage: %s [-h] (-e 'expr' | -f file)", os.Args[0])
 }

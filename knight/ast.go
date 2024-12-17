@@ -6,7 +6,7 @@ import (
 )
 
 // Ast represents a function call (eg `+ 1 2`) in Knight. It implements Value, but unconditionally
-// raise errors for all the conversion methods.
+// raise errors for all the conversion methods (as they're undefined in the specs for `Value`s).
 type Ast struct {
 	function  *Function
 	arguments []Value
@@ -19,7 +19,7 @@ var _ Value = &Ast{}
 // arity of the function.
 func NewAst(function *Function, arguments []Value) *Ast {
 	if function.arity != len(arguments) {
-		panic(fmt.Sprint("function arity mismatch: expected", function.arity, "got", len(arguments)))
+		panic(fmt.Sprint("[BUG] function arity mismatch: expected", function.arity, "got", len(arguments)))
 	}
 
 	return &Ast{function: function, arguments: arguments}
@@ -42,16 +42,19 @@ func (a *Ast) Dump() {
 	fmt.Print(")")
 }
 
-//
 // Conversions: They always return errors, as asts cannot be converted to other types.
-//
-var (
-	NoToStringDefinedForAst  = errors.New("Ast doesn't define string conversions")
-	NoToIntegerDefinedForAst = errors.New("Ast doesn't define integer conversions")
-	NoToBooleanDefinedForAst = errors.New("Ast doesn't define boolean conversions")
-	NoToListDefinedForAst    = errors.New("Ast doesn't define list conversions")
-)
-func (_ *Ast) ToString() (String, error)   { return "", NoToStringDefinedForAst }
-func (_ *Ast) ToInteger() (Integer, error) { return 0, NoToIntegerDefinedForAst }
-func (_ *Ast) ToBoolean() (Boolean, error) { return false, NoToBooleanDefinedForAst }
-func (_ *Ast) ToList() (List, error)       { return nil, NoToListDefinedForAst }
+func (_ *Ast) ToString() (String, error) {
+	return "", errors.New("Ast doesn't define string conversions")
+}
+
+func (_ *Ast) ToInteger() (Integer, error) {
+	return 0, errors.New("Ast doesn't define int conversions")
+}
+
+func (_ *Ast) ToBoolean() (Boolean, error) {
+	return false, errors.New("Ast doesn't define boolean conversions")
+}
+
+func (_ *Ast) ToList() (List, error) {
+	return nil, errors.New("Ast doesn't define list conversions")
+}

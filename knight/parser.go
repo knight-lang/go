@@ -17,14 +17,16 @@ var EndOfInput = errors.New("source was empty")
 //
 // This parses Knight programs in terms of "rune"s (golang speak for unicode codepoints), instead of
 // bytes, as an extension: Our implementation supports all of Unicode, in addition to the restricted
-// subset that Knight requires.
+// subset that Knight requires. Because of how UTF-8 encodes Unicode characters, we cant just simply
+// index into a UTF-8 encoded string like we could of a slice of bytes. So, we have to convert the
+// input into a rune slice (`[]rune`), which allows us to access the characters one-at-at-time.
 //
 // The strategy we use to parse out knight programs is to examine each rune at a time from the
 // source, which lets us know what to do next. Knight's spec is designed so that the next expression
 // is always unambiguously determined by the first non-whitespace non-comment rune. (e.g. if
 // we read a `D`, we know we're going to be executing `DUMP`.)
 type Parser struct {
-	source []rune // the contents of the program.
+	source []rune // the contents of the program. (rune is golang speak for a "unicode character")
 	index  int    // index of the next rune to look at.
 }
 
@@ -57,7 +59,7 @@ func (p *Parser) linenoAt(index int) int {
 // Peek returns the next rune without consuming it. It panics at the end of the source.
 func (p *Parser) Peek() rune {
 	if p.IsAtEnd() {
-		panic("peeked past end of source")
+		panic("[BUG] peeked when there's nothing left")
 	}
 
 	return p.source[p.index]
@@ -66,7 +68,7 @@ func (p *Parser) Peek() rune {
 // Advance consumes the next rune. It panics at the end of the source
 func (p *Parser) Advance() {
 	if p.IsAtEnd() {
-		panic("advanced past end of source")
+		panic("[BUG] advanced when there's nothing left")
 	}
 
 	p.index++
@@ -81,17 +83,16 @@ func (p *Parser) TakeWhile(condition func(rune) bool) string {
 		p.Advance()
 	}
 
-	// (You have to use `string()` to convert from a `[]rune` to a `string`.)
+	// (Since our `source` is a `[]rune`, and not a `string`, we have to convert it back to a
+	// `string` before returning it. We use the `string()` function to do this.)
 	return string(p.source[start:p.index])
 }
 
-//
 // Functions used within ParseNextValue as arguments to TakeWhile.
-// 
 func isntNewLine(r rune) bool             { return r != '\n' }
 func isDigit(r rune) bool                 { return '0' <= r && r <= '9' }
 func isVariableStart(r rune) bool         { return unicode.IsLower(r) || r == '_' }
-func isVariableBody(r rune) bool     { return isVariableStart(r) || unicode.IsNumber(r) }
+func isVariableBody(r rune) bool          { return isVariableStart(r) || unicode.IsNumber(r) }
 func isWordFunctionCharacter(r rune) bool { return unicode.IsUpper(r) || r == '_' }
 func isWhitespace(r rune) bool {
 	// Note: The parenthesis are also included here because they may also safely be considered

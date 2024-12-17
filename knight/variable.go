@@ -66,15 +66,14 @@ func (v *Variable) Assign(value Value) {
 	v.value = value
 }
 
-//
 // Conversions: They always return errors, as variables cannot be converted to other types.
-//
 var (
 	NoToStringDefinedForVariable  = errors.New("Variable doesn't define string conversions")
 	NoToIntegerDefinedForVariable = errors.New("Variable doesn't define integer conversions")
 	NoToBooleanDefinedForVariable = errors.New("Variable doesn't define boolean conversions")
 	NoToListDefinedForVariable    = errors.New("Variable doesn't define list conversions")
 )
+
 func (_ *Variable) ToString() (String, error)   { return "", NoToStringDefinedForVariable }
 func (_ *Variable) ToInteger() (Integer, error) { return 0, NoToIntegerDefinedForVariable }
 func (_ *Variable) ToBoolean() (Boolean, error) { return false, NoToBooleanDefinedForVariable }
