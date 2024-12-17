@@ -16,15 +16,15 @@ import (
 // This isn't a problem for spec-compliance, however, as the only valid use for `BLOCK`s are to be
 // `CALL`ed, which then will Run the variable anyways.
 type Variable struct {
-	name  string
-	value Value
+	name  string // the name of the variable; never changed after the Variable is created.
+	value Value  // the current value of the variable. a `nil` value indicates the Variable is unset.
 }
 
 // Compile-time assertion that Variable implements the Value interface.
 var _ Value = &Variable{}
 
-// variablesMap is the list of all known variables. It's used by NewVariable to ensure that all
-// variables of the same name point to the same Variable.
+// variablesMap is the a global variable that's a list of all known variables. It's used by the
+// NewVariable function to ensure that all variables of the same name point to the same Variable.
 var variablesMap map[string]*Variable = make(map[string]*Variable)
 
 // NewVariable returns the Variable corresponding to name, creating it if it doesn't exist.
@@ -60,21 +60,25 @@ func (v *Variable) Dump() {
 // Assign replaces the old value for the variable with the new value. Panics if value is nil.
 func (v *Variable) Assign(value Value) {
 	if value == nil {
-		panic("cannot assign nil values")
+		panic("[BUG] Variable.Assign called with a nil value?")
 	}
 
 	v.value = value
 }
 
 // Conversions: They always return errors, as variables cannot be converted to other types.
-var (
-	NoToStringDefinedForVariable  = errors.New("Variable doesn't define string conversions")
-	NoToIntegerDefinedForVariable = errors.New("Variable doesn't define integer conversions")
-	NoToBooleanDefinedForVariable = errors.New("Variable doesn't define boolean conversions")
-	NoToListDefinedForVariable    = errors.New("Variable doesn't define list conversions")
-)
+func (v *Variable) ToString() (String, error) {
+	return "", errors.New("Variable doesn't define string conversions")
+}
 
-func (_ *Variable) ToString() (String, error)   { return "", NoToStringDefinedForVariable }
-func (_ *Variable) ToInteger() (Integer, error) { return 0, NoToIntegerDefinedForVariable }
-func (_ *Variable) ToBoolean() (Boolean, error) { return false, NoToBooleanDefinedForVariable }
-func (_ *Variable) ToList() (List, error)       { return nil, NoToListDefinedForVariable }
+func (_ *Variable) ToInteger() (Integer, error) {
+	return 0, errors.New("Variable doesn't define integer conversions")
+}
+
+func (_ *Variable) ToBoolean() (Boolean, error) {
+	return false, errors.New("Variable doesn't define boolean conversions")
+}
+
+func (_ *Variable) ToList() (List, error) {
+	return nil, errors.New("Variable doesn't define list conversions")
+}
