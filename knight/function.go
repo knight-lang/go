@@ -2,7 +2,7 @@ package knight
 
 import (
 	"bufio"
-	"errors"
+	"errors" // For those non-gophers, `errors.New` is `fmt.Errorf` when no interpolation is needed.
 	"fmt"
 	"math"
 	"math/rand"
@@ -79,12 +79,14 @@ var (
 		'S': &Function{name: "SET", arity: 4, fn: set},
 	}
 
-	// stdinScanner is used by prompt to read lines from the standard input.
+	// stdinScanner is used by the `prompt` function to read lines from the standard input.
 	stdinScanner = bufio.NewScanner(os.Stdin)
 )
 
-// initialize the random number generator. (For non-go-folks, go ensures that all functions named
-// `init` will be executed before `main` is run.)
+// Initialize the random number generator for `random`.
+//
+// (For non-go-folks, go ensures that each file's `init` function, if it exists, will be executed
+// before `main` is run.)
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
@@ -118,14 +120,15 @@ func emptyList(_ []Value) (Value, error) {
 // random returns a random Integer.
 func random(_ []Value) (Value, error) {
 	// Note that `rand` is seeded in this file's `init` function.
-	return Integer(rand.Int63()), nil
+	return Integer(rand.Int63()), nil // Go only has `Int63` for some reason...
 }
 
 // prompt reads a line from stdin, returning Null if stdin is empty.
 func prompt(_ []Value) (Value, error) {
-	// If there was a problem getting the line...
+	// If there was a problem getting the line, then we're either at the end of the file (which means
+	// we should return Null), or there was some problem like stdin was closed or permission denied.
 	if !stdinScanner.Scan() {
-		// EOF doesn't cause errors; this is something like permission denied.
+		// EOF doesn't cause errors; this means there's a problem with stdin, like permission denied.
 		if err := stdinScanner.Err(); err != nil {
 			return nil, fmt.Errorf("unable to 'PROMPT': %v", err)
 		}
@@ -248,7 +251,7 @@ func quit(args []Value) (Value, error) {
 	}
 
 	os.Exit(int(exitStatus))
-	panic("<unreachable>") // Go isn't smart enough to recognize os.Exit never returns.
+	panic("<unreachable>") // Go isn't powerful enough to recognize os.Exit never returns.
 }
 
 // not returns the logical negation of its argument
@@ -280,7 +283,8 @@ func length(args []Value) (Value, error) {
 	}
 
 	// (Note: There need to be two branches here even though their contents are identical because the
-	// `len` function is operating on two different types).
+	// `len` function is operating on two different types: In the first case, a List, in the second
+	// a String.)
 	switch container := container.(type) {
 	case List:
 		return Integer(len(container)), nil
@@ -319,19 +323,26 @@ func dump(args []Value) (Value, error) {
 // argument, however if the argument ends in a `\`, the backslash is removed and no newline is
 // printed.
 func output(args []Value) (Value, error) {
-	string, err := runToString(args[0])
+	message, err := runToString(args[0])
 	if err != nil {
 		return nil, err
 	}
 
-	if string != "" && string[len(string)-1] == '\\' {
-		fmt.Print(string[:len(string)-1])
+	// Get the last "rune" (go-speak for (ish) a unicode character), so we can compare it against a
+	// backslash to see if the string ends in `\`. (If it does, the Knight specs say it should be
+	// deleted and the normal newline that `OUTPUT` would print would be suppressed.)
+	// NOTE: `DecodeLastRuneInString` will return `RuneError` if the message is empty. Since we only
+	// compare it against backslash, we don't need explicitly check for `string`'s length.
+	lastChr, idx := utf8.DecodeLastRuneInString(string(message))
+
+	if lastChr == '\\' {
+		fmt.Print(message[:len(message) - idx])
 
 		// Since we're not printing a newline, we flush stdout so that the output is always visible.
 		// (The error is explicitly ignored to be consistent with how `fmt.Print{,ln}` works.)
 		_ = os.Stdout.Sync()
 	} else {
-		fmt.Println(string)
+		fmt.Println(message)
 	}
 
 	return Null{}, nil
