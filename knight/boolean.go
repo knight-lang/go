@@ -14,8 +14,8 @@ var _ Value = Boolean(false)
 
 // Dump prints "true" or "false" to stdout.
 func (b Boolean) Dump() {
-	string, _ := b.ToString()
-	fmt.Print(string)
+	// In golang, `%t` is for booleans (just like `%d` is for ints and `%s` is for strings)
+	fmt.Printf("%t", b)
 }
 
 // Run simply returns the boolean unchanged.
