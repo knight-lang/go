@@ -14,11 +14,6 @@ type List []Value
 // Compile-time assertion that List implements the Value interface.
 var _ Value = List{}
 
-// Run simply returns the list unchanged.
-func (l List) Run() (Value, error) {
-	return l, nil
-}
-
 // Dump prints a debugging representation of the list to stdout.
 func (l List) Dump() {
 	fmt.Print("[")
@@ -33,6 +28,11 @@ func (l List) Dump() {
 	}
 
 	fmt.Print("]")
+}
+
+// Run simply returns the list unchanged.
+func (l List) Run() (Value, error) {
+	return l, nil
 }
 
 // ToBoolean returns whether the list is nonempty.

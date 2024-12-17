@@ -14,14 +14,14 @@ type Integer int64
 // Compile-time assertion that Integer implements the Value interface.
 var _ Value = Integer(0)
 
-// Run simply returns the integer unchanged.
-func (i Integer) Run() (Value, error) {
-	return i, nil
-}
-
 // Dump prints the integer in base-10 to stdout.
 func (i Integer) Dump() {
 	fmt.Printf("%d", i)
+}
+
+// Run simply returns the integer unchanged.
+func (i Integer) Run() (Value, error) {
+	return i, nil
 }
 
 // ToBoolean returns whether the integer is nonzero.

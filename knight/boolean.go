@@ -12,15 +12,15 @@ type Boolean bool
 // Compile-time assertion that Boolean implements the Value interface.
 var _ Value = Boolean(false)
 
-// Run simply returns the boolean unchanged.
-func (b Boolean) Run() (Value, error) {
-	return b, nil
-}
-
 // Dump prints "true" or "false" to stdout.
 func (b Boolean) Dump() {
 	string, _ := b.ToString()
 	fmt.Print(string)
+}
+
+// Run simply returns the boolean unchanged.
+func (b Boolean) Run() (Value, error) {
+	return b, nil
 }
 
 // ToBoolean simply returns the boolean unchanged.

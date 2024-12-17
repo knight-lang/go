@@ -17,15 +17,15 @@ type String string
 // Compile-time assertion that String implements the Value interface.
 var _ Value = String("")
 
-// Run simply returns the Stirng unchanged.
-func (s String) Run() (Value, error) {
-	return s, nil
-}
-
 // Dump prints the escaped version of string to stdout.
 func (s String) Dump() {
 	// It just so happens that golang's `%q` specifier exactly matches what Knight's `DUMP` expects.
 	fmt.Printf("%q", s)
+}
+
+// Run simply returns the Stirng unchanged.
+func (s String) Run() (Value, error) {
+	return s, nil
 }
 
 // ToBoolean returns whether the string is nonempty.

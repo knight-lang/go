@@ -14,11 +14,11 @@ package knight
 // cases (`panic`, use a default, return an error, etc). I chose the `error` route to make error
 // messages for the end-user a bit cleaner.
 type Value interface {
-	// Run executes the value, returning the result or whatever error may have occurred.
-	Run() (Value, error)
-
 	// Dump writes a debugging representation of the value to stdout.
 	Dump()
+
+	// Run executes the value, returning the result or whatever error may have occurred.
+	Run() (Value, error)
 
 	// ToBoolean coerces the type to a Boolean, or returns an error if there's a problem doing so.
 	ToBoolean() (Boolean, error)

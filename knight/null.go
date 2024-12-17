@@ -13,14 +13,14 @@ type Null struct{} // empty struct because there's only ever one null
 // Compile-time assertion that Null implements the Value interface.
 var _ Value = Null{}
 
-// Run simply returns the null unchanged.
-func (n Null) Run() (Value, error) {
-	return n, nil
-}
-
 // Dump simply prints "null" to stdout.
 func (_ Null) Dump() {
 	fmt.Print("null")
+}
+
+// Run simply returns the null unchanged.
+func (n Null) Run() (Value, error) {
+	return n, nil
 }
 
 // ToBoolean simply returns false.

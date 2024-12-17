@@ -1,12 +1,10 @@
 package knight
 
 import (
-	"errors"
 	"fmt"
 )
 
-// Ast represents a function call (eg `+ 1 2`) in Knight. It implements Value, but unconditionally
-// raise errors for all the conversion methods (as they're undefined in the specs for `Value`s).
+// Ast represents a function call (eg `+ 1 2`) in Knight.
 type Ast struct {
 	function  *Function
 	arguments []Value
@@ -42,19 +40,42 @@ func (a *Ast) Dump() {
 	fmt.Print(")")
 }
 
-// Conversions: They always return errors, as asts cannot be converted to other types.
-func (_ *Ast) ToString() (String, error) {
-	return "", errors.New("Ast doesn't define string conversions")
+// ToString converts the result of running the Ast to a String.
+func (a *Ast) ToString() (String, error) {
+	ran, err := a.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return ran.ToString()
 }
 
-func (_ *Ast) ToInteger() (Integer, error) {
-	return 0, errors.New("Ast doesn't define int conversions")
+// ToInteger converts the result of running the Ast to an Integer.
+func (a *Ast) ToInteger() (Integer, error) {
+	ran, err := a.Run()
+	if err != nil {
+		return 0, err
+	}
+
+	return ran.ToInteger()
 }
 
-func (_ *Ast) ToBoolean() (Boolean, error) {
-	return false, errors.New("Ast doesn't define boolean conversions")
+// ToBoolean converts the result of running the Ast to a Boolean.
+func (a *Ast) ToBoolean() (Boolean, error) {
+	ran, err := a.Run()
+	if err != nil {
+		return false, err
+	}
+
+	return ran.ToBoolean()
 }
 
-func (_ *Ast) ToList() (List, error) {
-	return nil, errors.New("Ast doesn't define list conversions")
+// ToList converts the result of running the Ast to a List.
+func (a *Ast) ToList() (List, error) {
+	ran, err := a.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	return ran.ToList()
 }
