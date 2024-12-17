@@ -25,8 +25,8 @@ func NewAst(function *Function, arguments []Value) *Ast {
 	return &Ast{function: function, arguments: arguments}
 }
 
-// Run executes the ast by passing its arguments to its function.
-func (a *Ast) Run() (Value, error) {
+// Execute executes the ast by passing its arguments to its function.
+func (a *Ast) Execute() (Value, error) {
 	return a.function.fn(a.arguments)
 }
 

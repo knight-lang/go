@@ -17,8 +17,8 @@ type Value interface {
 	// Dump writes a debugging representation of the value to stdout.
 	Dump()
 
-	// Run executes the value, returning the result or whatever error may have occurred.
-	Run() (Value, error)
+	// Execute executes the value, returning the result or whatever error may have occurred.
+	Execute() (Value, error)
 
 	// ToBoolean coerces the type to a Boolean, or returns an error if there's a problem doing so.
 	ToBoolean() (Boolean, error)
@@ -37,9 +37,9 @@ type Value interface {
 // The following are helper functions for executing Values.
 //
 
-// runToBoolean is a helper function that combines Value.Run and Value.ToBoolean.
-func runToBoolean(value Value) (Boolean, error) {
-	ran, err := value.Run()
+// executeToBoolean is a helper function that combines Value.Execute and Value.ToBoolean.
+func executeToBoolean(value Value) (Boolean, error) {
+	ran, err := value.Execute()
 	if err != nil {
 		return false, err
 	}
@@ -47,9 +47,9 @@ func runToBoolean(value Value) (Boolean, error) {
 	return ran.ToBoolean()
 }
 
-// runToInteger is a helper function that combines Value.Run and Value.ToInteger.
-func runToInteger(value Value) (Integer, error) {
-	ran, err := value.Run()
+// executeToInteger is a helper function that combines Value.Execute and Value.ToInteger.
+func executeToInteger(value Value) (Integer, error) {
+	ran, err := value.Execute()
 	if err != nil {
 		return 0, err
 	}
@@ -57,9 +57,9 @@ func runToInteger(value Value) (Integer, error) {
 	return ran.ToInteger()
 }
 
-// runToString is a helper function that combines Value.Run and Value.ToString.
-func runToString(value Value) (String, error) {
-	ran, err := value.Run()
+// executeToString is a helper function that combines Value.Execute and Value.ToString.
+func executeToString(value Value) (String, error) {
+	ran, err := value.Execute()
 	if err != nil {
 		return "", err
 	}
@@ -67,9 +67,9 @@ func runToString(value Value) (String, error) {
 	return ran.ToString()
 }
 
-// runToList is a helper function that combines Value.Run and Value.ToList.
-func runToList(value Value) (List, error) {
-	ran, err := value.Run()
+// executeToList is a helper function that combines Value.Execute and Value.ToList.
+func executeToList(value Value) (List, error) {
+	ran, err := value.Execute()
 	if err != nil {
 		return nil, err
 	}

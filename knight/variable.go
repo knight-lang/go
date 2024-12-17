@@ -10,11 +10,11 @@ import (
 // Variables are created via the NewVariable function, which ensures that each variable of a given
 // name always points to the same underlying Variable struct.
 //
-// Normally, this type isn't accessible from within Knight programs, as most functions Run their
+// Normally, this type isn't accessible from within Knight programs, as most functions Execute their
 // arguments before interacting with them. However, the `BLOCK` function has been implemented to
 // just return its argument, unevaluated. (So, variables can be accessed via eg `OUTPUT BLOCK foo`.)
 // This isn't a problem for spec-compliance, however, as the only valid use for `BLOCK`s are to be
-// `CALL`ed, which then will Run the variable anyways.
+// `CALL`ed, which then will Execute the variable anyways.
 type Variable struct {
 	name  string // the name of the variable; never changed after the Variable is created.
 	value Value  // the current value of the variable. a `nil` value indicates the Variable is unset.
@@ -40,9 +40,9 @@ func NewVariable(name string) *Variable {
 	return variable
 }
 
-// Run looks up the last-assigned value for the variable, returning an error if the variable hasn't
+// Execute looks up the last-assigned value for the variable, returning an error if the variable hasn't
 // been assigned yet.
-func (v *Variable) Run() (Value, error) {
+func (v *Variable) Execute() (Value, error) {
 	// Assign doesn't allow nil to be assigned to v.value, so we can use nil as a marker for
 	// unassigned variables.
 	if v.value == nil {

@@ -157,12 +157,12 @@ func prompt(_ []Value) (Value, error) {
 
 // noop simply executes its only argument and returns it
 func noop(args []Value) (Value, error) {
-	return args[0].Run()
+	return args[0].Execute()
 }
 
 // box creates a list just containing its argument.
 func box(args []Value) (Value, error) {
-	ran, err := args[0].Run()
+	ran, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func box(args []Value) (Value, error) {
 // head returns the first element/rune of a list/string. It returns an error if the container is
 // empty, or if the argument isn't a list or string.
 func head(args []Value) (Value, error) {
-	ran, err := args[0].Run()
+	ran, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func head(args []Value) (Value, error) {
 // tail returns a list/string of everything but the first element/rune. It returns an error if the
 // container is empty, or if the argument isn't a list or string.
 func tail(args []Value) (Value, error) {
-	ran, err := args[0].Run()
+	ran, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -226,26 +226,26 @@ func tail(args []Value) (Value, error) {
 	}
 }
 
-// block returns its argument unevaluated. This is intended to be used in conjunction with call (see
+// block returns its argument unexecuted. This is intended to be used in conjunction with call (see
 // below) to defer evaluation to a later point in time.
 func block(args []Value) (Value, error) {
 	return args[0], nil
 }
 
-// call runs its argument, and then returns the result of running _that_ value. This allows us to
-// defer execution of `BLOCK`s until later on.
+// call executes its argument, and then returns the result of executing _that_ value. This allows us
+// to defer execution of `BLOCK`s until later on.
 func call(args []Value) (Value, error) {
-	block, err := args[0].Run()
+	block, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	return block.Run()
+	return block.Execute()
 }
 
 // quit exits the program with the given exit status code.
 func quit(args []Value) (Value, error) {
-	exitStatus, err := runToInteger(args[0])
+	exitStatus, err := executeToInteger(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func quit(args []Value) (Value, error) {
 
 // not returns the logical negation of its argument
 func not(args []Value) (Value, error) {
-	boolean, err := runToBoolean(args[0])
+	boolean, err := executeToBoolean(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +266,7 @@ func not(args []Value) (Value, error) {
 
 // negate returns the numerical negation of its argument.
 func negate(args []Value) (Value, error) {
-	integer, err := runToInteger(args[0])
+	integer, err := executeToInteger(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +277,7 @@ func negate(args []Value) (Value, error) {
 // length returns the length of a list/string. It returns an error if the argument isn't a
 // list or string.
 func length(args []Value) (Value, error) {
-	container, err := args[0].Run()
+	container, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func length(args []Value) (Value, error) {
 
 // dump prints a debugging representation of its argument to stdout, then returns it.
 func dump(args []Value) (Value, error) {
-	value, err := args[0].Run()
+	value, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +323,7 @@ func dump(args []Value) (Value, error) {
 // argument, however if the argument ends in a `\`, the backslash is removed and no newline is
 // printed.
 func output(args []Value) (Value, error) {
-	message, err := runToString(args[0])
+	message, err := executeToString(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +352,7 @@ func output(args []Value) (Value, error) {
 // if an empty string, an integer which doesn't correspond to a rune, or a non int-non-string type
 // is given.
 func ascii(args []Value) (Value, error) {
-	value, err := args[0].Run()
+	value, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -387,14 +387,14 @@ func ascii(args []Value) (Value, error) {
 // add adds two integers/strings/lists together by coercing the second argument. Passing in any
 // other type will yield an error.
 func add(args []Value) (Value, error) {
-	ran, err := args[0].Run()
+	ran, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	switch lhs := ran.(type) {
 	case Integer:
-		rhs, err := runToInteger(args[1])
+		rhs, err := executeToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -402,7 +402,7 @@ func add(args []Value) (Value, error) {
 		return lhs + rhs, nil
 
 	case String:
-		rhs, err := runToString(args[1])
+		rhs, err := executeToString(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -414,7 +414,7 @@ func add(args []Value) (Value, error) {
 		return String(sb.String()), nil
 
 	case List:
-		rhs, err := runToList(args[1])
+		rhs, err := executeToList(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -428,14 +428,14 @@ func add(args []Value) (Value, error) {
 
 // subtract subtracts one integer from another. It returns an error for other types.
 func subtract(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := runToInteger(args[1])
+		rhs, err := executeToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -449,14 +449,14 @@ func subtract(args []Value) (Value, error) {
 
 // multiply an integer by another, or repeats a list or string. It returns an error for other types.
 func multiply(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	// It just so happens that all three multiply cases need integers as the second argument, so
 	// just do the coercion before the typecheck.
-	rhs, err := runToInteger(args[1])
+	rhs, err := executeToInteger(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -487,14 +487,14 @@ func multiply(args []Value) (Value, error) {
 // divide divides an integer by another. It returns an error for other types, or if the second
 // argument is zero.
 func divide(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := runToInteger(args[1])
+		rhs, err := executeToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -513,14 +513,14 @@ func divide(args []Value) (Value, error) {
 // remainder gets the remainder of the first argument and the second. It returns an error for other
 // types, or if the second argument is zero.
 func remainder(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := runToInteger(args[1])
+		rhs, err := executeToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -540,14 +540,14 @@ func remainder(args []Value) (Value, error) {
 // error for other types, if an integer is raised to a negative power, or if the list contains types
 // which cannot be converted to strings (such as `BLOCK`'s return value).
 func exponentiate(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := runToInteger(args[1])
+		rhs, err := executeToInteger(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -564,7 +564,7 @@ func exponentiate(args []Value) (Value, error) {
 		return Integer(math.Pow(float64(lhs), float64(rhs))), nil
 
 	case List:
-		sep, err := runToString(args[1])
+		sep, err := executeToString(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -654,12 +654,12 @@ func compare(lhs, rhs Value, functionName rune) (int, error) {
 // the first argument isn't a boolean, integer, string, or list, or if a list that's passed contains
 // an invalid argument.
 func lessThan(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	rhs, err := args[1].Run()
+	rhs, err := args[1].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -676,12 +676,12 @@ func lessThan(args []Value) (Value, error) {
 // if the first argument isn't a boolean, integer, string, or list, or if a list that's passed
 // contains an invalid argument.
 func greaterThan(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	rhs, err := args[1].Run()
+	rhs, err := args[1].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -697,12 +697,12 @@ func greaterThan(args []Value) (Value, error) {
 // equalTo returns whether its two arguments are equal to one other. Unlike the `<` and `>`
 // functions, this doesn't coerce the second argument to the type of the first.
 func equalTo(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	rval, err := args[1].Run()
+	rval, err := args[1].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -714,7 +714,7 @@ func equalTo(args []Value) (Value, error) {
 // and evaluates the first argument and returns it if it's falsey. When it's truthy, it returns the
 // second argument.
 func and(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -725,7 +725,7 @@ func and(args []Value) (Value, error) {
 	}
 
 	if isTruthy {
-		return args[1].Run()
+		return args[1].Execute()
 	}
 
 	return lhs, nil
@@ -734,7 +734,7 @@ func and(args []Value) (Value, error) {
 // or evaluates the first argument and returns it if it's truthy. When it's falsey, it returns the
 // second argument.
 func or(args []Value) (Value, error) {
-	lhs, err := args[0].Run()
+	lhs, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -745,18 +745,18 @@ func or(args []Value) (Value, error) {
 	}
 
 	if !isTruthy {
-		return args[1].Run()
+		return args[1].Execute()
 	}
 	return lhs, nil
 }
 
 // then evaluates the first argument, then evaluates and returns the second argument.
 func then(args []Value) (Value, error) {
-	if _, err := args[0].Run(); err != nil {
+	if _, err := args[0].Execute(); err != nil {
 		return nil, err
 	}
 
-	return args[1].Run()
+	return args[1].Execute()
 }
 
 // assign is used to assign values to variables. The first argument must be a Variable, or an error
@@ -767,7 +767,7 @@ func assign(args []Value) (Value, error) {
 		return nil, fmt.Errorf("invalid type given to '=': %T", args[0])
 	}
 
-	value, err := args[1].Run()
+	value, err := args[1].Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -780,7 +780,7 @@ func assign(args []Value) (Value, error) {
 // while evaluates the second argument whilst the first is true, and returns Null.
 func while(args []Value) (Value, error) {
 	for {
-		condition, err := runToBoolean(args[0])
+		condition, err := executeToBoolean(args[0])
 		if err != nil {
 			return nil, err
 		}
@@ -789,7 +789,7 @@ func while(args []Value) (Value, error) {
 			break
 		}
 
-		if _, err = args[1].Run(); err != nil {
+		if _, err = args[1].Execute(); err != nil {
 			return nil, err
 		}
 	}
@@ -806,28 +806,28 @@ func while(args []Value) (Value, error) {
 // if_ evaluates and returns the second argument if the first is truthy; if it's falsey, if_
 // evaluates and returns the third argument instead.
 func if_(args []Value) (Value, error) {
-	condition, err := runToBoolean(args[0])
+	condition, err := executeToBoolean(args[0])
 	if err != nil {
 		return nil, err
 	}
 
 	if condition {
-		return args[1].Run()
+		return args[1].Execute()
 	}
 
-	return args[2].Run()
+	return args[2].Execute()
 }
 
 // get returns a sublist/substring with start and length of the second and third arguments. It
 // returns an error if the start or length are negative, if `start + length` is larger than
 // the collection's length, or if a non-list/string element is provided.
 func get(args []Value) (Value, error) {
-	collection, err := args[0].Run()
+	collection, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	start, err := runToInteger(args[1])
+	start, err := executeToInteger(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -835,7 +835,7 @@ func get(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to 'GET': %d", start)
 	}
 
-	length, err := runToInteger(args[2])
+	length, err := executeToInteger(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -876,12 +876,12 @@ func get(args []Value) (Value, error) {
 // returned if either the start or length are negative, if `start+length` is larger than the size
 // of the container, or if the first argument isn't a list or string.
 func set(args []Value) (Value, error) {
-	collection, err := args[0].Run()
+	collection, err := args[0].Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	start, err := runToInteger(args[1])
+	start, err := executeToInteger(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -889,7 +889,7 @@ func set(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to 'SET': %d", start)
 	}
 
-	length, err := runToInteger(args[2])
+	length, err := executeToInteger(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -905,7 +905,7 @@ func set(args []Value) (Value, error) {
 			return nil, fmt.Errorf("string index out of bounds for 'SET': %d < %d", len(collection), stop)
 		}
 
-		replacement, err := runToString(args[3])
+		replacement, err := executeToString(args[3])
 		if err != nil {
 			return nil, err
 		}
@@ -921,7 +921,7 @@ func set(args []Value) (Value, error) {
 			return nil, fmt.Errorf("list index out of bounds for 'SET': %d < %d", len(collection), stop)
 		}
 
-		replacement, err := runToList(args[3])
+		replacement, err := executeToList(args[3])
 		if err != nil {
 			return nil, err
 		}

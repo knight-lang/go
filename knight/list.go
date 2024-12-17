@@ -30,8 +30,8 @@ func (l List) Dump() {
 	fmt.Print("]")
 }
 
-// Run simply returns the list unchanged.
-func (l List) Run() (Value, error) {
+// Execute simply returns the list unchanged.
+func (l List) Execute() (Value, error) {
 	return l, nil
 }
 

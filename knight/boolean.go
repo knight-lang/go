@@ -18,8 +18,8 @@ func (b Boolean) Dump() {
 	fmt.Printf("%t", b)
 }
 
-// Run simply returns the boolean unchanged.
-func (b Boolean) Run() (Value, error) {
+// Execute simply returns the boolean unchanged.
+func (b Boolean) Execute() (Value, error) {
 	return b, nil
 }
 

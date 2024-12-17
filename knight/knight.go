@@ -20,7 +20,7 @@ func Play(source string) (Value, error) {
 		return nil, fmt.Errorf("compile error: %v", err)
 	}
 
-	result, err := value.Run()
+	result, err := value.Execute()
 	if err != nil {
 		return nil, fmt.Errorf("runtime error: %v", err)
 	}

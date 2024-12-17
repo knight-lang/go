@@ -23,8 +23,8 @@ func (s String) Dump() {
 	fmt.Printf("%q", s)
 }
 
-// Run simply returns the Stirng unchanged.
-func (s String) Run() (Value, error) {
+// Execute simply returns the Stirng unchanged.
+func (s String) Execute() (Value, error) {
 	return s, nil
 }
 

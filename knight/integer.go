@@ -19,8 +19,8 @@ func (i Integer) Dump() {
 	fmt.Printf("%d", i)
 }
 
-// Run simply returns the integer unchanged.
-func (i Integer) Run() (Value, error) {
+// Execute simply returns the integer unchanged.
+func (i Integer) Execute() (Value, error) {
 	return i, nil
 }
 

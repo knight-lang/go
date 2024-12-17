@@ -18,8 +18,8 @@ func (_ Null) Dump() {
 	fmt.Print("null")
 }
 
-// Run simply returns the null unchanged.
-func (n Null) Run() (Value, error) {
+// Execute simply returns the null unchanged.
+func (n Null) Execute() (Value, error) {
 	return n, nil
 }
 
