@@ -1,6 +1,7 @@
 package knight
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -39,11 +40,6 @@ func NewVariable(name string) *Variable {
 	return variable
 }
 
-// Dump prints a debug representation of the variable to stdout.
-func (v *Variable) Dump() {
-	fmt.Printf("Variable(%s)", v.name)
-}
-
 // Run looks up the last-assigned value for the variable, returning an error if the variable hasn't
 // been assigned yet.
 func (v *Variable) Run() (Value, error) {
@@ -56,6 +52,11 @@ func (v *Variable) Run() (Value, error) {
 	return v.value, nil
 }
 
+// Dump prints a debug representation of the variable to stdout.
+func (v *Variable) Dump() {
+	fmt.Printf("Variable(%s)", v.name)
+}
+
 // Assign replaces the old value for the variable with the new value. Panics if value is nil.
 func (v *Variable) Assign(value Value) {
 	if value == nil {
@@ -65,46 +66,19 @@ func (v *Variable) Assign(value Value) {
 	v.value = value
 }
 
-// ToString converts the Variable's last assigned value to a String, returning an error if the
-// variable hasn't been assigned yet.
+// Conversions: They always return errors, as variables cannot be converted to other types.
 func (v *Variable) ToString() (String, error) {
-	ran, err := v.Run()
-	if err != nil {
-		return "", err
-	}
-
-	return ran.ToString()
+	return "", errors.New("Variable doesn't define string conversions")
 }
 
-// ToInteger converts the Variable's last assigned value to an Integer, returning an error if the
-// variable hasn't been assigned yet.
-func (v *Variable) ToInteger() (Integer, error) {
-	ran, err := v.Run()
-	if err != nil {
-		return 0, err
-	}
-
-	return ran.ToInteger()
+func (_ *Variable) ToInteger() (Integer, error) {
+	return 0, errors.New("Variable doesn't define integer conversions")
 }
 
-// ToBoolean converts the Variable's last assigned value to a Boolean, returning an error if the
-// variable hasn't been assigned yet.
-func (v *Variable) ToBoolean() (Boolean, error) {
-	ran, err := v.Run()
-	if err != nil {
-		return false, err
-	}
-
-	return ran.ToBoolean()
+func (_ *Variable) ToBoolean() (Boolean, error) {
+	return false, errors.New("Variable doesn't define boolean conversions")
 }
 
-// ToList converts the Variable's last assigned value to a List, returning an error if the
-// variable hasn't been assigned yet.
-func (v *Variable) ToList() (List, error) {
-	ran, err := v.Run()
-	if err != nil {
-		return nil, err
-	}
-
-	return ran.ToList()
+func (_ *Variable) ToList() (List, error) {
+	return nil, errors.New("Variable doesn't define list conversions")
 }
