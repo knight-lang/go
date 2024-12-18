@@ -337,10 +337,12 @@ func output(args []Value) (Value, error) {
 	// Get the last "rune" (go-speak for (ish) a unicode character), so we can compare it against a
 	// backslash to see if the string ends in `\`. (If it does, the Knight specs say it should be
 	// deleted and the normal newline that `OUTPUT` would print would be suppressed.)
+	//
 	// NOTE: `DecodeLastRuneInString` will return `RuneError` if the message is empty. Since we only
 	// compare it against backslash, we don't need explicitly check for `string`'s length.
 	lastChr, idx := utf8.DecodeLastRuneInString(string(message))
 
+	// Check to see if the last character is a `\`, and if it is, print neither it nor the newline
 	if lastChr == '\\' {
 		fmt.Print(message[:len(message)-idx])
 
@@ -768,6 +770,8 @@ func then(args []Value) (Value, error) {
 // assign is used to assign values to variables. The first argument must be a Variable, or an error
 // is returned. The second argument is evaluated, and after assignment is returned.
 func assign(args []Value) (Value, error) {
+	// go syntax for "attempt to cast to a Variable pointer". If `args[0]` isn't a variable, then
+	// `ok` will be false, which we can check.
 	variable, ok := args[0].(*Variable)
 	if !ok {
 		return nil, fmt.Errorf("invalid type given to '=': %T", args[0])
@@ -785,6 +789,7 @@ func assign(args []Value) (Value, error) {
 
 // while evaluates the second argument whilst the first is true, and returns Null.
 func while(args []Value) (Value, error) {
+	// "loop forever" loops in golang are `for { ... }`
 	for {
 		condition, err := executeToBoolean(args[0])
 		if err != nil {
@@ -833,6 +838,7 @@ func get(args []Value) (Value, error) {
 		return nil, err
 	}
 
+	// Get the starting index, returning an error if it's negative
 	start, err := executeToInteger(args[1])
 	if err != nil {
 		return nil, err
@@ -841,6 +847,7 @@ func get(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to 'GET': %d", start)
 	}
 
+	// Get the length, returning an error if it's negative
 	length, err := executeToInteger(args[2])
 	if err != nil {
 		return nil, err
@@ -849,6 +856,7 @@ func get(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative length given to GET: '%d'", length)
 	}
 
+	// Get the stop index, i.e. where the substring/sublist will end
 	stop := start + length
 
 	switch collection := collection.(type) {
@@ -887,6 +895,7 @@ func set(args []Value) (Value, error) {
 		return nil, err
 	}
 
+	// Get the starting index, returning an error if it's negative
 	start, err := executeToInteger(args[1])
 	if err != nil {
 		return nil, err
@@ -895,6 +904,7 @@ func set(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative start given to 'SET': %d", start)
 	}
 
+	// Get the length, returning an error if it's negative
 	length, err := executeToInteger(args[2])
 	if err != nil {
 		return nil, err
@@ -903,6 +913,7 @@ func set(args []Value) (Value, error) {
 		return nil, fmt.Errorf("negative length given to 'SET': %d", length)
 	}
 
+	// Get the stop index, i.e. where the substring/sublist to replace will end
 	stop := start + length
 
 	switch collection := collection.(type) {
@@ -916,11 +927,12 @@ func set(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		var sb strings.Builder
-		sb.WriteString(string(collection[:start]))
-		sb.WriteString(string(replacement))
-		sb.WriteString(string(collection[stop:]))
-		return String(sb.String()), nil
+		// Use a string builder for efficiency's sake
+		var builder strings.Builder
+		builder.WriteString(string(collection[:start]))
+		builder.WriteString(string(replacement))
+		builder.WriteString(string(collection[stop:]))
+		return String(builder.String()), nil
 
 	case List:
 		if len(collection) < int(stop) {

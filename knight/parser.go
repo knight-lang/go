@@ -74,8 +74,8 @@ func (p *Parser) Advance() {
 	p.index++
 }
 
-// TakeWhile consumes runes from the source while the condition is true, and then returns them. If
-// the condition is never true, an empty string is returned.
+// TakeWhile consumes runes from the source while the condition is true, and then returns a string
+// containing the runes. If the condition is never true, an empty string is returned.
 func (p *Parser) TakeWhile(condition func(rune) bool) string {
 	start := p.index
 
@@ -88,18 +88,15 @@ func (p *Parser) TakeWhile(condition func(rune) bool) string {
 	return string(p.source[start:p.index])
 }
 
+//
 // Functions used within ParseNextValue as arguments to TakeWhile.
+//
 func isntNewLine(r rune) bool             { return r != '\n' }
 func isDigit(r rune) bool                 { return '0' <= r && r <= '9' }
 func isVariableStart(r rune) bool         { return unicode.IsLower(r) || r == '_' }
 func isVariableBody(r rune) bool          { return isVariableStart(r) || unicode.IsNumber(r) }
 func isWordFunctionCharacter(r rune) bool { return unicode.IsUpper(r) || r == '_' }
-func isWhitespace(r rune) bool {
-	// Note: The parenthesis are also included here because they may also safely be considered
-	// whitespace by implementations. (There's an optional extension where implementations can give
-	// syntax errors on unbalanced parenthesis, but this implementation isn't doing that.)
-	return unicode.IsSpace(r) || r == '(' || r == ')'
-}
+func isWhitespace(r rune) bool            { return unicode.IsSpace(r) }
 
 // ParseNextValue returns the next Value in the source code. EndOfInput is returned if there's no
 // Values left. Syntax errors (such as missing an ending quote) are also returned.
@@ -115,7 +112,12 @@ func (p *Parser) ParseNextValue() (Value, error) {
 	c := p.Peek()
 
 	// Whitespace, delete it and parse again.
-	if isWhitespace(c) {
+	//
+	// Note: The parenthesis are also included here because they may safely be ignored and considered
+	// whitespace by implementations. (There's an optional extension where implementations *can* give
+	// syntax errors on unbalanced parenthesis if they want. However, for implementations that aren't
+	// doing that extension (like this one), they may safely be ignored)
+	if isWhitespace(c) || c == '(' || c == ')' {
 		p.Advance()
 		return p.ParseNextValue()
 	}
@@ -128,6 +130,7 @@ func (p *Parser) ParseNextValue() (Value, error) {
 
 	// Integers
 	if isDigit(c) {
+		// (Note: we ignore the error case, because `p.TakeWhile` will always return digits)
 		integer, _ := strconv.Atoi(p.TakeWhile(isDigit))
 		return Integer(integer), nil
 	}
@@ -142,12 +145,14 @@ func (p *Parser) ParseNextValue() (Value, error) {
 		startIndex := p.index // for error msgs
 		p.Advance()           // Consume the starting quote.
 
+		quote := c
+
 		// Read until we hit the ending quote, but don't actually consume it.
-		contents := p.TakeWhile(func(r rune) bool { return r != c })
+		contents := p.TakeWhile(func(r rune) bool { return r != quote })
 
 		// If we reached end of file, that means we never found the ending quote.
 		if p.IsAtEnd() {
-			return nil, fmt.Errorf("[line %d] unterminated %q string", p.linenoAt(startIndex), c)
+			return nil, fmt.Errorf("[line %d] unterminated %q string", p.linenoAt(startIndex), quote)
 		}
 
 		// Consume the ending quote, and return the contents of the string.
