@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"os/exec"
 	"reflect"
 	"slices"
 	"strings"
@@ -83,12 +84,17 @@ var (
 	stdinScanner = bufio.NewScanner(os.Stdin)
 )
 
-// Initialize the random number generator for `random`.
+// Initialize the functions module. This both initializes the random number generator for `random`,
+// as well as registers extension functions.
 //
 // (For non-go-folks, go ensures that each file's `init` function, if it exists, will be executed
 // before `main` is run.)
 func init() {
 	rand.Seed(time.Now().UnixNano())
+
+	// Extension functions
+	KnownFunctions['E'] = &Function{name: "EVAL", arity: 1, fn: eval}
+	KnownFunctions['$'] = &Function{name: "$", arity: 1, fn: system}
 }
 
 /**************************************************************************************************
@@ -336,7 +342,7 @@ func output(args []Value) (Value, error) {
 	lastChr, idx := utf8.DecodeLastRuneInString(string(message))
 
 	if lastChr == '\\' {
-		fmt.Print(message[:len(message) - idx])
+		fmt.Print(message[:len(message)-idx])
 
 		// Since we're not printing a newline, we flush stdout so that the output is always visible.
 		// (The error is explicitly ignored to be consistent with how `fmt.Print{,ln}` works.)
@@ -931,4 +937,42 @@ func set(args []Value) (Value, error) {
 	default:
 		return nil, fmt.Errorf("invalid type given to 'SET': %T", collection)
 	}
+}
+
+/**************************************************************************************************
+ *                                                                                                *
+ *                                           Extensions                                           *
+ *                                                                                                *
+ **************************************************************************************************/
+
+func eval(args []Value) (Value, error) {
+	sourceCode, err := executeToString(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return Evaluate(string(sourceCode))
+}
+
+func system(args []Value) (Value, error) {
+	// Get the shell script to execute
+	shellCommand, err := executeToString(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the `SHELL` environment variable, if it exists. If it doesn't, default to `/bin/sh`
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		shell = "/bin/sh"
+	}
+
+	// Execute the command
+	stdout, err := exec.Command(shell, "-c", string(shellCommand)).Output()
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the stdout
+	return String(stdout), nil
 }

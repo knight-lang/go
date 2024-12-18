@@ -10,9 +10,9 @@ import (
 // changes aren't supported.
 const shouldSupportKnightVersion_2_0_1 = true
 
-// Play parses source as Knight code, and then executes it. Any errors that occur when parsing or
-// executing the code are returned.
-func Play(source string) (Value, error) {
+// Evaluate parses source as Knight code, and then executes it. Any errors that occur when parsing
+// or executing the code are returned.
+func Evaluate(source string) (Value, error) {
 	parser := NewParser(source)
 
 	value, err := parser.ParseNextValue()

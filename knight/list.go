@@ -67,21 +67,22 @@ func (l List) ToList() (List, error) {
 // string.
 func (l List) Join(separator string) (string, error) {
 	// Use a `strings.Builder` for efficiency, as we'll be doing multiple concatenations.
-	var sb strings.Builder
+	var builder strings.Builder
 
 	for i, element := range l {
 		// Don't add the separator during the first iteration
 		if i != 0 {
-			sb.WriteString(separator)
+			builder.WriteString(separator)
 		}
 
+		// Try to get the string representation, or return an error if there's a problem.
 		stringRepresentation, err := element.ToString()
 		if err != nil {
 			return "", err
 		}
 
-		sb.WriteString(string(stringRepresentation))
+		builder.WriteString(string(stringRepresentation))
 	}
 
-	return sb.String(), nil
+	return builder.String(), nil
 }

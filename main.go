@@ -57,7 +57,7 @@ func main() {
 		usage(true)
 	}
 
-	if _, err := knight.Play(program); err != nil {
+	if _, err := knight.Evaluate(program); err != nil {
 		printAndExit(true, "%s", err)
 	}
 }
