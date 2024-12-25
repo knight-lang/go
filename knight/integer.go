@@ -39,19 +39,16 @@ func (i Integer) ToString() (String, error) {
 	return String(strconv.FormatInt(int64(i), 10)), nil
 }
 
-// ToList returns the digits of the integer in base-10 format. If the integer is negative, an error
-// is returned.
+// ToList returns the digits of the integer in base-10 format.
 func (i Integer) ToList() (List, error) {
 	// Special case for when we're just given 0
 	if i == 0 {
 		return List{i}, nil
 	}
 
-	// Knight 2.0.1 requires negative integers to be supported, an to have their sign added to each
-	// element of the list (ie `-123` would become `[-1, -2, -3]`).
-	if !shouldSupportKnightVersion_2_0_1 && i < 0 {
-		return nil, fmt.Errorf("attempted to convert a negative integer to list: %d", i)
-	}
+	// Knight 3.0 says that negative integers -> list is undefined behaviour. As an extension, this
+	// implementation supports this conversion (with no extra cost; the algorithm that's used to get
+	// the digits just happens to work on negative numbers too/)
 
 	var list List
 	for i != 0 {

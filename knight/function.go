@@ -104,32 +104,57 @@ func init() {
  **************************************************************************************************/
 
 // true_ always returns the true Boolean.
+//
+// Example:
+// 	DUMP TRUE #=> true
 func true_(_ []Value) (Value, error) {
 	return Boolean(true), nil
 }
 
 // false_ always returns the false Boolean.
+//
+// Example:
+// 	DUMP FALSE #=> false
 func false_(_ []Value) (Value, error) {
 	return Boolean(false), nil
 }
 
 // null always returns Null.
+//
+// Example:
+// 	DUMP NULL #=> null
 func null(_ []Value) (Value, error) {
 	return Null{}, nil
 }
 
 // emptyList always returns an empty List
+//
+// Example:
+// 	DUMP @ #=> []
 func emptyList(_ []Value) (Value, error) {
 	return List{}, nil
 }
 
 // random returns a random Integer.
+//
+// Example:
+// 	DUMP RANDOM #=> 8015671084101644486
 func random(_ []Value) (Value, error) {
 	// Note that `rand` is seeded in this file's `init` function.
 	return Integer(rand.Int63()), nil // Go only has `Int63` for some reason...
 }
 
 // prompt reads a line from stdin, returning Null if stdin is empty.
+//
+// Examples:
+// 	DUMP PROMPT <stdin="foo">        #=> "foo"
+// 	DUMP PROMPT <stdin="foo\n">      #=> "foo"
+// 	DUMP PROMPT <stdin="foo\nbar">   #=> "foo"
+// 	DUMP PROMPT <stdin="foo\r\nbar"> #=> "foo"
+// 	DUMP PROMPT <stdin="foo\rbar">   #=> "foo\rbar"
+// 	DUMP PROMPT <stdin="foo\r">      #=> "foo"
+// 	DUMP PROMPT <stdin="">           #=> ""
+// 	DUMP ; PROMPT PROMPT <stdin="">  #=> null
 func prompt(_ []Value) (Value, error) {
 	// If there was a problem getting the line, then we're either at the end of the file (which means
 	// we should return Null), or there was some problem like stdin was closed or permission denied.
@@ -143,16 +168,8 @@ func prompt(_ []Value) (Value, error) {
 		return Null{}, nil
 	}
 
-	// The line was scanned properly, extract it.
-	line := stdinScanner.Text()
-
-	// Knight version 2.0.1 requires _all_ trailing `\r`s to be stripped. Knight 2.1 only requires
-	// one to be stripped (which `.Text()` does for us).
-	if shouldSupportKnightVersion_2_0_1 {
-		line = strings.TrimRight(line, "\r")
-	}
-
-	return String(line), nil
+	// The line was scanned properly, return it.
+	return String(stdinScanner.Text()), nil
 }
 
 /**************************************************************************************************
@@ -162,11 +179,20 @@ func prompt(_ []Value) (Value, error) {
  **************************************************************************************************/
 
 // noop simply executes its only argument and returns it
+//
+// Examples:
+// 	DUMP : 34                     #=> 34
+// 	: : : DUMP : : : : + : 30 : 4 #=> 34
 func noop(args []Value) (Value, error) {
 	return args[0].Execute()
 }
 
 // box creates a list just containing its argument.
+//
+// Example:
+// 	DUMP ,T    #=> [true]
+// 	DUMP ,@    #=> [[]]
+// 	DUMP ,,,,3 #=> [[[[3]]]]
 func box(args []Value) (Value, error) {
 	ran, err := args[0].Execute()
 	if err != nil {
@@ -178,6 +204,12 @@ func box(args []Value) (Value, error) {
 
 // head returns the first element/rune of a list/string. It returns an error if the container is
 // empty, or if the argument isn't a list or string.
+//
+// Example:
+// 	DUMP [ "A"   #=> "A"
+// 	DUMP [ "ABC" #=> "A"
+// 	DUMP [ ,1    #=> 1
+// 	DUMP [ +@123 #=> 1
 func head(args []Value) (Value, error) {
 	ran, err := args[0].Execute()
 	if err != nil {
@@ -206,6 +238,12 @@ func head(args []Value) (Value, error) {
 
 // tail returns a list/string of everything but the first element/rune. It returns an error if the
 // container is empty, or if the argument isn't a list or string.
+//
+// Example:
+// 	DUMP ] "A"   #=> ""
+// 	DUMP ] "ABC" #=> "BC"
+// 	DUMP ] ,1    #=> []
+// 	DUMP ] +@123 #=> [2, 3]
 func tail(args []Value) (Value, error) {
 	ran, err := args[0].Execute()
 	if err != nil {
@@ -234,12 +272,26 @@ func tail(args []Value) (Value, error) {
 
 // block returns its argument unexecuted. This is intended to be used in conjunction with call (see
 // below) to defer evaluation to a later point in time.
+//
+// Example:
+// 	; = double BLOCK * x 2
+// 	; = x 2
+// 	; OUTPUT CALL double     #=> 4
+// 	; = x 10
+// 	: OUTPUT CALL double     #=> 20
 func block(args []Value) (Value, error) {
 	return args[0], nil
 }
 
 // call executes its argument, and then returns the result of executing _that_ value. This allows us
 // to defer execution of `BLOCK`s until later on.
+//
+// Example:
+// 	; = double BLOCK * x 2
+// 	; = x 2
+// 	; OUTPUT CALL double     #=> 4
+// 	; = x 10
+// 	: OUTPUT CALL double     #=> 20
 func call(args []Value) (Value, error) {
 	block, err := args[0].Execute()
 	if err != nil {
@@ -250,6 +302,12 @@ func call(args []Value) (Value, error) {
 }
 
 // quit exits the program with the given exit status code.
+//
+// Examples:
+// 	QUIT TRUE   # (exit with status 1)
+// 	QUIT NULL   # (exit with status 0)
+// 	QUIT 12     # (exit with status 12)
+// 	QUIT "017"  # (exit with status 15)
 func quit(args []Value) (Value, error) {
 	exitStatus, err := executeToInteger(args[0])
 	if err != nil {
@@ -261,6 +319,14 @@ func quit(args []Value) (Value, error) {
 }
 
 // not returns the logical negation of its argument
+//
+// Examples:
+// 	DUMP ! NULL #=> true
+// 	DUMP ! @     #=> true
+// 	DUMP ! TRUE  #=> false
+// 	DUMP ! 12    #=> false
+// 	DUMP ! "0"   #=> false
+// 	DUMP ! ,@    #=> false
 func not(args []Value) (Value, error) {
 	boolean, err := executeToBoolean(args[0])
 	if err != nil {
@@ -271,6 +337,16 @@ func not(args []Value) (Value, error) {
 }
 
 // negate returns the numerical negation of its argument.
+// Examples:
+// 	DUMP ~ FALSE #=> 0
+// 	DUMP ~ @     #=> 0
+// 	DUMP ~ TRUE  #=> -1
+// 	DUMP ~ 12    #=> -12
+// 	DUMP ~ "-12" #=> 12
+// 	DUMP ~ ~ 12  #=> 12
+// 	DUMP ~ "017" #=> -17
+// 	DUMP ~ "hi"  #=> 0
+// 	DUMP ~ ,@    #=> -1
 func negate(args []Value) (Value, error) {
 	integer, err := executeToInteger(args[0])
 	if err != nil {
@@ -280,38 +356,14 @@ func negate(args []Value) (Value, error) {
 	return -integer, nil
 }
 
-// length returns the length of a list/string. It returns an error if the argument isn't a
-// list or string.
+// length returns the length of its argument, converted to an array.
 func length(args []Value) (Value, error) {
-	container, err := args[0].Execute()
+	list, err := executeToList(args[0])
 	if err != nil {
 		return nil, err
 	}
 
-	// (Note: There need to be two branches here even though their contents are identical because the
-	// `len` function is operating on two different types: In the first case, a List, in the second
-	// a String.)
-	switch container := container.(type) {
-	case List:
-		return Integer(len(container)), nil
-
-	case String:
-		return Integer(len(container)), nil
-
-	default:
-		// Knight 2.0.1 required `LENGTH` to coerce its arguments to lists, instead of having it be
-		// undefined behaviour
-		if shouldSupportKnightVersion_2_0_1 {
-			list, err := container.ToList()
-			if err != nil {
-				return nil, err
-			}
-			return Integer(len(list)), nil
-		}
-
-		return nil, fmt.Errorf("invalid type given to 'LENGTH': %T", container)
-
-	}
+	return Integer(len(list)), nil
 }
 
 // dump prints a debugging representation of its argument to stdout, then returns it.

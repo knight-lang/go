@@ -46,6 +46,9 @@ func (b Boolean) ToString() (String, error) {
 
 // ToList returns an empty List when the boolean is false, or a list of just the boolean when
 // the boolean is true.
+//
+// NOTE: This is an extension, as the specs say that converting from boolean -> lists is
+// undefined behaviour.
 func (b Boolean) ToList() (List, error) {
 	if b {
 		return List{b}, nil
