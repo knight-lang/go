@@ -40,5 +40,5 @@ func (_ Null) ToString() (String, error) {
 
 // ToList simply returns an empty list.
 func (_ Null) ToList() (List, error) {
-	return nil, nil // nil is equivalent to an empty slice (and Lists are wrappers around slices).
+	return List{}, nil
 }

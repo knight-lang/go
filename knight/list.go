@@ -81,6 +81,7 @@ func (l List) Join(separator string) (string, error) {
 			return "", err
 		}
 
+		// (We have to cast to `string` as `stringRepresentation` is a `String`, not `string`.)
 		builder.WriteString(string(stringRepresentation))
 	}
 
