@@ -47,8 +47,8 @@ func (i Integer) ToList() (List, error) {
 	}
 
 	// Knight 3.0 says that negative integers -> list is undefined behaviour. As an extension, this
-	// implementation supports this conversion (with no extra cost; the algorithm that's used to get
-	// the digits just happens to work on negative numbers too/)
+	// implementation supports this conversion. (And, with no extra cost too; the algorithm that's
+	// used below to get the digit just happens to work on negative numbers too.)
 
 	var list List
 	for i != 0 {
