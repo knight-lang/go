@@ -47,7 +47,7 @@ func (_ *Ast) ToString() (string, error) {
 	return "", errors.New("Ast doesn't define string conversions")
 }
 
-func (_ *Ast) ToInt64() (int64, error) {
+func (_ *Ast) ToInt() (int, error) {
 	return 0, errors.New("Ast doesn't define int conversions")
 }
 

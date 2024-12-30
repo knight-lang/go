@@ -7,9 +7,9 @@ import (
 
 // Integer is the numeric type within Knight.
 //
-// The Knight specs only require support for `int32`, but this implementation supports `int64`
+// The Knight specs only require support for `int32`, but this implementation supports `int`
 // as an extension.
-type Integer int64
+type Integer int
 
 // Compile-time assertion that Integer implements the Value interface.
 var _ Value = Integer(0)
@@ -29,9 +29,9 @@ func (i Integer) ToBool() (bool, error) {
 	return i != 0, nil
 }
 
-// ToInt64 simply returns the integer unchanged.
-func (i Integer) ToInt64() (int64, error) {
-	return int64(i), nil
+// ToInt simply returns the integer unchanged.
+func (i Integer) ToInt() (int, error) {
+	return int(i), nil
 }
 
 // ToString returns the string representation of the integer in base-10.

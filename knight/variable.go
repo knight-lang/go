@@ -71,7 +71,7 @@ func (v *Variable) ToString() (string, error) {
 	return "", errors.New("Variable doesn't define string conversions")
 }
 
-func (_ *Variable) ToInt64() (int64, error) {
+func (_ *Variable) ToInt() (int, error) {
 	return 0, errors.New("Variable doesn't define integer conversions")
 }
 

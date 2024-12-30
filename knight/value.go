@@ -23,8 +23,8 @@ type Value interface {
 	// ToBool coerces the type to a Boolean, or returns an error if there's a problem doing so.
 	ToBool() (bool, error)
 
-	// ToInt64 coerces the type to an Integer, or returns an error if there's a problem doing so.
-	ToInt64() (int64, error)
+	// ToInt coerces the type to an Integer, or returns an error if there's a problem doing so.
+	ToInt() (int, error)
 
 	// ToString coerces the type to a String, or returns an error if there's a problem doing so.
 	ToString() (string, error)
@@ -47,14 +47,14 @@ func executeToBool(value Value) (bool, error) {
 	return ran.ToBool()
 }
 
-// executeToInt64 is a helper function that combines Value.Execute and Value.ToInt64.
-func executeToInt64(value Value) (int64, error) {
+// executeToInt is a helper function that combines Value.Execute and Value.ToInt.
+func executeToInt(value Value) (int, error) {
 	ran, err := value.Execute()
 	if err != nil {
 		return 0, err
 	}
 
-	return ran.ToInt64()
+	return ran.ToInt()
 }
 
 // executeToString is a helper function that combines Value.Execute and Value.ToString.

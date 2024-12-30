@@ -33,17 +33,17 @@ func (s String) ToBool() (bool, error) {
 	return s != "", nil
 }
 
-// ToInt64 converts the string to an integer as defined by the knight spec.
+// ToInt converts the string to an integer as defined by the knight spec.
 //
 // More specifically, this is equivalent to matching the string against the regex `/^\s+([-+]?\d+)/`
 // and converting the first capture group (the `[-+]?\d+`) to a string. If the regex doesn't match,
 // then zero is used.
-func (s String) ToInt64() (int64, error) {
+func (s String) ToInt() (int, error) {
 	// Delete leading whitespace
 	trimmed := strings.TrimLeftFunc(string(s), unicode.IsSpace)
 
 	// Parse out the integer. If Scanf fails, parsed stays zero.
-	var parsed int64
+	var parsed int
 	fmt.Sscanf(trimmed, "%d", &parsed)
 
 	// No errors can occur when converting strings to integers.

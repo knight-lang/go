@@ -341,7 +341,7 @@ func call(args []Value) (Value, error) {
 // not let us return them.)
 //  QUIT 12345  # (allowed, but the OS determines the exit status...)
 func quit(args []Value) (Value, error) {
-	exitStatus, err := executeToInt64(args[0])
+	exitStatus, err := executeToInt(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +389,7 @@ func not(args []Value) (Value, error) {
 // Types which can't be converted to booleans yield an error:
 //    DUMP ~ BLOCK foo    #!! error: cant covert to an integer
 func negate(args []Value) (Value, error) {
-	integer, err := executeToInt64(args[0])
+	integer, err := executeToInt(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -546,12 +546,12 @@ func add(args []Value) (Value, error) {
 
 	switch lhs := ran.(type) {
 	case Integer:
-		rhs, err := executeToInt64(args[1])
+		rhs, err := executeToInt(args[1])
 		if err != nil {
 			return nil, err
 		}
 
-		return Integer(int64(lhs) + rhs), nil
+		return Integer(int(lhs) + rhs), nil
 
 	case String:
 		rhs, err := executeToString(args[1])
@@ -587,12 +587,12 @@ func subtract(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := executeToInt64(args[1])
+		rhs, err := executeToInt(args[1])
 		if err != nil {
 			return nil, err
 		}
 
-		return Integer(int64(lhs) - rhs), nil
+		return Integer(int(lhs) - rhs), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '-': %T", lhs)
@@ -608,14 +608,14 @@ func multiply(args []Value) (Value, error) {
 
 	// It just so happens that all three multiply cases need integers as the second argument, so
 	// just do the coercion before the typecheck.
-	rhs, err := executeToInt64(args[1])
+	rhs, err := executeToInt(args[1])
 	if err != nil {
 		return nil, err
 	}
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		return Integer(int64(lhs) * rhs), nil
+		return Integer(int(lhs) * rhs), nil
 
 	case String:
 		if rhs < 0 {
@@ -646,7 +646,7 @@ func divide(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := executeToInt64(args[1])
+		rhs, err := executeToInt(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -655,7 +655,7 @@ func divide(args []Value) (Value, error) {
 			return nil, errors.New("zero divisor given to '/'")
 		}
 
-		return Integer(int64(lhs) / rhs), nil
+		return Integer(int(lhs) / rhs), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '/': %T", lhs)
@@ -672,7 +672,7 @@ func remainder(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := executeToInt64(args[1])
+		rhs, err := executeToInt(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -681,7 +681,7 @@ func remainder(args []Value) (Value, error) {
 			return nil, errors.New("zero divisor given to '%'")
 		}
 
-		return Integer(int64(lhs) % rhs), nil
+		return Integer(int(lhs) % rhs), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '%%': %T", lhs)
@@ -699,7 +699,7 @@ func exponentiate(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := executeToInt64(args[1])
+		rhs, err := executeToInt(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -739,13 +739,13 @@ func exponentiate(args []Value) (Value, error) {
 func compare(lhs, rhs Value, functionName rune) (int, error) {
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := rhs.ToInt64()
+		rhs, err := rhs.ToInt()
 		if err != nil {
 			return 0, err
 		}
 
 		// Subtraction actually is all that's needed for integers.
-		return int(int64(lhs) - rhs), nil
+		return int(int(lhs) - rhs), nil
 
 	case String:
 		rhs, err := rhs.ToString()
@@ -983,7 +983,7 @@ func get(args []Value) (Value, error) {
 	}
 
 	// Get the starting index, returning an error if it's negative
-	start, err := executeToInt64(args[1])
+	start, err := executeToInt(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -992,7 +992,7 @@ func get(args []Value) (Value, error) {
 	}
 
 	// Get the length, returning an error if it's negative
-	length, err := executeToInt64(args[2])
+	length, err := executeToInt(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -1040,7 +1040,7 @@ func set(args []Value) (Value, error) {
 	}
 
 	// Get the starting index, returning an error if it's negative
-	start, err := executeToInt64(args[1])
+	start, err := executeToInt(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -1049,7 +1049,7 @@ func set(args []Value) (Value, error) {
 	}
 
 	// Get the length, returning an error if it's negative
-	length, err := executeToInt64(args[2])
+	length, err := executeToInt(args[2])
 	if err != nil {
 		return nil, err
 	}

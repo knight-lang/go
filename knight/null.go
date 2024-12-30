@@ -28,8 +28,8 @@ func (_ Null) ToBool() (bool, error) {
 	return false, nil
 }
 
-// ToInt64 simply returns 0.
-func (_ Null) ToInt64() (int64, error) {
+// ToInt simply returns 0.
+func (_ Null) ToInt() (int, error) {
 	return 0, nil
 }
 

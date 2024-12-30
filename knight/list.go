@@ -40,9 +40,9 @@ func (l List) ToBool() (bool, error) {
 	return len(l) != 0, nil
 }
 
-// ToInt64 returns the list's length.
-func (l List) ToInt64() (int64, error) {
-	return int64(len(l)), nil
+// ToInt returns the list's length.
+func (l List) ToInt() (int, error) {
+	return len(l), nil
 }
 
 // ToString returns the list converted to a string by adding a newline between each element. This

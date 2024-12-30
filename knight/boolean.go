@@ -28,8 +28,8 @@ func (b Boolean) ToBool() (bool, error) {
 	return bool(b), nil
 }
 
-// ToInt64 returns 1 if the boolean is true and 0 if it is false.
-func (b Boolean) ToInt64() (int64, error) {
+// ToInt returns 1 if the boolean is true and 0 if it is false.
+func (b Boolean) ToInt() (int, error) {
 	if b {
 		return 1, nil
 	}
