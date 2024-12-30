@@ -28,17 +28,17 @@ func (s String) Execute() (Value, error) {
 	return s, nil
 }
 
-// ToBoolean returns whether the string is nonempty.
-func (s String) ToBoolean() (bool, error) {
+// ToBool returns whether the string is nonempty.
+func (s String) ToBool() (bool, error) {
 	return s != "", nil
 }
 
-// ToInteger converts the string to an integer as defined by the knight spec.
+// ToInt64 converts the string to an integer as defined by the knight spec.
 //
 // More specifically, this is equivalent to matching the string against the regex `/^\s+([-+]?\d+)/`
 // and converting the first capture group (the `[-+]?\d+`) to a string. If the regex doesn't match,
 // then zero is used.
-func (s String) ToInteger() (int64, error) {
+func (s String) ToInt64() (int64, error) {
 	// Delete leading whitespace
 	trimmed := strings.TrimLeftFunc(string(s), unicode.IsSpace)
 
@@ -55,8 +55,8 @@ func (s String) ToString() (string, error) {
 	return string(s), nil
 }
 
-// ToList returns a list of all the runes within string.
-func (s String) ToList() ([]Value, error) {
+// ToSlice returns a list of all the runes within string.
+func (s String) ToSlice() ([]Value, error) {
 	list := make(List, utf8.RuneCountInString(string(s)))
 
 	for idx, rune := range []rune(s) {

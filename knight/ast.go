@@ -47,14 +47,14 @@ func (_ *Ast) ToString() (string, error) {
 	return "", errors.New("Ast doesn't define string conversions")
 }
 
-func (_ *Ast) ToInteger() (int64, error) {
+func (_ *Ast) ToInt64() (int64, error) {
 	return 0, errors.New("Ast doesn't define int conversions")
 }
 
-func (_ *Ast) ToBoolean() (bool, error) {
+func (_ *Ast) ToBool() (bool, error) {
 	return false, errors.New("Ast doesn't define boolean conversions")
 }
 
-func (_ *Ast) ToList() ([]Value, error) {
+func (_ *Ast) ToSlice() ([]Value, error) {
 	return nil, errors.New("Ast doesn't define list conversions")
 }

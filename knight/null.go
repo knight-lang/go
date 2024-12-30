@@ -23,13 +23,13 @@ func (n Null) Execute() (Value, error) {
 	return n, nil
 }
 
-// ToBoolean simply returns false.
-func (_ Null) ToBoolean() (bool, error) {
+// ToBool simply returns false.
+func (_ Null) ToBool() (bool, error) {
 	return false, nil
 }
 
-// ToInteger simply returns 0.
-func (_ Null) ToInteger() (int64, error) {
+// ToInt64 simply returns 0.
+func (_ Null) ToInt64() (int64, error) {
 	return 0, nil
 }
 
@@ -38,7 +38,7 @@ func (_ Null) ToString() (string, error) {
 	return "", nil
 }
 
-// ToList simply returns an empty list.
-func (_ Null) ToList() ([]Value, error) {
+// ToSlice simply returns an empty list.
+func (_ Null) ToSlice() ([]Value, error) {
 	return List{}, nil
 }

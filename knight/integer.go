@@ -24,13 +24,13 @@ func (i Integer) Execute() (Value, error) {
 	return i, nil
 }
 
-// ToBoolean returns whether the integer is nonzero.
-func (i Integer) ToBoolean() (bool, error) {
+// ToBool returns whether the integer is nonzero.
+func (i Integer) ToBool() (bool, error) {
 	return i != 0, nil
 }
 
-// ToInteger simply returns the integer unchanged.
-func (i Integer) ToInteger() (int64, error) {
+// ToInt64 simply returns the integer unchanged.
+func (i Integer) ToInt64() (int64, error) {
 	return int64(i), nil
 }
 
@@ -39,8 +39,8 @@ func (i Integer) ToString() (string, error) {
 	return strconv.FormatInt(int64(i), 10), nil
 }
 
-// ToList returns the digits of the integer in base-10 format.
-func (i Integer) ToList() ([]Value, error) {
+// ToSlice returns the digits of the integer in base-10 format.
+func (i Integer) ToSlice() ([]Value, error) {
 	// Special case for when we're just given 0
 	if i == 0 {
 		return List{i}, nil

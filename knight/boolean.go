@@ -23,13 +23,13 @@ func (b Boolean) Execute() (Value, error) {
 	return b, nil
 }
 
-// ToBoolean simply returns the boolean unchanged.
-func (b Boolean) ToBoolean() (bool, error) {
+// ToBool simply returns the boolean unchanged.
+func (b Boolean) ToBool() (bool, error) {
 	return bool(b), nil
 }
 
-// ToInteger returns 1 if the boolean is true and 0 if it is false.
-func (b Boolean) ToInteger() (int64, error) {
+// ToInt64 returns 1 if the boolean is true and 0 if it is false.
+func (b Boolean) ToInt64() (int64, error) {
 	if b {
 		return 1, nil
 	}
@@ -44,12 +44,12 @@ func (b Boolean) ToString() (string, error) {
 	return "false", nil
 }
 
-// ToList returns an empty List when the boolean is false, or a list of just the boolean when
+// ToSlice returns an empty List when the boolean is false, or a list of just the boolean when
 // the boolean is true.
 //
 // NOTE: This is an extension, as the specs say that converting from boolean -> lists is
 // undefined behaviour.
-func (b Boolean) ToList() ([]Value, error) {
+func (b Boolean) ToSlice() ([]Value, error) {
 	if b {
 		return List{b}, nil
 	}

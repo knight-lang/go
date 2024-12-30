@@ -35,13 +35,13 @@ func (l List) Execute() (Value, error) {
 	return l, nil
 }
 
-// ToBoolean returns whether the list is nonempty.
-func (l List) ToBoolean() (bool, error) {
+// ToBool returns whether the list is nonempty.
+func (l List) ToBool() (bool, error) {
 	return len(l) != 0, nil
 }
 
-// ToInteger returns the list's length.
-func (l List) ToInteger() (int64, error) {
+// ToInt64 returns the list's length.
+func (l List) ToInt64() (int64, error) {
 	return int64(len(l)), nil
 }
 
@@ -57,8 +57,8 @@ func (l List) ToString() (string, error) {
 	return joined, nil
 }
 
-// ToList simply returns the list unchanged.
-func (l List) ToList() ([]Value, error) {
+// ToSlice simply returns the list unchanged.
+func (l List) ToSlice() ([]Value, error) {
 	return l, nil
 }
 

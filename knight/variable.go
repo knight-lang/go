@@ -71,14 +71,14 @@ func (v *Variable) ToString() (string, error) {
 	return "", errors.New("Variable doesn't define string conversions")
 }
 
-func (_ *Variable) ToInteger() (int64, error) {
+func (_ *Variable) ToInt64() (int64, error) {
 	return 0, errors.New("Variable doesn't define integer conversions")
 }
 
-func (_ *Variable) ToBoolean() (bool, error) {
+func (_ *Variable) ToBool() (bool, error) {
 	return false, errors.New("Variable doesn't define boolean conversions")
 }
 
-func (_ *Variable) ToList() ([]Value, error) {
+func (_ *Variable) ToSlice() ([]Value, error) {
 	return nil, errors.New("Variable doesn't define list conversions")
 }

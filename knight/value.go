@@ -20,41 +20,41 @@ type Value interface {
 	// Execute executes the value, returning the result or whatever error may have occurred.
 	Execute() (Value, error)
 
-	// ToBoolean coerces the type to a Boolean, or returns an error if there's a problem doing so.
-	ToBoolean() (bool, error)
+	// ToBool coerces the type to a Boolean, or returns an error if there's a problem doing so.
+	ToBool() (bool, error)
 
-	// ToInteger coerces the type to an Integer, or returns an error if there's a problem doing so.
-	ToInteger() (int64, error)
+	// ToInt64 coerces the type to an Integer, or returns an error if there's a problem doing so.
+	ToInt64() (int64, error)
 
 	// ToString coerces the type to a String, or returns an error if there's a problem doing so.
 	ToString() (string, error)
 
-	// ToList coerces the type to a List, or returns an error if there's a problem doing so.
-	ToList() ([]Value, error)
+	// ToSlice coerces the type to a List, or returns an error if there's a problem doing so.
+	ToSlice() ([]Value, error)
 }
 
 //
 // The following are helper functions for executing Values.
 //
 
-// executeToBoolean is a helper function that combines Value.Execute and Value.ToBoolean.
-func executeToBoolean(value Value) (bool, error) {
+// executeToBool is a helper function that combines Value.Execute and Value.ToBool.
+func executeToBool(value Value) (bool, error) {
 	ran, err := value.Execute()
 	if err != nil {
 		return false, err
 	}
 
-	return ran.ToBoolean()
+	return ran.ToBool()
 }
 
-// executeToInteger is a helper function that combines Value.Execute and Value.ToInteger.
-func executeToInteger(value Value) (int64, error) {
+// executeToInt64 is a helper function that combines Value.Execute and Value.ToInt64.
+func executeToInt64(value Value) (int64, error) {
 	ran, err := value.Execute()
 	if err != nil {
 		return 0, err
 	}
 
-	return ran.ToInteger()
+	return ran.ToInt64()
 }
 
 // executeToString is a helper function that combines Value.Execute and Value.ToString.
@@ -67,12 +67,12 @@ func executeToString(value Value) (string, error) {
 	return ran.ToString()
 }
 
-// executeToList is a helper function that combines Value.Execute and Value.ToList.
-func executeToList(value Value) (List, error) {
+// executeToSlice is a helper function that combines Value.Execute and Value.ToSlice.
+func executeToSlice(value Value) (List, error) {
 	ran, err := value.Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	return ran.ToList()
+	return ran.ToSlice()
 }

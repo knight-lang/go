@@ -341,7 +341,7 @@ func call(args []Value) (Value, error) {
 // not let us return them.)
 //  QUIT 12345  # (allowed, but the OS determines the exit status...)
 func quit(args []Value) (Value, error) {
-	exitStatus, err := executeToInteger(args[0])
+	exitStatus, err := executeToInt64(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func quit(args []Value) (Value, error) {
 // Types which can't be converted to booleans yield an error:
 //    DUMP ! BLOCK foo    #!! error: cant covert to a boolean
 func not(args []Value) (Value, error) {
-	boolean, err := executeToBoolean(args[0])
+	boolean, err := executeToBool(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +389,7 @@ func not(args []Value) (Value, error) {
 // Types which can't be converted to booleans yield an error:
 //    DUMP ~ BLOCK foo    #!! error: cant covert to an integer
 func negate(args []Value) (Value, error) {
-	integer, err := executeToInteger(args[0])
+	integer, err := executeToInt64(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +408,7 @@ func negate(args []Value) (Value, error) {
 // Types which can't be converted to lists yield an error:
 //    DUMP LENGTH BLOCK foo      #!! error: cant covert to a list
 func length(args []Value) (Value, error) {
-	list, err := executeToList(args[0])
+	list, err := executeToSlice(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +546,7 @@ func add(args []Value) (Value, error) {
 
 	switch lhs := ran.(type) {
 	case Integer:
-		rhs, err := executeToInteger(args[1])
+		rhs, err := executeToInt64(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -566,7 +566,7 @@ func add(args []Value) (Value, error) {
 		return String(sb.String()), nil
 
 	case List:
-		rhs, err := executeToList(args[1])
+		rhs, err := executeToSlice(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -587,7 +587,7 @@ func subtract(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := executeToInteger(args[1])
+		rhs, err := executeToInt64(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -608,7 +608,7 @@ func multiply(args []Value) (Value, error) {
 
 	// It just so happens that all three multiply cases need integers as the second argument, so
 	// just do the coercion before the typecheck.
-	rhs, err := executeToInteger(args[1])
+	rhs, err := executeToInt64(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -646,7 +646,7 @@ func divide(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := executeToInteger(args[1])
+		rhs, err := executeToInt64(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -672,7 +672,7 @@ func remainder(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := executeToInteger(args[1])
+		rhs, err := executeToInt64(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -699,7 +699,7 @@ func exponentiate(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := executeToInteger(args[1])
+		rhs, err := executeToInt64(args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -739,7 +739,7 @@ func exponentiate(args []Value) (Value, error) {
 func compare(lhs, rhs Value, functionName rune) (int, error) {
 	switch lhs := lhs.(type) {
 	case Integer:
-		rhs, err := rhs.ToInteger()
+		rhs, err := rhs.ToInt64()
 		if err != nil {
 			return 0, err
 		}
@@ -757,7 +757,7 @@ func compare(lhs, rhs Value, functionName rune) (int, error) {
 		return strings.Compare(string(lhs), string(rhs)), nil
 
 	case Boolean:
-		rhs, err := rhs.ToBoolean()
+		rhs, err := rhs.ToBool()
 		if err != nil {
 			return 0, err
 		}
@@ -772,7 +772,7 @@ func compare(lhs, rhs Value, functionName rune) (int, error) {
 		}
 
 	case List:
-		rhs, err := rhs.ToList()
+		rhs, err := rhs.ToSlice()
 		if err != nil {
 			return 0, err
 		}
@@ -871,7 +871,7 @@ func and(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	isTruthy, err := lhs.ToBoolean()
+	isTruthy, err := lhs.ToBool()
 	if err != nil {
 		return nil, err
 	}
@@ -891,7 +891,7 @@ func or(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	isTruthy, err := lhs.ToBoolean()
+	isTruthy, err := lhs.ToBool()
 	if err != nil {
 		return nil, err
 	}
@@ -935,7 +935,7 @@ func assign(args []Value) (Value, error) {
 func while(args []Value) (Value, error) {
 	// "loop forever" loops in golang are `for { ... }`
 	for {
-		condition, err := executeToBoolean(args[0])
+		condition, err := executeToBool(args[0])
 		if err != nil {
 			return nil, err
 		}
@@ -961,7 +961,7 @@ func while(args []Value) (Value, error) {
 // if_ evaluates and returns the second argument if the first is truthy; if it's falsey, if_
 // evaluates and returns the third argument instead.
 func if_(args []Value) (Value, error) {
-	condition, err := executeToBoolean(args[0])
+	condition, err := executeToBool(args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -983,7 +983,7 @@ func get(args []Value) (Value, error) {
 	}
 
 	// Get the starting index, returning an error if it's negative
-	start, err := executeToInteger(args[1])
+	start, err := executeToInt64(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -992,7 +992,7 @@ func get(args []Value) (Value, error) {
 	}
 
 	// Get the length, returning an error if it's negative
-	length, err := executeToInteger(args[2])
+	length, err := executeToInt64(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -1040,7 +1040,7 @@ func set(args []Value) (Value, error) {
 	}
 
 	// Get the starting index, returning an error if it's negative
-	start, err := executeToInteger(args[1])
+	start, err := executeToInt64(args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -1049,7 +1049,7 @@ func set(args []Value) (Value, error) {
 	}
 
 	// Get the length, returning an error if it's negative
-	length, err := executeToInteger(args[2])
+	length, err := executeToInt64(args[2])
 	if err != nil {
 		return nil, err
 	}
@@ -1083,7 +1083,7 @@ func set(args []Value) (Value, error) {
 			return nil, fmt.Errorf("list index out of bounds for 'SET': %d < %d", len(collection), stop)
 		}
 
-		replacement, err := executeToList(args[3])
+		replacement, err := executeToSlice(args[3])
 		if err != nil {
 			return nil, err
 		}
