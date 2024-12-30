@@ -24,21 +24,21 @@ func (n Null) Execute() (Value, error) {
 }
 
 // ToBoolean simply returns false.
-func (_ Null) ToBoolean() (Boolean, error) {
+func (_ Null) ToBoolean() (bool, error) {
 	return false, nil
 }
 
 // ToInteger simply returns 0.
-func (_ Null) ToInteger() (Integer, error) {
+func (_ Null) ToInteger() (int64, error) {
 	return 0, nil
 }
 
 // ToString simply returns an empty string.
-func (_ Null) ToString() (String, error) {
+func (_ Null) ToString() (string, error) {
 	return "", nil
 }
 
 // ToList simply returns an empty list.
-func (_ Null) ToList() (List, error) {
+func (_ Null) ToList() ([]Value, error) {
 	return List{}, nil
 }

@@ -67,18 +67,18 @@ func (v *Variable) Assign(value Value) {
 }
 
 // Conversions: They always return errors, as variables cannot be converted to other types.
-func (v *Variable) ToString() (String, error) {
+func (v *Variable) ToString() (string, error) {
 	return "", errors.New("Variable doesn't define string conversions")
 }
 
-func (_ *Variable) ToInteger() (Integer, error) {
+func (_ *Variable) ToInteger() (int64, error) {
 	return 0, errors.New("Variable doesn't define integer conversions")
 }
 
-func (_ *Variable) ToBoolean() (Boolean, error) {
+func (_ *Variable) ToBoolean() (bool, error) {
 	return false, errors.New("Variable doesn't define boolean conversions")
 }
 
-func (_ *Variable) ToList() (List, error) {
+func (_ *Variable) ToList() ([]Value, error) {
 	return nil, errors.New("Variable doesn't define list conversions")
 }

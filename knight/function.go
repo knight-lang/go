@@ -369,7 +369,7 @@ func not(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	return !boolean, nil
+	return Boolean(!boolean), nil
 }
 
 // negate returns the numerical negation of its argument.
@@ -394,7 +394,7 @@ func negate(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	return -integer, nil
+	return Integer(-integer), nil
 }
 
 // length returns the length of its argument, converted to an array.
@@ -551,7 +551,7 @@ func add(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		return lhs + rhs, nil
+		return Integer(int64(lhs) + rhs), nil
 
 	case String:
 		rhs, err := executeToString(args[1])
@@ -592,7 +592,7 @@ func subtract(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		return lhs - rhs, nil
+		return Integer(int64(lhs) - rhs), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '-': %T", lhs)
@@ -615,7 +615,7 @@ func multiply(args []Value) (Value, error) {
 
 	switch lhs := lhs.(type) {
 	case Integer:
-		return lhs * rhs, nil
+		return Integer(int64(lhs) * rhs), nil
 
 	case String:
 		if rhs < 0 {
@@ -655,7 +655,7 @@ func divide(args []Value) (Value, error) {
 			return nil, errors.New("zero divisor given to '/'")
 		}
 
-		return lhs / rhs, nil
+		return Integer(int64(lhs) / rhs), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '/': %T", lhs)
@@ -681,7 +681,7 @@ func remainder(args []Value) (Value, error) {
 			return nil, errors.New("zero divisor given to '%'")
 		}
 
-		return lhs % rhs, nil
+		return Integer(int64(lhs) % rhs), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '%%': %T", lhs)
@@ -745,7 +745,7 @@ func compare(lhs, rhs Value, functionName rune) (int, error) {
 		}
 
 		// Subtraction actually is all that's needed for integers.
-		return int(lhs - rhs), nil
+		return int(int64(lhs) - rhs), nil
 
 	case String:
 		rhs, err := rhs.ToString()
@@ -763,9 +763,9 @@ func compare(lhs, rhs Value, functionName rune) (int, error) {
 		}
 
 		// Just manually enumerate all the cases for booleans.
-		if !lhs && rhs {
+		if !bool(lhs) && rhs {
 			return -1, nil
-		} else if lhs && !rhs {
+		} else if bool(lhs) && !rhs {
 			return 1, nil
 		} else {
 			return 0, nil

@@ -25,22 +25,22 @@ func (i Integer) Execute() (Value, error) {
 }
 
 // ToBoolean returns whether the integer is nonzero.
-func (i Integer) ToBoolean() (Boolean, error) {
+func (i Integer) ToBoolean() (bool, error) {
 	return i != 0, nil
 }
 
 // ToInteger simply returns the integer unchanged.
-func (i Integer) ToInteger() (Integer, error) {
-	return i, nil
+func (i Integer) ToInteger() (int64, error) {
+	return int64(i), nil
 }
 
 // ToString returns the string representation of the integer in base-10.
-func (i Integer) ToString() (String, error) {
-	return String(strconv.FormatInt(int64(i), 10)), nil
+func (i Integer) ToString() (string, error) {
+	return strconv.FormatInt(int64(i), 10), nil
 }
 
 // ToList returns the digits of the integer in base-10 format.
-func (i Integer) ToList() (List, error) {
+func (i Integer) ToList() ([]Value, error) {
 	// Special case for when we're just given 0
 	if i == 0 {
 		return List{i}, nil

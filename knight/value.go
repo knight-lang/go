@@ -21,16 +21,16 @@ type Value interface {
 	Execute() (Value, error)
 
 	// ToBoolean coerces the type to a Boolean, or returns an error if there's a problem doing so.
-	ToBoolean() (Boolean, error)
+	ToBoolean() (bool, error)
 
 	// ToInteger coerces the type to an Integer, or returns an error if there's a problem doing so.
-	ToInteger() (Integer, error)
+	ToInteger() (int64, error)
 
 	// ToString coerces the type to a String, or returns an error if there's a problem doing so.
-	ToString() (String, error)
+	ToString() (string, error)
 
 	// ToList coerces the type to a List, or returns an error if there's a problem doing so.
-	ToList() (List, error)
+	ToList() ([]Value, error)
 }
 
 //
@@ -38,7 +38,7 @@ type Value interface {
 //
 
 // executeToBoolean is a helper function that combines Value.Execute and Value.ToBoolean.
-func executeToBoolean(value Value) (Boolean, error) {
+func executeToBoolean(value Value) (bool, error) {
 	ran, err := value.Execute()
 	if err != nil {
 		return false, err
@@ -48,7 +48,7 @@ func executeToBoolean(value Value) (Boolean, error) {
 }
 
 // executeToInteger is a helper function that combines Value.Execute and Value.ToInteger.
-func executeToInteger(value Value) (Integer, error) {
+func executeToInteger(value Value) (int64, error) {
 	ran, err := value.Execute()
 	if err != nil {
 		return 0, err
@@ -58,7 +58,7 @@ func executeToInteger(value Value) (Integer, error) {
 }
 
 // executeToString is a helper function that combines Value.Execute and Value.ToString.
-func executeToString(value Value) (String, error) {
+func executeToString(value Value) (string, error) {
 	ran, err := value.Execute()
 	if err != nil {
 		return "", err

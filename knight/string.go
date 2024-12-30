@@ -29,7 +29,7 @@ func (s String) Execute() (Value, error) {
 }
 
 // ToBoolean returns whether the string is nonempty.
-func (s String) ToBoolean() (Boolean, error) {
+func (s String) ToBoolean() (bool, error) {
 	return s != "", nil
 }
 
@@ -38,12 +38,12 @@ func (s String) ToBoolean() (Boolean, error) {
 // More specifically, this is equivalent to matching the string against the regex `/^\s+([-+]?\d+)/`
 // and converting the first capture group (the `[-+]?\d+`) to a string. If the regex doesn't match,
 // then zero is used.
-func (s String) ToInteger() (Integer, error) {
+func (s String) ToInteger() (int64, error) {
 	// Delete leading whitespace
 	trimmed := strings.TrimLeftFunc(string(s), unicode.IsSpace)
 
 	// Parse out the integer. If Scanf fails, parsed stays zero.
-	var parsed Integer
+	var parsed int64
 	fmt.Sscanf(trimmed, "%d", &parsed)
 
 	// No errors can occur when converting strings to integers.
@@ -51,12 +51,12 @@ func (s String) ToInteger() (Integer, error) {
 }
 
 // ToString simply returns the string unchanged.
-func (s String) ToString() (String, error) {
-	return s, nil
+func (s String) ToString() (string, error) {
+	return string(s), nil
 }
 
 // ToList returns a list of all the runes within string.
-func (s String) ToList() (List, error) {
+func (s String) ToList() ([]Value, error) {
 	list := make(List, utf8.RuneCountInString(string(s)))
 
 	for idx, rune := range []rune(s) {

@@ -36,29 +36,29 @@ func (l List) Execute() (Value, error) {
 }
 
 // ToBoolean returns whether the list is nonempty.
-func (l List) ToBoolean() (Boolean, error) {
+func (l List) ToBoolean() (bool, error) {
 	return len(l) != 0, nil
 }
 
 // ToInteger returns the list's length.
-func (l List) ToInteger() (Integer, error) {
-	return Integer(len(l)), nil
+func (l List) ToInteger() (int64, error) {
+	return int64(len(l)), nil
 }
 
 // ToString returns the list converted to a string by adding a newline between each element. This
 // will return an error if the list contains elements which aren't convertible to strings, such as
 // `BLOCK`'s return value.
-func (l List) ToString() (String, error) {
+func (l List) ToString() (string, error) {
 	joined, err := l.Join("\n")
 	if err != nil {
 		return "", err
 	}
 
-	return String(joined), nil
+	return joined, nil
 }
 
 // ToList simply returns the list unchanged.
-func (l List) ToList() (List, error) {
+func (l List) ToList() ([]Value, error) {
 	return l, nil
 }
 

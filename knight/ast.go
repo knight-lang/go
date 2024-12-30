@@ -43,18 +43,18 @@ func (a *Ast) Dump() {
 }
 
 // Conversions: They always return errors, as asts cannot be converted to other types.
-func (_ *Ast) ToString() (String, error) {
+func (_ *Ast) ToString() (string, error) {
 	return "", errors.New("Ast doesn't define string conversions")
 }
 
-func (_ *Ast) ToInteger() (Integer, error) {
+func (_ *Ast) ToInteger() (int64, error) {
 	return 0, errors.New("Ast doesn't define int conversions")
 }
 
-func (_ *Ast) ToBoolean() (Boolean, error) {
+func (_ *Ast) ToBoolean() (bool, error) {
 	return false, errors.New("Ast doesn't define boolean conversions")
 }
 
-func (_ *Ast) ToList() (List, error) {
+func (_ *Ast) ToList() ([]Value, error) {
 	return nil, errors.New("Ast doesn't define list conversions")
 }
