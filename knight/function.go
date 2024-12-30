@@ -346,7 +346,7 @@ func quit(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	os.Exit(int(exitStatus))
+	os.Exit(exitStatus)
 	panic("<unreachable>") // Go isn't powerful enough to recognize os.Exit never returns.
 }
 
@@ -468,7 +468,7 @@ func output(args []Value) (Value, error) {
 	//
 	// NOTE: `DecodeLastRuneInString` will return `RuneError` if the message is empty. Since we only
 	// compare it against backslash, we don't need explicitly check for `string`'s length.
-	lastChr, idx := utf8.DecodeLastRuneInString(string(message))
+	lastChr, idx := utf8.DecodeLastRuneInString(message)
 
 	// Check to see if the last character is a `\`, and if it is, print neither it nor the newline
 	if lastChr == '\\' {
@@ -562,7 +562,7 @@ func add(args []Value) (Value, error) {
 		// using strings.Builder is a bit more efficient than concating and stuff.
 		var sb strings.Builder
 		sb.WriteString(string(lhs))
-		sb.WriteString(string(rhs))
+		sb.WriteString(rhs)
 		return String(sb.String()), nil
 
 	case List:
@@ -622,14 +622,14 @@ func multiply(args []Value) (Value, error) {
 			return nil, fmt.Errorf("negative replication amount for a string in '*': %d", rhs)
 		}
 
-		return String(strings.Repeat(string(lhs), int(rhs))), nil
+		return String(strings.Repeat(string(lhs), rhs)), nil
 
 	case List:
 		if rhs < 0 {
 			return nil, fmt.Errorf("negative replication amount for a list in '*': %d", rhs)
 		}
 
-		return slices.Repeat(lhs, int(rhs)), nil
+		return slices.Repeat(lhs, rhs), nil
 
 	default:
 		return nil, fmt.Errorf("invalid type given to '*': %T", lhs)
@@ -721,7 +721,7 @@ func exponentiate(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		joined, err := lhs.Join(string(sep)) // Join can fail if the list contains Asts or Variables.
+		joined, err := lhs.Join(sep) // Join can fail if the list contains Asts or Variables.
 		if err != nil {
 			return nil, err
 		}
@@ -745,7 +745,7 @@ func compare(lhs, rhs Value, functionName rune) (int, error) {
 		}
 
 		// Subtraction actually is all that's needed for integers.
-		return int(int(lhs) - rhs), nil
+		return int(lhs) - rhs, nil
 
 	case String:
 		rhs, err := rhs.ToString()
@@ -754,7 +754,7 @@ func compare(lhs, rhs Value, functionName rune) (int, error) {
 		}
 
 		// strings.Compare does lexicographical comparisons
-		return strings.Compare(string(lhs), string(rhs)), nil
+		return strings.Compare(string(lhs), rhs), nil
 
 	case Boolean:
 		rhs, err := rhs.ToBool()
@@ -1005,14 +1005,14 @@ func get(args []Value) (Value, error) {
 
 	switch collection := collection.(type) {
 	case String:
-		if len(collection) < int(stop) {
+		if len(collection) < stop {
 			return nil, fmt.Errorf("string index out of bounds for 'GET': %d < %d", len(collection), stop)
 		}
 
 		return collection[start:stop], nil
 
 	case List:
-		if len(collection) < int(stop) {
+		if len(collection) < stop {
 			return nil, fmt.Errorf("list index out of bounds for 'GET': %d < %d", len(collection), stop)
 		}
 
@@ -1062,7 +1062,7 @@ func set(args []Value) (Value, error) {
 
 	switch collection := collection.(type) {
 	case String:
-		if len(collection) < int(stop) {
+		if len(collection) < stop {
 			return nil, fmt.Errorf("string index out of bounds for 'SET': %d < %d", len(collection), stop)
 		}
 
@@ -1074,12 +1074,12 @@ func set(args []Value) (Value, error) {
 		// Use a string builder for efficiency's sake
 		var builder strings.Builder
 		builder.WriteString(string(collection[:start]))
-		builder.WriteString(string(replacement))
+		builder.WriteString(replacement)
 		builder.WriteString(string(collection[stop:]))
 		return String(builder.String()), nil
 
 	case List:
-		if len(collection) < int(stop) {
+		if len(collection) < stop {
 			return nil, fmt.Errorf("list index out of bounds for 'SET': %d < %d", len(collection), stop)
 		}
 
@@ -1107,7 +1107,7 @@ func eval(args []Value) (Value, error) {
 		return nil, err
 	}
 
-	return Evaluate(string(sourceCode))
+	return Evaluate(sourceCode)
 }
 
 func system(args []Value) (Value, error) {
@@ -1124,7 +1124,7 @@ func system(args []Value) (Value, error) {
 	}
 
 	// Execute the command
-	stdout, err := exec.Command(shell, "-c", string(shellCommand)).Output()
+	stdout, err := exec.Command(shell, "-c", shellCommand).Output()
 	if err != nil {
 		return nil, err
 	}

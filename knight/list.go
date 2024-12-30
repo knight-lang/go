@@ -82,7 +82,7 @@ func (l List) Join(separator string) (string, error) {
 		}
 
 		// (We have to cast to `string` as `stringRepresentation` is a `String`, not `string`.)
-		builder.WriteString(string(stringRepresentation))
+		builder.WriteString(stringRepresentation)
 	}
 
 	return builder.String(), nil

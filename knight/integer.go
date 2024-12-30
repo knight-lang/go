@@ -36,7 +36,7 @@ func (i Integer) ToInt() (int, error) {
 
 // ToString returns the string representation of the integer in base-10.
 func (i Integer) ToString() (string, error) {
-	return strconv.FormatInt(int64(i), 10), nil
+	return strconv.Itoa(int(i)), nil
 }
 
 // ToSlice returns the digits of the integer in base-10 format.

@@ -57,7 +57,7 @@ func (s String) ToString() (string, error) {
 
 // ToSlice returns a list of all the runes within string.
 func (s String) ToSlice() ([]Value, error) {
-	list := make(List, utf8.RuneCountInString(string(s)))
+	list := make([]Value, utf8.RuneCountInString(string(s)))
 
 	for idx, rune := range []rune(s) {
 		list[idx] = String(rune)

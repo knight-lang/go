@@ -40,5 +40,5 @@ func (_ Null) ToString() (string, error) {
 
 // ToSlice simply returns an empty list.
 func (_ Null) ToSlice() ([]Value, error) {
-	return List{}, nil
+	return nil, nil
 }
