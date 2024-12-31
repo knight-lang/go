@@ -48,7 +48,8 @@ func (i Integer) ToSlice() ([]Value, error) {
 
 	// Knight 3.0 says that negative integers -> list is undefined behaviour. As an extension, this
 	// implementation supports this conversion. (And, with no extra cost too; the algorithm that's
-	// used below to get the digit just happens to work on negative numbers too.)
+	// used below to get the digit just happens to work on negative numbers too.) It'd also be
+	// totally valid to just return an error indicating the conversion isn't supported.
 
 	var list List
 	for i != 0 {

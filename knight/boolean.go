@@ -46,10 +46,11 @@ func (b Boolean) ToString() (string, error) {
 
 // ToSlice returns an empty List when the boolean is false, or a list of just the boolean when
 // the boolean is true.
-//
-// NOTE: This is an extension, as the specs say that converting from boolean -> lists is
-// undefined behaviour.
 func (b Boolean) ToSlice() ([]Value, error) {
+	// Knight 3.0 says that converting from booleans to lists is undefined behaviour. So, as an
+	// extension, this implementation converts `TRUE` to `[true]` and `FALSE` to `[]`. It'd also be
+	// totally valid to just return an error indicating the conversion isn't supported.
+
 	if b {
 		return List{b}, nil
 	}
