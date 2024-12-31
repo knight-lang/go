@@ -19,7 +19,8 @@ var _ Value = &Ast{}
 // arity of the function.
 func NewAst(function *Function, arguments []Value) *Ast {
 	if function.arity != len(arguments) {
-		panic(fmt.Sprint("[BUG] function arity mismatch: expected", function.arity, "got", len(arguments)))
+		panic(fmt.Sprint("<INTERNAL BUG> function arity mismatch: expected",
+			function.arity, "got", len(arguments)))
 	}
 
 	return &Ast{function: function, arguments: arguments}

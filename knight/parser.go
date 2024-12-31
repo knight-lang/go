@@ -59,7 +59,7 @@ func (p *Parser) linenoAt(index int) int {
 // Peek returns the next rune without consuming it. It panics at the end of the source.
 func (p *Parser) Peek() rune {
 	if p.IsAtEnd() {
-		panic("[BUG] peeked when there's nothing left")
+		panic("<INTERNAL BUG> peeked when there's nothing left")
 	}
 
 	return p.source[p.index]
@@ -68,7 +68,7 @@ func (p *Parser) Peek() rune {
 // Advance consumes the next rune. It panics at the end of the source
 func (p *Parser) Advance() {
 	if p.IsAtEnd() {
-		panic("[BUG] advanced when there's nothing left")
+		panic("<INTERNAL BUG> advanced when there's nothing left")
 	}
 
 	p.index++

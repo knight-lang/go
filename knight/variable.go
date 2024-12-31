@@ -60,7 +60,7 @@ func (v *Variable) Dump() {
 // Assign replaces the old value for the variable with the new value. Panics if value is nil.
 func (v *Variable) Assign(value Value) {
 	if value == nil {
-		panic("[BUG] Variable.Assign called with a nil value?")
+		panic("<INTERNAL BUG> Variable.Assign called with a nil value?")
 	}
 
 	v.value = value
