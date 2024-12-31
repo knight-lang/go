@@ -7,8 +7,8 @@ import (
 
 // Integer is the numeric type within Knight.
 //
-// The Knight specs only require support for `int32`, but this implementation supports `int`
-// as an extension.
+// The Knight specs only require support for `int32`, but this implementation supports `int` (which
+// is `int64` on 64-bit platforms, but `int32` on 32-bit platforms) as an extension.
 type Integer int
 
 // Compile-time assertion that Integer implements the Value interface.

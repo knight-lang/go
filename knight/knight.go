@@ -11,7 +11,7 @@ func Evaluate(source string) (Value, error) {
 
 	value, err := parser.ParseNextValue()
 	if err != nil {
-		return nil, fmt.Errorf("compile error: %v", err)
+		return nil, fmt.Errorf("parse error: %v", err)
 	}
 
 	result, err := value.Execute()

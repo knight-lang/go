@@ -96,7 +96,7 @@ func isWhitespace(r rune) bool            { return unicode.IsSpace(r) }
 // ParseNextValue returns the next Value in the source code. EndOfInput is returned if there's no
 // Values left. Syntax errors (such as missing an ending quote) are also returned.
 func (p *Parser) ParseNextValue() (Value, error) {
-	// If we're at the end, return EndOfInput.
+	// If we're at the end, return the EndOfInput error.
 	if p.IsAtEnd() {
 		return nil, EndOfInput
 	}
@@ -105,6 +105,9 @@ func (p *Parser) ParseNextValue() (Value, error) {
 	// such a way that you can unambiguously determine what to do solely based on the next character
 	// in the input stream.
 	c := p.Peek()
+
+	// The starting index of this expression. Used in some syntax error messages.
+	startIndex := p.index
 
 	// Whitespace, delete it and parse again.
 	//
@@ -137,10 +140,8 @@ func (p *Parser) ParseNextValue() (Value, error) {
 
 	// Strings
 	if c == '\'' || c == '"' {
-		startIndex := p.index // for error msgs
-		p.Advance()           // Consume the starting quote.
-
-		quote := c
+		p.Advance() // Consume the starting quote.
+		quote := c  // Save `c` in a variable with a more descriptive name.
 
 		// Read until we hit the ending quote, but don't actually consume it.
 		contents := p.TakeWhile(func(r rune) bool { return r != quote })
@@ -166,9 +167,8 @@ func (p *Parser) ParseNextValue() (Value, error) {
 		p.Advance()
 	}
 
-	startIndex := p.index // used for syntax error messages
-
 	// Get the function definition; If it doesn't exist, then we've been given an invalid token.
+	// (Note: `KnownFunctoins` is declared within `function.go`.)
 	function, ok := KnownFunctions[c]
 	if !ok {
 		return nil, fmt.Errorf("[line %d] unknown token start: %c", p.linenoAt(startIndex), c)
@@ -178,7 +178,7 @@ func (p *Parser) ParseNextValue() (Value, error) {
 	arguments := make([]Value, function.arity)
 
 	// Parse each argument to the function, returning any errors that might occur. As a special case,
-	// we handle EndOfInput errors specially, which allows us to provide a better error message when
+	// we handle EndOfInput errors directly, which allows us to provide a better error message when
 	// arguments to a function are missing.
 	for i := 0; i < function.arity; i++ {
 		var err error
@@ -187,12 +187,8 @@ func (p *Parser) ParseNextValue() (Value, error) {
 		if err != nil {
 			// Special case: If the error was EndOfInput, provide a better error message.
 			if err == EndOfInput {
-				err = fmt.Errorf(
-					"[line %d] missing argument %d for function %q",
-					p.linenoAt(startIndex),
-					i+1,
-					function.name,
-				)
+				err = fmt.Errorf("[line %d] missing argument %d for function %q",
+					p.linenoAt(startIndex), i+1, function.name)
 			}
 
 			return nil, err
