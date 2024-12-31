@@ -32,10 +32,7 @@ type Parser struct {
 
 // NewParser creates a Parser for the given source string.
 func NewParser(source string) Parser {
-	return Parser{
-		source: []rune(source),
-		index:  0,
-	}
+	return Parser{source: []rune(source), index: 0}
 }
 
 // IsAtEnd returns whether the parser is at the end of its stream.
@@ -88,9 +85,7 @@ func (p *Parser) TakeWhile(condition func(rune) bool) string {
 	return string(p.source[start:p.index])
 }
 
-//
 // Functions used within ParseNextValue as arguments to TakeWhile.
-//
 func isntNewLine(r rune) bool             { return r != '\n' }
 func isDigit(r rune) bool                 { return '0' <= r && r <= '9' }
 func isVariableStart(r rune) bool         { return unicode.IsLower(r) || r == '_' }

@@ -106,7 +106,8 @@ func init() {
 // true_ always returns the true Boolean.
 //
 // Example:
-//    DUMP TRUE #=> true
+//
+//	DUMP TRUE #=> true
 func true_(_ []Value) (Value, error) {
 	return Boolean(true), nil
 }
@@ -114,7 +115,8 @@ func true_(_ []Value) (Value, error) {
 // false_ always returns the false Boolean.
 //
 // Example:
-//    DUMP FALSE #=> false
+//
+//	DUMP FALSE #=> false
 func false_(_ []Value) (Value, error) {
 	return Boolean(false), nil
 }
@@ -122,7 +124,8 @@ func false_(_ []Value) (Value, error) {
 // null always returns Null.
 //
 // Example:
-//    DUMP NULL #=> null
+//
+//	DUMP NULL #=> null
 func null(_ []Value) (Value, error) {
 	return Null{}, nil
 }
@@ -130,7 +133,8 @@ func null(_ []Value) (Value, error) {
 // emptyList always returns an empty List
 //
 // Example:
-//    DUMP @ #=> []
+//
+//	DUMP @ #=> []
 func emptyList(_ []Value) (Value, error) {
 	return List{}, nil
 }
@@ -140,7 +144,8 @@ func emptyList(_ []Value) (Value, error) {
 // As an extension, the go implementation supports random integers above the required 32767.
 //
 // Example:
-//    DUMP RANDOM #=> 8015671084101644486
+//
+//	DUMP RANDOM #=> 8015671084101644486
 func random(_ []Value) (Value, error) {
 	// Note that `rand` is seeded in this file's `init` function.
 	return Integer(rand.Int63()), nil // Go only has `Int63` for some reason...
@@ -149,14 +154,15 @@ func random(_ []Value) (Value, error) {
 // prompt reads a line from stdin, returning Null if stdin is empty.
 //
 // Examples:
-//    DUMP PROMPT <stdin="foo">        #=> "foo"
-//    DUMP PROMPT <stdin="foo\n">      #=> "foo"
-//    DUMP PROMPT <stdin="foo\nbar">   #=> "foo"
-//    DUMP PROMPT <stdin="foo\r\nbar"> #=> "foo"
-//    DUMP PROMPT <stdin="foo\rbar">   #=> "foo\rbar"
-//    DUMP PROMPT <stdin="foo\r">      #=> "foo"
-//    DUMP PROMPT <stdin="">           #=> ""
-//    DUMP ; PROMPT PROMPT <stdin="">  #=> null
+//
+//	DUMP PROMPT <stdin="foo">        #=> "foo"
+//	DUMP PROMPT <stdin="foo\n">      #=> "foo"
+//	DUMP PROMPT <stdin="foo\nbar">   #=> "foo"
+//	DUMP PROMPT <stdin="foo\r\nbar"> #=> "foo"
+//	DUMP PROMPT <stdin="foo\rbar">   #=> "foo\rbar"
+//	DUMP PROMPT <stdin="foo\r">      #=> "foo"
+//	DUMP PROMPT <stdin="">           #=> ""
+//	DUMP ; PROMPT PROMPT <stdin="">  #=> null
 func prompt(_ []Value) (Value, error) {
 	// If there was a problem getting the line, then we're either at the end of the file (which means
 	// we should return Null), or there was some problem like stdin was closed or permission denied.
@@ -183,8 +189,9 @@ func prompt(_ []Value) (Value, error) {
 // noop simply executes its only argument and returns it
 //
 // Examples:
-//    DUMP : 34                     #=> 34
-//    : : : DUMP : : : : + : 30 : 4 #=> 34
+//
+//	DUMP : 34                     #=> 34
+//	: : : DUMP : : : : + : 30 : 4 #=> 34
 func noop(args []Value) (Value, error) {
 	return args[0].Execute()
 }
@@ -192,9 +199,10 @@ func noop(args []Value) (Value, error) {
 // box creates a list just containing its argument.
 //
 // Examples:
-//    DUMP ,T    #=> [true]
-//    DUMP ,@    #=> [[]]
-//    DUMP ,,,,3 #=> [[[[3]]]]
+//
+//	DUMP ,T    #=> [true]
+//	DUMP ,@    #=> [[]]
+//	DUMP ,,,,3 #=> [[[[3]]]]
 func box(args []Value) (Value, error) {
 	ran, err := args[0].Execute()
 	if err != nil {
@@ -208,16 +216,18 @@ func box(args []Value) (Value, error) {
 // empty, or if the argument isn't a list or string.
 //
 // Examples:
-//    DUMP [ "A"   #=> "A"
-//    DUMP [ "ABC" #=> "A"
-//    DUMP [ ,1    #=> 1
-//    DUMP [ +@123 #=> 1
+//
+//	DUMP [ "A"   #=> "A"
+//	DUMP [ "ABC" #=> "A"
+//	DUMP [ ,1    #=> 1
+//	DUMP [ +@123 #=> 1
 //
 // Undefined Behaviour:
 // Errors are returned for all forms of undefined behaviour in `[`:
-//    DUMP [ ""    #!! empty string
-//    DUMP [ @     #!! empty list
-//    DUMP [ 123   #!! other types
+//
+//	DUMP [ ""    #!! empty string
+//	DUMP [ @     #!! empty list
+//	DUMP [ 123   #!! other types
 func head(args []Value) (Value, error) {
 	ran, err := args[0].Execute()
 	if err != nil {
@@ -248,16 +258,18 @@ func head(args []Value) (Value, error) {
 // container is empty, or if the argument isn't a list or string.
 //
 // Examples:
-//    DUMP ] "A"   #=> ""
-//    DUMP ] "ABC" #=> "BC"
-//    DUMP ] ,1    #=> []
-//    DUMP ] +@123 #=> [2, 3]
+//
+//	DUMP ] "A"   #=> ""
+//	DUMP ] "ABC" #=> "BC"
+//	DUMP ] ,1    #=> []
+//	DUMP ] +@123 #=> [2, 3]
 //
 // Undefined Behaviour:
 // Errors are returned for all forms of undefined behaviour in `]`:
-//    DUMP ] ""    #!! empty string
-//    DUMP ] @     #!! empty list
-//    DUMP ] 123   #!! other types
+//
+//	DUMP ] ""    #!! empty string
+//	DUMP ] @     #!! empty list
+//	DUMP ] 123   #!! other types
 func tail(args []Value) (Value, error) {
 	ran, err := args[0].Execute()
 	if err != nil {
@@ -294,11 +306,12 @@ func tail(args []Value) (Value, error) {
 // totally legit and fine strategy.
 //
 // Examples:
-//    ; = double BLOCK * x 2
-//    ; = x 2
-//    ; OUTPUT CALL double     #=> 4
-//    ; = x 10
-//    : OUTPUT CALL double     #=> 20
+//
+//	; = double BLOCK * x 2
+//	; = x 2
+//	; OUTPUT CALL double     #=> 4
+//	; = x 10
+//	: OUTPUT CALL double     #=> 20
 func block(args []Value) (Value, error) {
 	return args[0], nil
 }
@@ -307,15 +320,17 @@ func block(args []Value) (Value, error) {
 // to defer execution of `BLOCK`s until later on.
 //
 // Examples:
-//    ; = double BLOCK * x 2
-//    ; = x 2
-//    ; OUTPUT CALL double     #=> 4
-//    ; = x 10
-//    : OUTPUT CALL double     #=> 20
+//
+//	; = double BLOCK * x 2
+//	; = x 2
+//	; OUTPUT CALL double     #=> 4
+//	; = x 10
+//	: OUTPUT CALL double     #=> 20
 //
 // Undefined Behaviour:
 // `CALL`ing non-`BLOCK`s is supported, and simply returns that argument:
-//    DUMP CALL 123 #=> 123
+//
+//	DUMP CALL 123 #=> 123
 //
 // (NOTE: This is a direct consequence of how `BLOCK` is implemented, as `BLOCK 12` actually
 // returns `12`, so `CALL BLOCK 12` actually reduces down to `CALL 12`, which then returns `12`.)
@@ -331,15 +346,17 @@ func call(args []Value) (Value, error) {
 // quit exits the program with the given exit status code.
 //
 // Examples:
-//    QUIT TRUE   # (exit with status 1)
-//    QUIT NULL   # (exit with status 0)
-//    QUIT 12     # (exit with status 12)
-//    QUIT "017"  # (exit with status 17)
+//
+//	QUIT TRUE   # (exit with status 1)
+//	QUIT NULL   # (exit with status 0)
+//	QUIT 12     # (exit with status 12)
+//	QUIT "017"  # (exit with status 17)
 //
 // Undefined Behaviour:
 // As an extension, exit codes that can fit into an `int` are supported. (Although, the OS might
 // not let us return them.)
-//  QUIT 12345  # (allowed, but the OS determines the exit status...)
+//
+//	QUIT 12345  # (allowed, but the OS determines the exit status...)
 func quit(args []Value) (Value, error) {
 	exitStatus, err := executeToInt(args[0])
 	if err != nil {
@@ -353,16 +370,18 @@ func quit(args []Value) (Value, error) {
 // not returns the logical negation of its argument
 //
 // Examples:
-//    DUMP ! NULL #=> true
-//    DUMP ! @     #=> true
-//    DUMP ! TRUE  #=> false
-//    DUMP ! 12    #=> false
-//    DUMP ! "0"   #=> false
-//    DUMP ! ,@    #=> false
+//
+//	DUMP ! NULL #=> true
+//	DUMP ! @     #=> true
+//	DUMP ! TRUE  #=> false
+//	DUMP ! 12    #=> false
+//	DUMP ! "0"   #=> false
+//	DUMP ! ,@    #=> false
 //
 // Undefined Behaviour:
 // Types which can't be converted to booleans yield an error:
-//    DUMP ! BLOCK foo    #!! error: cant covert to a boolean
+//
+//	DUMP ! BLOCK foo    #!! error: cant covert to a boolean
 func not(args []Value) (Value, error) {
 	boolean, err := executeToBool(args[0])
 	if err != nil {
@@ -375,19 +394,21 @@ func not(args []Value) (Value, error) {
 // negate returns the numerical negation of its argument.
 //
 // Examples:
-//    DUMP ~ FALSE #=> 0
-//    DUMP ~ @     #=> 0
-//    DUMP ~ TRUE  #=> -1
-//    DUMP ~ 12    #=> -12
-//    DUMP ~ "-12" #=> 12
-//    DUMP ~ ~ 12  #=> 12
-//    DUMP ~ "017" #=> -17
-//    DUMP ~ "hi"  #=> 0
-//    DUMP ~ ,@    #=> -1
+//
+//	DUMP ~ FALSE #=> 0
+//	DUMP ~ @     #=> 0
+//	DUMP ~ TRUE  #=> -1
+//	DUMP ~ 12    #=> -12
+//	DUMP ~ "-12" #=> 12
+//	DUMP ~ ~ 12  #=> 12
+//	DUMP ~ "017" #=> -17
+//	DUMP ~ "hi"  #=> 0
+//	DUMP ~ ,@    #=> -1
 //
 // Undefined Behaviour:
 // Types which can't be converted to booleans yield an error:
-//    DUMP ~ BLOCK foo    #!! error: cant covert to an integer
+//
+//	DUMP ~ BLOCK foo    #!! error: cant covert to an integer
 func negate(args []Value) (Value, error) {
 	integer, err := executeToInt(args[0])
 	if err != nil {
@@ -400,13 +421,15 @@ func negate(args []Value) (Value, error) {
 // length returns the length of its argument, converted to an array.
 //
 // Examples:
-//    DUMP LENGTH 123            #=> 3
-//    DUMP LENGTH "hello world"  #=> 11
-//    DUMP LENGTH ++++,T,F,T,F,N #=> 5
+//
+//	DUMP LENGTH 123            #=> 3
+//	DUMP LENGTH "hello world"  #=> 11
+//	DUMP LENGTH ++++,T,F,T,F,N #=> 5
 //
 // Undefined Behaviour:
 // Types which can't be converted to lists yield an error:
-//    DUMP LENGTH BLOCK foo      #!! error: cant covert to a list
+//
+//	DUMP LENGTH BLOCK foo      #!! error: cant covert to a list
 func length(args []Value) (Value, error) {
 	list, err := executeToSlice(args[0])
 	if err != nil {
@@ -419,13 +442,15 @@ func length(args []Value) (Value, error) {
 // dump prints a debugging representation of its argument to stdout, then returns it.
 //
 // Examples:
-//    DUMP 123               #=> 123
-//    DUMP 'he said\: "hi!"' #=> "he said\\: \"hi!\""
-//    DUMP TRUE              #=> true
+//
+//	DUMP 123               #=> 123
+//	DUMP 'he said\: "hi!"' #=> "he said\\: \"hi!\""
+//	DUMP TRUE              #=> true
 //
 // Undefined Behaviour:
 // As an extension, _all_ types can be passed to `DUMP`.
-//    DUMP BLOCK + foo 2     #=> Ast(%!c(string=+), Variable(foo), 2)
+//
+//	DUMP BLOCK + foo 2     #=> Ast(%!c(string=+), Variable(foo), 2)
 //
 // Any errors with writing to stdout are silently ignored.
 func dump(args []Value) (Value, error) {
@@ -443,17 +468,19 @@ func dump(args []Value) (Value, error) {
 // printed.
 //
 // Examples (`␤` represents newline, to make these examples clearer):
-//    OUTPUT 123             #=> 123␤
-//    OUTPUT 'hello'         #=> hello␤
-//    OUTPUT NULL            #=> ␤         (Note: `NULL` coerces to an empty string)
-//    OUTPUT "what\"         #=> what      (notice there's no newline)
-//    OUTPUT +@"a\"          #=> a␤        (trailng `\` was deleted, but the `␤` separator is kept)
-//    OUTPUT "a\␤"           #=> a\␤␤
-//    OUTPUT "a\␤\"          #=> a\␤
+//
+//	OUTPUT 123             #=> 123␤
+//	OUTPUT 'hello'         #=> hello␤
+//	OUTPUT NULL            #=> ␤         (Note: `NULL` coerces to an empty string)
+//	OUTPUT "what\"         #=> what      (notice there's no newline)
+//	OUTPUT +@"a\"          #=> a␤        (trailng `\` was deleted, but the `␤` separator is kept)
+//	OUTPUT "a\␤"           #=> a\␤␤
+//	OUTPUT "a\␤\"          #=> a\␤
 //
 // Undefined Behaviour:
 // Types which can't be converted to strings yield an error:
-//    OUTPUT BLOCK foo       #!! error: cant covert to a list
+//
+//	OUTPUT BLOCK foo       #!! error: cant covert to a list
 //
 // Any errors with writing to stdout are silently ignored.
 func output(args []Value) (Value, error) {
@@ -489,20 +516,27 @@ func output(args []Value) (Value, error) {
 // is given.
 //
 // Examples:
-//    DUMP ASCII 10    #=> <newline>
-//    DUMP ASCII 126   #=> ~
-//    DUMP ASCII "F"   #=> 70
-//    DUMP ASCII "FOO" #=> 70
+//
+//	DUMP ASCII 10    #=> <newline>
+//	DUMP ASCII 126   #=> ~
+//	DUMP ASCII "F"   #=> 70
+//	DUMP ASCII "FOO" #=> 70
+//
 // Undefined Behaviour:
 // As an extension, `ASCII` supports all of utf-8:
-//    DUMP ASCII "😁"  #=> 1f601
-//    DUMP ASCII 1f601 #=> 😁
+//
+//	DUMP ASCII "😁"  #=> 1f601
+//	DUMP ASCII 1f601 #=> 😁
+//
 // Errors are returned for all forms of undefined behaviour in `ASCII`:
-//    DUMP ASCII 0 @      #!! empty list
-//    DUMP [ 123   #!! other types
-//    DUMP ASCII ""    #=> error
+//
+//	DUMP ASCII 0 @      #!! empty list
+//	DUMP [ 123   #!! other types
+//	DUMP ASCII ""    #=> error
+//
 // Types which can't be converted to strings yield an error:
-//    OUTPUT BLOCK foo       #!! error: cant covert to a list
+//
+//	OUTPUT BLOCK foo       #!! error: cant covert to a list
 func ascii(args []Value) (Value, error) {
 	value, err := args[0].Execute()
 	if err != nil {

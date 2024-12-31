@@ -3,7 +3,8 @@ package knight
 // Value is the interface implemented by all types that are usable in Knight programs.
 //
 // This not only includes the Integer, String, Boolean, Null, and List types that the spec
-// defines, but also the Variable and the Ast types as well. See each type for more details.
+// defines, but also the Variable and the Ast types as well (which are encountered during normal
+// execution, but are only Knight code can't directly interact with[1]) See each type for more details.
 //
 // All types must define the conversion functions, however types which don't have a defined
 // conversion (such as `BLOCK`'s return values) are free to always return `error`s.
@@ -13,6 +14,10 @@ package knight
 // fallible conversions is undefined behaviour. As such, we _could_ do whatever we liked in these
 // cases (`panic`, use a default, return an error, etc). I chose the `error` route to make error
 // messages for the end-user a bit cleaner.
+//
+// [1] Technically the `BLOCK` function allows access to these for Knight code, but compliant
+//
+//	Knight programs won't access them.
 type Value interface {
 	// Dump writes a debugging representation of the value to stdout.
 	Dump()
@@ -20,16 +25,17 @@ type Value interface {
 	// Execute executes the value, returning the result or whatever error may have occurred.
 	Execute() (Value, error)
 
-	// ToBool coerces the type to a Boolean, or returns an error if there's a problem doing so.
+	// ToBool coerces the type to a bool, or returns an error if there's a problem doing so.
 	ToBool() (bool, error)
 
-	// ToInt coerces the type to an Integer, or returns an error if there's a problem doing so.
+	// ToInt coerces the type to an int, or returns an error if there's a problem doing so.
 	ToInt() (int, error)
 
-	// ToString coerces the type to a String, or returns an error if there's a problem doing so.
+	// ToString coerces the type to a string, or returns an error if there's a problem doing so.
 	ToString() (string, error)
 
-	// ToSlice coerces the type to a List, or returns an error if there's a problem doing so.
+	// ToSlice coerces the type to a slice (golang speak for a list), or returns an error if there's
+	// a problem doing so.
 	ToSlice() ([]Value, error)
 }
 

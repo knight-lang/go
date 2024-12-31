@@ -16,8 +16,8 @@ import (
 // This isn't a problem for spec-compliance, however, as the only valid use for `BLOCK`s are to be
 // `CALL`ed, which then will Execute the variable anyways.
 type Variable struct {
-	name  string // the name of the variable; never changed after the Variable is created.
-	value Value  // the current value of the variable. a `nil` value indicates the Variable is unset.
+	name  string // The name of the variable; never changed after the Variable is created.
+	value Value  // The current value of the variable. a `nil` value indicates the Variable is unset.
 }
 
 // Compile-time assertion that Variable implements the Value interface.
@@ -25,7 +25,7 @@ var _ Value = &Variable{}
 
 // variablesMap is the a global variable that's a list of all known variables. It's used by the
 // NewVariable function to ensure that all variables of the same name point to the same Variable.
-var variablesMap map[string]*Variable = make(map[string]*Variable)
+var variablesMap = make(map[string]*Variable)
 
 // NewVariable returns the Variable corresponding to name, creating it if it doesn't exist.
 func NewVariable(name string) *Variable {
