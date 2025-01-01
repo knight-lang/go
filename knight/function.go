@@ -587,7 +587,7 @@ func ascii(args []Value) (Value, error) {
 // Creating lists or strings which are larger than `2147483647` will do whatever the golang runtime
 // would do. (Which probably is a memory allocation error, and aborting the program.)
 //
-// 	DUMP + "<2147483647-character-long string>" "X" #=> might work, depending on the OS
+//	DUMP + "<2147483647-character-long string>" "X" #=> might work, depending on the OS
 //
 // Other types are invalid:
 //
@@ -683,7 +683,7 @@ func subtract(args []Value) (Value, error) {
 // Creating lists or strings which are larger than `2147483647` will do whatever the golang runtime
 // would do. (Which probably is a memory allocation error, and aborting the program.)
 //
-// 	DUMP * "A" 2147483648 #=> might work, depending on the OS
+//	DUMP * "A" 2147483648 #=> might work, depending on the OS
 //
 // Other types are invalid:
 //
@@ -783,10 +783,15 @@ func divide(args []Value) (Value, error) {
 //
 //	DUMP % (- ~9223372036854775807 1) ~1 #=> 0
 //
-// Division by zero is an error:
+// Modulo by zero is an error:
 //
 //	DUMP % 123 0         #=> error: zero divisor given
 //	DUMP % 123 NULL      #=> error: zero divisor given
+//
+// Modulo by a negative number is handled by rounding towards zero:
+//
+//	DUMP % 5 ~2  #=> 1
+//	DUMP % ~5 ~2 #=> -1
 //
 // Other types are invalid:
 //
@@ -818,6 +823,33 @@ func remainder(args []Value) (Value, error) {
 // exponentiate raises the first argument to the power of the second, or joins lists. It returns an
 // error for other types, if an integer is raised to a negative power, or if the list contains types
 // which cannot be converted to strings (such as `BLOCK`'s return value).
+//
+// Examples:
+//
+//	DUMP ^ 3 "12"       #=> 531441
+//	DUMP ^ 12 TRUE      #=> 12
+//	DUMP ^ (+@123) TRUE #=> "1true2true3"
+//	DUMP ^ @ ":"        #=> ""
+//
+// Undefined Behaviour:
+// Overflowing operations on `Integer`s are "saturating"---they'll stop at the minimum or maximum
+// value for integers.
+//
+//	DUMP ^ 12  30 #=> 9223372036854775807
+//	DUMP ^ ~12 31 #=> -9223372036854775808
+//
+// Negative integers given to the exponent result in errors:
+//
+//	DUMP ^ 12 ~3  #!! error: negative exponent
+//
+// Like other operations, Creating strings which are larger than `2147483647` will do whatever the
+// golang runtime would do. (Which probably is a memory allocation error, and aborting the program):
+//
+//	DUMP ^ (list of 2147483647 elements) ":" #=> might work, depending on the OS
+//
+// Other types are invalid:
+//
+//	DUMP ^ TRUE 34  #!! error: invalid type
 func exponentiate(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -860,9 +892,9 @@ func exponentiate(args []Value) (Value, error) {
 	}
 }
 
-// compare returns a negative, zero, or positive integer depending on whether lhs is less than,
-// equal to, or greater than the second. The functionName argument is just used for error messages
-// if an invalid type is provided.
+// compare is a helper method for lessThan and greaterThan. It returns a negative, zero, or positive
+// integer depending on whether lhs is less than, equal to, or greater than the second. The
+// functionName argument is just used for error messages if an invalid type is provided.
 func compare(lhs, rhs Value, functionName rune) (int, error) {
 	switch lhs := lhs.(type) {
 	case Integer:
