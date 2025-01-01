@@ -106,7 +106,7 @@ func init() {
 
 // true_ always returns the true Boolean.
 //
-// Example:
+// ## Examples
 //
 //	DUMP TRUE #=> true
 func true_(_ []Value) (Value, error) {
@@ -115,7 +115,7 @@ func true_(_ []Value) (Value, error) {
 
 // false_ always returns the false Boolean.
 //
-// Example:
+// ## Examples
 //
 //	DUMP FALSE #=> false
 func false_(_ []Value) (Value, error) {
@@ -124,7 +124,7 @@ func false_(_ []Value) (Value, error) {
 
 // null always returns Null.
 //
-// Example:
+// ## Examples
 //
 //	DUMP NULL #=> null
 func null(_ []Value) (Value, error) {
@@ -133,7 +133,7 @@ func null(_ []Value) (Value, error) {
 
 // emptyList always returns an empty List
 //
-// Example:
+// ## Examples
 //
 //	DUMP @ #=> []
 func emptyList(_ []Value) (Value, error) {
@@ -144,7 +144,7 @@ func emptyList(_ []Value) (Value, error) {
 //
 // As an extension, the go implementation supports random integers above the required 32767.
 //
-// Example:
+// ## Examples
 //
 //	DUMP RANDOM #=> 8015671084101644486
 func random(_ []Value) (Value, error) {
@@ -154,7 +154,7 @@ func random(_ []Value) (Value, error) {
 
 // prompt reads a line from stdin, returning Null if stdin is empty.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP PROMPT <stdin="foo">        #=> "foo"
 //	DUMP PROMPT <stdin="foo\n">      #=> "foo"
@@ -189,7 +189,7 @@ func prompt(_ []Value) (Value, error) {
 
 // noop simply executes its only argument and returns it
 //
-// Examples:
+// ## Examples
 //
 //	DUMP : 34                     #=> 34
 //	: : : DUMP : : : : + : 30 : 4 #=> 34
@@ -199,7 +199,7 @@ func noop(args []Value) (Value, error) {
 
 // box creates a list just containing its argument.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP ,T    #=> [true]
 //	DUMP ,@    #=> [[]]
@@ -216,14 +216,14 @@ func box(args []Value) (Value, error) {
 // head returns the first element/rune of a list/string. It returns an error if the container is
 // empty, or if the argument isn't a list or string.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP [ "A"   #=> "A"
 //	DUMP [ "ABC" #=> "A"
 //	DUMP [ ,1    #=> 1
 //	DUMP [ +@123 #=> 1
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Errors are returned for all forms of undefined behaviour in `[`:
 //
 //	DUMP [ ""    #!! empty string
@@ -258,14 +258,14 @@ func head(args []Value) (Value, error) {
 // tail returns a list/string of everything but the first element/rune. It returns an error if the
 // container is empty, or if the argument isn't a list or string.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP ] "A"   #=> ""
 //	DUMP ] "ABC" #=> "BC"
 //	DUMP ] ,1    #=> []
 //	DUMP ] +@123 #=> [2, 3]
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Errors are returned for all forms of undefined behaviour in `]`:
 //
 //	DUMP ] ""    #!! empty string
@@ -306,7 +306,7 @@ func tail(args []Value) (Value, error) {
 // their argument, such as `;`, `&`'s second argument, etc.) is undefined behaviour, this is a
 // totally legit and fine strategy.
 //
-// Examples:
+// ## Examples
 //
 //	; = double BLOCK * x 2
 //	; = x 2
@@ -320,7 +320,7 @@ func block(args []Value) (Value, error) {
 // call executes its argument, and then returns the result of executing _that_ value. This allows us
 // to defer execution of `BLOCK`s until later on.
 //
-// Examples:
+// ## Examples
 //
 //	; = double BLOCK * x 2
 //	; = x 2
@@ -328,7 +328,7 @@ func block(args []Value) (Value, error) {
 //	; = x 10
 //	: OUTPUT CALL double     #=> 20
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // `CALL`ing non-`BLOCK`s is supported, and simply returns that argument:
 //
 //	DUMP CALL 123 #=> 123
@@ -346,14 +346,14 @@ func call(args []Value) (Value, error) {
 
 // quit exits the program with the given exit status code.
 //
-// Examples:
+// ## Examples
 //
 //	QUIT TRUE   # (exit with status 1)
 //	QUIT NULL   # (exit with status 0)
 //	QUIT 12     # (exit with status 12)
 //	QUIT "017"  # (exit with status 17)
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // As an extension, exit codes that can fit into an `int` are supported. (Although, the OS might
 // not let us return them.)
 //
@@ -370,7 +370,7 @@ func quit(args []Value) (Value, error) {
 
 // not returns the logical negation of its argument
 //
-// Examples:
+// ## Examples
 //
 //	DUMP ! NULL #=> true
 //	DUMP ! @     #=> true
@@ -379,7 +379,7 @@ func quit(args []Value) (Value, error) {
 //	DUMP ! "0"   #=> false
 //	DUMP ! ,@    #=> false
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Types which can't be converted to booleans yield an error:
 //
 //	DUMP ! BLOCK foo    #!! error: cant covert to a boolean
@@ -394,7 +394,7 @@ func not(args []Value) (Value, error) {
 
 // negate returns the numerical negation of its argument.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP ~ FALSE #=> 0
 //	DUMP ~ @     #=> 0
@@ -406,7 +406,7 @@ func not(args []Value) (Value, error) {
 //	DUMP ~ "hi"  #=> 0
 //	DUMP ~ ,@    #=> -1
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Types which can't be converted to booleans yield an error:
 //
 //	DUMP ~ BLOCK foo    #!! error: cant covert to an integer
@@ -421,13 +421,13 @@ func negate(args []Value) (Value, error) {
 
 // length returns the length of its argument, converted to an array.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP LENGTH 123            #=> 3
 //	DUMP LENGTH "hello world"  #=> 11
 //	DUMP LENGTH ++++,T,F,T,F,N #=> 5
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Types which can't be converted to lists yield an error:
 //
 //	DUMP LENGTH BLOCK foo      #!! error: cant covert to a list
@@ -442,13 +442,13 @@ func length(args []Value) (Value, error) {
 
 // dump prints a debugging representation of its argument to stdout, then returns it.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP 123               #=> 123
 //	DUMP 'he said\: "hi!"' #=> "he said\\: \"hi!\""
 //	DUMP TRUE              #=> true
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // As an extension, _all_ types can be passed to `DUMP`.
 //
 //	DUMP BLOCK + foo 2     #=> Ast(%!c(string=+), Variable(foo), 2)
@@ -478,7 +478,7 @@ func dump(args []Value) (Value, error) {
 //	OUTPUT "a\␤"           #=> a\␤␤
 //	OUTPUT "a\␤\"          #=> a\␤
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Types which can't be converted to strings yield an error:
 //
 //	OUTPUT BLOCK foo       #!! error: cant covert to a list
@@ -516,14 +516,14 @@ func output(args []Value) (Value, error) {
 // if an empty string, an integer which doesn't correspond to a rune, or a non int-non-string type
 // is given.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP ASCII 10    #=> <newline>
 //	DUMP ASCII 126   #=> ~
 //	DUMP ASCII "F"   #=> 70
 //	DUMP ASCII "FOO" #=> 70
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // As an extension, `ASCII` supports all of utf-8:
 //
 //	DUMP ASCII "😁"   #=> 128513
@@ -573,13 +573,13 @@ func ascii(args []Value) (Value, error) {
 // add adds two integers/strings/lists together by coercing the second argument. Passing in any
 // other type will yield an error.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP + 12 34       #=> 36
 //	DUMP + "hi" TRUE   #=> hitrue
 //	DUMP + @ "what"    #=> ["w", "h", "a", "t"]
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Overflowing operations on `Integer`s just wraparound
 //
 //	DUMP + 9223372036854775807 1                    #=> -9223372036854775808
@@ -634,12 +634,12 @@ func add(args []Value) (Value, error) {
 
 // subtract subtracts one integer from another. It returns an error for other types.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP - 12 "34"       #=> -22
 //	DUMP - 12 FALSE      #=> -12
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Overflowing operations on `Integer`s just wraparound
 //
 //	DUMP - ~2 9223372036854775807 #=> 9223372036854775807
@@ -669,13 +669,13 @@ func subtract(args []Value) (Value, error) {
 
 // multiply an integer by another, or repeats a list or string. It returns an error for other types.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP * 12 34     #=> 408
 //	DUMP * "hi" 3    #=> hihihi
 //	DUMP * (+@123) 4 #=> [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Overflowing operations on `Integer`s just wraparound
 //
 //	DUMP * 922337203685477580 20  #=> -16
@@ -727,12 +727,12 @@ func multiply(args []Value) (Value, error) {
 // divide divides an integer by another. It returns an error for other types, or if the second
 // argument is zero.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP / 123 "3"       #=> 41
 //	DUMP / 12 TRUE       #=> 12
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Overflowing operations on `Integer`s just wraparound. (This is only happens when the minimum
 // integer is divided by `-1`.)
 //
@@ -772,12 +772,12 @@ func divide(args []Value) (Value, error) {
 // remainder gets the remainder of the first argument and the second. It returns an error for other
 // types, or if the second argument is zero.
 //
-// Examples:
+// ## Examples
 //
 //	DUMP % 34 "12"       #=> 10
 //	DUMP % 12 TRUE       #=> 0
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Overflowing operations on `Integer`s just wraparound. (This is only happens when the minimum
 // integer is modulo'd by `-1`.)
 //
@@ -824,14 +824,14 @@ func remainder(args []Value) (Value, error) {
 // error for other types, if an integer is raised to a negative power, or if the list contains types
 // which cannot be converted to strings (such as `BLOCK`'s return value).
 //
-// Examples:
+// ## Examples
 //
 //	DUMP ^ 3 "12"       #=> 531441
 //	DUMP ^ 12 TRUE      #=> 12
 //	DUMP ^ (+@123) TRUE #=> "1true2true3"
 //	DUMP ^ @ ":"        #=> ""
 //
-// Undefined Behaviour:
+// ## Undefined Behaviour
 // Overflowing operations on `Integer`s are "saturating"---they'll stop at the minimum or maximum
 // value for integers.
 //
