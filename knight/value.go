@@ -2,9 +2,10 @@ package knight
 
 // Value is the interface implemented by all types that are usable in Knight programs.
 //
-// This not only includes the Integer, String, Boolean, Null, and List types that the spec
-// defines, but also the Variable and the Ast types as well (which are encountered during normal
-// execution, but are only Knight code can't directly interact with[1]) See each type for more details.
+// This not only includes the Integer, String, Boolean, Null, and List types that the spec defines,
+// but also the Variable and the FnCall types as well (which are encountered during normal
+// execution, but are only Knight code can't directly interact with[1]) See each type for more
+// details.
 //
 // All types must define the conversion functions, however types which don't have a defined
 // conversion (such as `BLOCK`'s return values) are free to always return `error`s.

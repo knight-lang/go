@@ -17,9 +17,9 @@ import (
 
 // Function represents a Knight function (eg `DUMP`, `+`, `=`, etc.).
 //
-// These are used within Ast to store which function the AST should be executing.
+// These are used within FnCall to store which function the function call should be executing.
 type Function struct {
-	// The user-friendly name of the function. Used within syntax error and `Ast.Dump`.
+	// The user-friendly name of the function. Used within syntax error and `FnCall.Dump`.
 	name string
 
 	// The amount of arguments that `fn` expects.
@@ -92,9 +92,10 @@ var (
 func init() {
 	rand.Seed(time.Now().UnixNano())
 
-	// Extension functions
+	// Extension functions. (We have to add these here because including `eval` above would be a
+	// circular loop; I moved `system` out here to be consistent)
 	KnownFunctions['E'] = &Function{name: "EVAL", arity: 1, fn: eval}
-	KnownFunctions['$'] = &Function{name: "$", arity: 1, fn: system}
+	KnownFunctions['`'] = &Function{name: "`", arity: 1, fn: system}
 }
 
 /**************************************************************************************************
@@ -525,18 +526,17 @@ func output(args []Value) (Value, error) {
 // Undefined Behaviour:
 // As an extension, `ASCII` supports all of utf-8:
 //
-//	DUMP ASCII "😁"  #=> 1f601
-//	DUMP ASCII 1f601 #=> 😁
+//	DUMP ASCII "😁"   #=> 128513
+//	DUMP ASCII 128513 #=> 😁
 //
-// Errors are returned for all forms of undefined behaviour in `ASCII`:
+// Errors are returned for all other forms of undefined behaviour in `ASCII`:
 //
-//	DUMP ASCII 0 @      #!! empty list
-//	DUMP [ 123   #!! other types
-//	DUMP ASCII ""    #=> error
+//	DUMP ASCII 1234567 #!! not a valid rune
+//	DUMP ASCII ""      #!! empty rune
 //
-// Types which can't be converted to strings yield an error:
+// Other types are invalid:
 //
-//	OUTPUT BLOCK foo       #!! error: cant covert to a list
+//	DUMP ASCII TRUE    #!! error: invalid type
 func ascii(args []Value) (Value, error) {
 	value, err := args[0].Execute()
 	if err != nil {
@@ -572,6 +572,26 @@ func ascii(args []Value) (Value, error) {
 
 // add adds two integers/strings/lists together by coercing the second argument. Passing in any
 // other type will yield an error.
+//
+// Examples:
+//
+//	DUMP + 12 34       #=> 36
+//	DUMP + "hi" TRUE   #=> hitrue
+//	DUMP + @ "what"    #=> ["w", "h", "a", "t"]
+//
+// Undefined Behaviour:
+// Overflowing operations on `Integer`s just wraparound
+//
+//	DUMP + 9223372036854775807 1                    #=> -9223372036854775808
+//
+// Creating lists or strings which are larger than `2147483647` will do whatever the golang runtime
+// would do. (Which probably is a memory allocation error, and aborting the program.)
+//
+// 	DUMP + "<2147483647-character-long string>" "X" #=> might work, depending on the OS
+//
+// Other types are invalid:
+//
+//	DUMP + TRUE 34  #!! error: invalid type
 func add(args []Value) (Value, error) {
 	ran, err := args[0].Execute()
 	if err != nil {
@@ -613,6 +633,20 @@ func add(args []Value) (Value, error) {
 }
 
 // subtract subtracts one integer from another. It returns an error for other types.
+//
+// Examples:
+//
+//	DUMP - 12 "34"       #=> -22
+//	DUMP - 12 FALSE      #=> -12
+//
+// Undefined Behaviour:
+// Overflowing operations on `Integer`s just wraparound
+//
+//	DUMP - ~2 9223372036854775807 #=> 9223372036854775807
+//
+// Other types are invalid:
+//
+//	DUMP - TRUE 34  #!! error: invalid type
 func subtract(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -634,6 +668,26 @@ func subtract(args []Value) (Value, error) {
 }
 
 // multiply an integer by another, or repeats a list or string. It returns an error for other types.
+//
+// Examples:
+//
+//	DUMP * 12 34     #=> 408
+//	DUMP * "hi" 3    #=> hihihi
+//	DUMP * (+@123) 4 #=> [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+//
+// Undefined Behaviour:
+// Overflowing operations on `Integer`s just wraparound
+//
+//	DUMP * 922337203685477580 20  #=> -16
+//
+// Creating lists or strings which are larger than `2147483647` will do whatever the golang runtime
+// would do. (Which probably is a memory allocation error, and aborting the program.)
+//
+// 	DUMP * "A" 2147483648 #=> might work, depending on the OS
+//
+// Other types are invalid:
+//
+//	DUMP * TRUE 34  #!! error: invalid type
 func multiply(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -672,6 +726,25 @@ func multiply(args []Value) (Value, error) {
 
 // divide divides an integer by another. It returns an error for other types, or if the second
 // argument is zero.
+//
+// Examples:
+//
+//	DUMP / 123 "3"       #=> 41
+//	DUMP / 12 TRUE       #=> 12
+//
+// Undefined Behaviour:
+// Overflowing operations on `Integer`s just wraparound. (This is only happens when the minimum
+// integer is divided by `-1`.)
+//
+//	DUMP / (- ~9223372036854775807 1) ~1 #=> -9223372036854775808
+//
+// Division by zero is an error:
+//
+//	DUMP / 123 0         #=> error: zero divisor given
+//
+// Other types are invalid:
+//
+//	DUMP / TRUE 34  #!! error: invalid type
 func divide(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -698,6 +771,26 @@ func divide(args []Value) (Value, error) {
 
 // remainder gets the remainder of the first argument and the second. It returns an error for other
 // types, or if the second argument is zero.
+//
+// Examples:
+//
+//	DUMP % 34 "12"       #=> 10
+//	DUMP % 12 TRUE       #=> 0
+//
+// Undefined Behaviour:
+// Overflowing operations on `Integer`s just wraparound. (This is only happens when the minimum
+// integer is modulo'd by `-1`.)
+//
+//	DUMP % (- ~9223372036854775807 1) ~1 #=> 0
+//
+// Division by zero is an error:
+//
+//	DUMP % 123 0         #=> error: zero divisor given
+//	DUMP % 123 NULL      #=> error: zero divisor given
+//
+// Other types are invalid:
+//
+//	DUMP % TRUE 34  #!! error: invalid type
 func remainder(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {

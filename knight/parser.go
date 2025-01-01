@@ -195,5 +195,5 @@ func (p *Parser) ParseNextValue() (Value, error) {
 		}
 	}
 
-	return NewAst(function, arguments), nil
+	return NewFnCall(function, arguments), nil
 }
