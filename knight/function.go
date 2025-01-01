@@ -382,7 +382,7 @@ func quit(args []Value) (Value, error) {
 // ## Undefined Behaviour
 // Types which can't be converted to booleans yield an error:
 //
-//	DUMP ! BLOCK foo    #!! error: cant covert to a boolean
+//	DUMP ! BLOCK foo    #!! error: cant convert to a boolean
 func not(args []Value) (Value, error) {
 	boolean, err := executeToBool(args[0])
 	if err != nil {
@@ -409,7 +409,7 @@ func not(args []Value) (Value, error) {
 // ## Undefined Behaviour
 // Types which can't be converted to booleans yield an error:
 //
-//	DUMP ~ BLOCK foo    #!! error: cant covert to an integer
+//	DUMP ~ BLOCK foo    #!! error: cant convert to an integer
 func negate(args []Value) (Value, error) {
 	integer, err := executeToInt(args[0])
 	if err != nil {
@@ -430,7 +430,7 @@ func negate(args []Value) (Value, error) {
 // ## Undefined Behaviour
 // Types which can't be converted to lists yield an error:
 //
-//	DUMP LENGTH BLOCK foo      #!! error: cant covert to a list
+//	DUMP LENGTH BLOCK foo      #!! error: cant convert to a list
 func length(args []Value) (Value, error) {
 	list, err := executeToSlice(args[0])
 	if err != nil {
@@ -451,7 +451,7 @@ func length(args []Value) (Value, error) {
 // ## Undefined Behaviour
 // As an extension, _all_ types can be passed to `DUMP`.
 //
-//	DUMP BLOCK + foo 2     #=> Ast(%!c(string=+), Variable(foo), 2)
+//	DUMP BLOCK + foo 2     #=> FnCall(%!c(string=+), Variable(foo), 2)
 //
 // Any errors with writing to stdout are silently ignored.
 func dump(args []Value) (Value, error) {
@@ -481,7 +481,7 @@ func dump(args []Value) (Value, error) {
 // ## Undefined Behaviour
 // Types which can't be converted to strings yield an error:
 //
-//	OUTPUT BLOCK foo       #!! error: cant covert to a list
+//	OUTPUT BLOCK foo       #!! error: cant convert to a list
 //
 // Any errors with writing to stdout are silently ignored.
 func output(args []Value) (Value, error) {
@@ -1067,7 +1067,7 @@ func equalTo(args []Value) (Value, error) {
 // ## Undefined Behaviour
 // Types which can't be converted to booleans yield an error:
 //
-//	: & (BLOCK foo) 34   #!! error: cant covert to a boolean
+//	: & (BLOCK foo) 34   #!! error: cant convert to a boolean
 func and(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -1100,7 +1100,7 @@ func and(args []Value) (Value, error) {
 // ## Undefined Behaviour
 // Types which can't be converted to booleans yield an error:
 //
-//	: | (BLOCK foo) 34   #!! error: cant covert to a boolean
+//	: | (BLOCK foo) 34   #!! error: cant convert to a boolean
 func or(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -1142,6 +1142,7 @@ func then(args []Value) (Value, error) {
 //
 //	DUMP = foo 34            #=> 34   (returns itself)
 //	; (= foo 34) (DUMP foo)  #=> 34   (assigns for future use)
+//	= foo BLOCK bar          # (works, you can assign to blocks)
 //
 // ## Undefined Behaviour
 // All forms of undefined behaviour within `=` yield errors:
