@@ -19,7 +19,7 @@ import (
 //
 // These are used within FnCall to store which function the function call should be executing.
 type Function struct {
-	// The user-friendly name of the function. Used within syntax error and `FnCall.Dump`.
+	// User-friendly name of the function. Used within syntax error and `FnCall.Dump`.
 	name string
 
 	// The amount of arguments that `fn` expects.
@@ -880,7 +880,7 @@ func exponentiate(args []Value) (Value, error) {
 			return nil, err
 		}
 
-		joined, err := lhs.Join(sep) // Join can fail if the list contains Asts or Variables.
+		joined, err := lhs.Join(sep) // Join can fail if the list contains Block return value.
 		if err != nil {
 			return nil, err
 		}
@@ -964,6 +964,20 @@ func compare(lhs, rhs Value, functionName rune) (int, error) {
 // lessThan returns whether the first argument is less than the second. An error is returned if
 // the first argument isn't a boolean, integer, string, or list, or if a list that's passed contains
 // an invalid argument.
+//
+// ## Examples
+//
+//	DUMP < 10  "2"       #=> false
+//	DUMP < "10" 2        #=> true    (converts arg2 to a string, deos lexicographical comparisons)
+//	DUMP < FALSE 123     #=> true    (converts arg2 to a boolean)
+//	DUMP < (+@123) 13    #=> true    (`2 < 3`)
+//	DUMP < (+@123) 12    #=> false   (first argument's length is larger)
+//
+// ## Undefined Behaviour
+// All forms of undefined behaviour in `<` have errors associated with them:
+//
+//	DUMP < (BLOCK foo) 34   #!! error: invalid type
+//	DUMP < ,(BLOCK foo) 34  #!! error: invalid type (even within lists, you cant use `BLOCK`s)
 func lessThan(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -986,6 +1000,8 @@ func lessThan(args []Value) (Value, error) {
 // greaterThan returns whether the first argument is greater than the second. An error is returned
 // if the first argument isn't a boolean, integer, string, or list, or if a list that's passed
 // contains an invalid argument.
+//
+// See lessThan for examples and undefined behaviour.
 func greaterThan(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -1007,6 +1023,21 @@ func greaterThan(args []Value) (Value, error) {
 
 // equalTo returns whether its two arguments are equal to one other. Unlike the `<` and `>`
 // functions, this doesn't coerce the second argument to the type of the first.
+//
+// ## Examples
+//
+//	DUMP ? 10 10       #=> true
+//	DUMP ? 10 "10"     #=> false     (don't coerce)
+//	DUMP ? FALSE NULL  #=> false
+//	DUMP ? " hi" "hi"  #=> false
+//
+// ## Undefined Behaviour
+// As an extension, `?` called with a `Block` is supported, and returns whether the arguments
+// contain the *exact same bodies*
+//
+//	DUMP ? (BLOCK foo) (BLOCK foo)             #=> true
+//	DUMP ? (BLOCK + 1 bar) (BLOCK + 1 bar)     #=> true
+//	DUMP ? (BLOCK + 0 + 1 bar) (BLOCK + 1 bar) #=> false, even though semantically the same
 func equalTo(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -1024,6 +1055,19 @@ func equalTo(args []Value) (Value, error) {
 
 // and evaluates the first argument and returns it if it's falsey. When it's truthy, it returns the
 // second argument.
+//
+// ## Examples
+//
+//	DUMP & 4 "hi"        #=> "hi"
+//	DUMP & 0  "hi"       #=> 0
+//	DUMP & 0 (QUIT 34)   #=> 0         (the other argument isn't even evaluated)
+//	DUMP & 4 (QUIT 34)   # (exit status 34)
+//	: & 4 (BLOCK foo)    # (works, `&`'s second argument can be a BLOCK.)
+//
+// ## Undefined Behaviour
+// Types which can't be converted to booleans yield an error:
+//
+//	: & (BLOCK foo) 34   #!! error: cant covert to a boolean
 func and(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -1044,6 +1088,19 @@ func and(args []Value) (Value, error) {
 
 // or evaluates the first argument and returns it if it's truthy. When it's falsey, it returns the
 // second argument.
+//
+// ## Examples
+//
+//	DUMP | 4 "hi"        #=> 4
+//	DUMP | 0  "hi"       #=> "hi"
+//	DUMP | 4 (QUIT 34)   #=> 4         (the other argument isn't even evaluated)
+//	DUMP | 0 (QUIT 34)   # (exit status 34)
+//	: | 4 (BLOCK foo)    # (works, `|`'s second argument can be a BLOCK.)
+//
+// ## Undefined Behaviour
+// Types which can't be converted to booleans yield an error:
+//
+//	: | (BLOCK foo) 34   #!! error: cant covert to a boolean
 func or(args []Value) (Value, error) {
 	lhs, err := args[0].Execute()
 	if err != nil {
@@ -1062,6 +1119,14 @@ func or(args []Value) (Value, error) {
 }
 
 // then evaluates the first argument, then evaluates and returns the second argument.
+//
+// ## Examples
+//
+//	DUMP ; 3 4                     #=> 4
+//	DUMP ; (= a 4) a               #=> a
+//	; (= a BLOCK + 3 4) (CALL a)   #=> 7
+//
+// ; (BLOCK foo) (BLOCK bar)      # (ok, both arguments can be a `BLOCK`.)
 func then(args []Value) (Value, error) {
 	if _, err := args[0].Execute(); err != nil {
 		return nil, err
@@ -1072,6 +1137,16 @@ func then(args []Value) (Value, error) {
 
 // assign is used to assign values to variables. The first argument must be a Variable, or an error
 // is returned. The second argument is evaluated, and after assignment is returned.
+//
+// ## Examples
+//
+//	DUMP = foo 34            #=> 34   (returns itself)
+//	; (= foo 34) (DUMP foo)  #=> 34   (assigns for future use)
+//
+// ## Undefined Behaviour
+// All forms of undefined behaviour within `=` yield errors:
+//
+//	= 12 34 #!! error: can only assign variables
 func assign(args []Value) (Value, error) {
 	// go syntax for "attempt to cast to a Variable pointer". If `args[0]` isn't a variable, then
 	// `ok` will be false, which we can check.
@@ -1286,6 +1361,15 @@ func system(args []Value) (Value, error) {
 	stdout, err := exec.Command(shell, "-c", shellCommand).Output()
 	if err != nil {
 		return nil, err
+	}
+
+	// Delete the last `\n`, `\r`, or `\r\n` to be like `PROMPT`.
+	if len(stdout) != 0 && stdout[len(stdout)-1] == '\n' {
+		stdout = stdout[:len(stdout)-1]
+	}
+
+	if len(stdout) != 0 && stdout[len(stdout)-1] == '\r' {
+		stdout = stdout[:len(stdout)-1]
 	}
 
 	// Return the stdout
