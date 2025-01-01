@@ -193,6 +193,7 @@ func prompt(_ []Value) (Value, error) {
 //
 //	DUMP : 34                     #=> 34
 //	: : : DUMP : : : : + : 30 : 4 #=> 34
+// : (BLOCK foo)                 # (works, `:` accepts Blocks)
 func noop(args []Value) (Value, error) {
 	return args[0].Execute()
 }
@@ -201,9 +202,10 @@ func noop(args []Value) (Value, error) {
 //
 // ## Examples
 //
-//	DUMP ,T    #=> [true]
-//	DUMP ,@    #=> [[]]
-//	DUMP ,,,,3 #=> [[[[3]]]]
+//	DUMP ,T        #=> [true]
+//	DUMP ,@        #=> [[]]
+//	DUMP ,,,,3     #=> [[[[3]]]]
+// , (BLOCK foo)  # (works, `,` accepts Blocks)
 func box(args []Value) (Value, error) {
 	ran, err := args[0].Execute()
 	if err != nil {
@@ -313,6 +315,8 @@ func tail(args []Value) (Value, error) {
 //	; OUTPUT CALL double     #=> 4
 //	; = x 10
 //	: OUTPUT CALL double     #=> 20
+//
+// BLOCK (BLOCK foo)        # (works, `BLOCK` also accepts Blocks)
 func block(args []Value) (Value, error) {
 	return args[0], nil
 }
@@ -1142,7 +1146,7 @@ func then(args []Value) (Value, error) {
 //
 //	DUMP = foo 34            #=> 34   (returns itself)
 //	; (= foo 34) (DUMP foo)  #=> 34   (assigns for future use)
-//	= foo BLOCK bar          # (works, you can assign to blocks)
+//	= foo BLOCK bar          # (works, you can assign blocks)
 //
 // ## Undefined Behaviour
 // All forms of undefined behaviour within `=` yield errors:
@@ -1167,6 +1171,13 @@ func assign(args []Value) (Value, error) {
 }
 
 // while evaluates the second argument whilst the first is true, and returns Null.
+//
+// ## Examples
+//
+//	; = i = j 0 : WHILE (> 4 = i + i 1) (OUTPUT i)  #=> 1␤2␤3␤
+//	DUMP WHILE FALSE 34                             #=> null
+//	DUMP WHILE FALSE QUIT 34                        #=> null (doesn't run the body)
+//	: WHILE FALSE BLOCK 34                          # (works, `BLOCK` is allowed as the body)
 func while(args []Value) (Value, error) {
 	// "loop forever" loops in golang are `for { ... }`
 	for {
@@ -1179,6 +1190,7 @@ func while(args []Value) (Value, error) {
 			break
 		}
 
+		// Ignore the return value of the body, but return an error if there is one.
 		if _, err = args[1].Execute(); err != nil {
 			return nil, err
 		}
@@ -1189,12 +1201,13 @@ func while(args []Value) (Value, error) {
 
 /**************************************************************************************************
  *                                                                                                *
- *                                            Arity 2                                             *
+ *                                            Arity 3                                             *
  *                                                                                                *
  **************************************************************************************************/
 
 // if_ evaluates and returns the second argument if the first is truthy; if it's falsey, if_
 // evaluates and returns the third argument instead.
+//
 func if_(args []Value) (Value, error) {
 	condition, err := executeToBool(args[0])
 	if err != nil {
