@@ -193,6 +193,7 @@ func prompt(_ []Value) (Value, error) {
 //
 //	DUMP : 34                     #=> 34
 //	: : : DUMP : : : : + : 30 : 4 #=> 34
+//
 // : (BLOCK foo)                 # (works, `:` accepts Blocks)
 func noop(args []Value) (Value, error) {
 	return args[0].Execute()
@@ -205,6 +206,7 @@ func noop(args []Value) (Value, error) {
 //	DUMP ,T        #=> [true]
 //	DUMP ,@        #=> [[]]
 //	DUMP ,,,,3     #=> [[[[3]]]]
+//
 // , (BLOCK foo)  # (works, `,` accepts Blocks)
 func box(args []Value) (Value, error) {
 	ran, err := args[0].Execute()
@@ -1208,6 +1210,17 @@ func while(args []Value) (Value, error) {
 // if_ evaluates and returns the second argument if the first is truthy; if it's falsey, if_
 // evaluates and returns the third argument instead.
 //
+// ## Examples
+//
+//	DUMP IF 0 1 2                    #=> 2
+//	DUMP IF "yes" 1 2                #=> 1
+//	DUMP IF 0 (QUIT 3) 2             #=> 2 (doesn't execute the other branches)
+//	IF FALSE (BLOCK foo) (BLOCK bar) # (works, `IF` can accept blocks as 2nd and 3rd args)
+//
+// ## Undefined Behaviour
+// All forms of undefined behaviour within `IF` yield errors:
+//
+//	IF (BLOCK foo) 3 4 #!! error: cant convert to a boolean
 func if_(args []Value) (Value, error) {
 	condition, err := executeToBool(args[0])
 	if err != nil {
@@ -1224,6 +1237,33 @@ func if_(args []Value) (Value, error) {
 // get returns a sublist/substring with start and length of the second and third arguments. It
 // returns an error if the start or length are negative, if `start + length` is larger than
 // the collection's length, or if a non-list/string element is provided.
+//
+// ## Examples
+//
+//	DUMP GET "" 0 0         # => ""
+//	DUMP GET "abcde" 2 2    # => "cd"
+//	DUMP GET "abcde" 2 0    # => ""
+//	DUMP GET "abcde" 5 0    # => ""
+//	DUMP GET "abcde" 4 1    # => "e"
+//
+//	DUMP GET @ 0 0          # => []
+//	DUMP GET (+@12345) 2 2  # => [3, 4]
+//	DUMP GET (+@12345) 2 0  # => []
+//	DUMP GET (+@12345) 5 0  # => []
+//	DUMP GET (+@12345) 4 1  # => [5]
+//
+// ## Undefined Behaviour
+// All forms of undefined behaviour within `GET` yield errors:
+//
+//	DUMP GET "abcde" 5 1       #!! error, string index out of bounds
+//	DUMP GET "abcde" ~1 1      #!! error, string negative start
+//	DUMP GET "abcde" 1 ~1      #!! error, string negative length
+//
+//	DUMP GET (+@"abcde") 5 1   #!! error, list index out of bounds
+//	DUMP GET (+@"abcde") ~1 1  #!! error, list negative start
+//	DUMP GET (+@"abcde") 1 ~1  #!! error, list negative length
+//
+//	DUMP GET TRUE 1 2          #!! error, invalid type
 func get(args []Value) (Value, error) {
 	collection, err := args[0].Execute()
 	if err != nil {
@@ -1281,6 +1321,38 @@ func get(args []Value) (Value, error) {
 // second and third parameters, respectively) is replaced by the fourth parameter. An error is
 // returned if either the start or length are negative, if `start+length` is larger than the size
 // of the container, or if the first argument isn't a list or string.
+//
+// ## Examples
+//
+//	DUMP SET "" 0 0 "Hello"  # => "Hello"
+//	DUMP SET "abcd" 2 1 "!"  # => "ab!d"
+//	DUMP SET "abcd" 2 0 "!"  # => "ab!cd"
+//	DUMP SET "abcd" 1 2 TRUE # => "atrued"
+//	DUMP SET "abcd" 0 2 @    # => "cd"
+//
+//	DUMP SET @ 0 0 "Hello"        # => ["H", "e", "l", "l", "o"]
+//	DUMP SET (+@1234) 2 1 ,9      # => [1, 2, 9, 4]
+//	DUMP SET (+@1234) 2 0 "!"     # => [1, 2, "!", 3, 4]
+//	DUMP SET (+@1234) 1 2 (+@789) # => [1, 7, 8, 9, 4]
+//	DUMP SET (+@1234) 0 2 @       # => [3, 4]
+//
+// ## Undefined Behaviour
+// The following forms of undefined behaviour within `SET` yield errors:
+//
+//	DUMP SET "abcde" 5 1 "foo"      #!! error, string index out of bounds
+//	DUMP SET "abcde" ~1 1 "foo"     #!! error, string negative start
+//	DUMP SET "abcde" 1 ~1 "foo"     #!! error, string negative length
+//
+//	DUMP SET (+@"abcde") 5 1 "foo"  #!! error, list index out of bounds
+//	DUMP SET (+@"abcde") ~1 1 "foo" #!! error, list negative start
+//	DUMP SET (+@"abcde") 1 ~1 "foo" #!! error, list negative length
+//
+//	DUMP SET TRUE 1 2          #!! error, invalid type
+//
+// Creating lists or strings which are larger than `2147483647` will do whatever the golang runtime
+// would do. (Which probably is a memory allocation error, and aborting the program.)
+//
+//	DUMP SET "ABC" 0 1 "<2147483647-character-long string>" #=> might work, depending on the OS
 func set(args []Value) (Value, error) {
 	collection, err := args[0].Execute()
 	if err != nil {
