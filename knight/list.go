@@ -47,7 +47,7 @@ func (l List) ToInt() (int, error) {
 
 // ToString returns the list converted to a string by adding a newline between each element. This
 // will return an error if the list contains elements which aren't convertible to strings, such as
-// `Ast` and `Variable`s (which is only possible if `BLOCK` was used, eg `, BLOCK foo`).
+// `FnCall` and `Variable`s (which is only possible if `BLOCK` was used, eg `, BLOCK foo`).
 func (l List) ToString() (string, error) {
 	joined, err := l.Join("\n")
 	if err != nil {

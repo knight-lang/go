@@ -27,12 +27,12 @@ func NewFnCall(function *Function, arguments []Value) *FnCall {
 	return &FnCall{function: function, arguments: arguments}
 }
 
-// Execute executes the ast by passing its arguments to its function.
+// Execute executes the function call by passing its arguments to its function.
 func (a *FnCall) Execute() (Value, error) {
 	return (a.function.fn)(a.arguments)
 }
 
-// Dump writes a debugging representation of the ast to stdout.
+// Dump writes a debugging representation of the function call to stdout.
 func (a *FnCall) Dump() {
 	fmt.Printf("FnCall(%c", a.function.name)
 
@@ -44,7 +44,7 @@ func (a *FnCall) Dump() {
 	fmt.Print(")")
 }
 
-// Conversions: They always return errors, as asts cannot be converted to other types.
+// Conversions: They always return errors, as function calls cannot be converted to other types.
 func (_ *FnCall) ToString() (string, error) {
 	return "", errors.New("FnCall doesn't define string conversions")
 }

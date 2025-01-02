@@ -304,7 +304,7 @@ func tail(args []Value) (Value, error) {
 // block returns its argument unexecuted. This is intended to be used in conjunction with call (see
 // below) to defer evaluation to a later point in time.
 //
-// Because the argument is returned, unexecuted, we might be returning a `Variable` or an `Ast`,
+// Because the argument is returned, unexecuted, we might be returning a `Variable` or an `FnCall`,
 // both of which have no conversions defined on them. However, since using the return value of
 // `BLOCK` in any function other than `CALL` (or, a handful of others that don't actually modify,
 // their argument, such as `;`, `&`'s second argument, etc.) is undefined behaviour, this is a
@@ -1421,6 +1421,11 @@ func set(args []Value) (Value, error) {
  *                                                                                                *
  **************************************************************************************************/
 
+// eval converts its argument to a string, and then evaluates that as Knight source code.
+//
+// ## Examples
+//
+//	; = foo 34 : DUMP EVAL + "fo" "o"   #=> 34
 func eval(args []Value) (Value, error) {
 	sourceCode, err := executeToString(args[0])
 	if err != nil {
@@ -1430,6 +1435,12 @@ func eval(args []Value) (Value, error) {
 	return Evaluate(sourceCode)
 }
 
+// system converts its argument to a string, and then evaluates that as a shell command, returning
+// the stdout of it (less its trailing newline)
+//
+// ## Examples
+//
+// DUMP ` "ls" #=> "README.md\ngo\ngo.mod\nknight\nmain.go"
 func system(args []Value) (Value, error) {
 	// Get the shell script to execute
 	shellCommand, err := executeToString(args[0])
